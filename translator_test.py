@@ -119,9 +119,9 @@ class TestTranslator(unittest.TestCase):
                                 else:
                                     print 'The file ' + conv_f + 'cannot be converted into the _emd space and therefore, cannot be translated'  
                         except IOError as exp:
-                            print error+exp.msgs
+                            print exp.msgs
             except IOError as exp:
-                        print error+exp.msgs    
+                        print exp.msgs
         
 
 
