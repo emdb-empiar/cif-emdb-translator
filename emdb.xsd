@@ -25,6 +25,7 @@
         </xs:sequence>
         <xs:attribute name="emdb_id" type="emdb_id_type" use="required"/>
         <xs:attribute name="version" type="xs:token" use="required" fixed="3.0.0.0"/>
+        <!-- <xs:attribute name="version" type="xs:token" default="3.0.0.0"/> -->
         <!-- <xs:attribute name="composite_structure" type="xs:boolean"/> -->
     </xs:complexType>
     <xs:complexType name="admin_type">
@@ -2416,7 +2417,7 @@
     <xs:simpleType name="allowed_average_exposure_time_type">
         <xs:restriction base="xs:float">
             <xs:minExclusive value="0"/>
-            <xs:maxExclusive value="60"/>
+            <xs:maxExclusive value="240"/>
         </xs:restriction>
     </xs:simpleType>
     <xs:simpleType name="allowed_electron_dose">
