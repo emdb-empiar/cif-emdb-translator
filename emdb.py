@@ -2,20 +2,20 @@
 # -*- coding: utf-8 -*-
 
 #
-# Generated Wed Feb 21 16:35:23 2018 by generateDS.py version 2.29.5.
+# Generated Fri Feb 23 12:18:30 2018 by generateDS.py version 2.29.5.
 # Python 2.7.11 (v2.7.11:6d1b6a68f775, Dec  5 2015, 12:54:16)  [GCC 4.2.1 (Apple Inc. build 5666) (dot 3)]
 #
 # Command line options:
 #   ('--root-element', 'emd')
 #   ('-f', '')
-#   ('-o', 'emdb.py')
+#   ('-o', '../../IdeaProjects/cif-emdb-translator/emdb.py')
 #   ('--external-encoding', 'utf-8')
 #
 # Command line arguments:
-#   ../workspaceSelenium/v3/DA_schema/emdb.xsd
+#   ../../IdeaProjects/emdb-schemas/v3/v3_0_0_0/emdb.xsd
 #
 # Command line:
-#   generateDS_original.py --root-element="emd" -f -o "emdb.py" --external-encoding="utf-8" ../workspaceSelenium/v3/DA_schema/emdb.xsd
+#   generateDS_original.py --root-element="emd" -f -o "../../IdeaProjects/cif-emdb-translator/emdb.py" --external-encoding="utf-8" ../../IdeaProjects/emdb-schemas/v3/v3_0_0_0/emdb.xsd
 #
 # Current working directory (os.getcwd()):
 #   generateDS-2.29.5
