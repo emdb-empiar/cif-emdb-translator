@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 #
-# Generated Fri Feb 23 12:18:30 2018 by generateDS.py version 2.29.5.
+# Generated Thu Mar  1 16:32:41 2018 by generateDS.py version 2.29.8.
 # Python 2.7.11 (v2.7.11:6d1b6a68f775, Dec  5 2015, 12:54:16)  [GCC 4.2.1 (Apple Inc. build 5666) (dot 3)]
 #
 # Command line options:
@@ -15,10 +15,10 @@
 #   ../../IdeaProjects/emdb-schemas/v3/v3_0_0_0/emdb.xsd
 #
 # Command line:
-#   generateDS_original.py --root-element="emd" -f -o "../../IdeaProjects/cif-emdb-translator/emdb.py" --external-encoding="utf-8" ../../IdeaProjects/emdb-schemas/v3/v3_0_0_0/emdb.xsd
+#   generateDS.py --root-element="emd" -f -o "../../IdeaProjects/cif-emdb-translator/emdb.py" --external-encoding="utf-8" ../../IdeaProjects/emdb-schemas/v3/v3_0_0_0/emdb.xsd
 #
 # Current working directory (os.getcwd()):
-#   generateDS-2.29.5
+#   generateDS-2.29.8
 #
 
 import sys
@@ -721,7 +721,7 @@ def _cast(typ, value):
 class entry_type(GeneratedsSuper):
     subclass = None
     superclass = None
-    def __init__(self, emdb_id=None, version=None, admin=None, crossreferences=None, sample=None, structure_determination_list=None, map=None, interpretation=None, validation=None):
+    def __init__(self, emdb_id=None, version='3.0.0.0', admin=None, crossreferences=None, sample=None, structure_determination_list=None, map=None, interpretation=None, validation=None):
         self.original_tagname_ = None
         self.emdb_id = _cast(None, emdb_id)
         self.version = _cast(None, version)
@@ -767,7 +767,7 @@ class entry_type(GeneratedsSuper):
             if not self.gds_validate_simple_patterns(
                     self.validate_emdb_id_type_patterns_, value):
                 warnings_.warn('Value "%s" does not match xsd pattern restrictions: %s' % (value.encode('utf-8'), self.validate_emdb_id_type_patterns_, ))
-    validate_emdb_id_type_patterns_ = [['^EMD-\\d{4,}$']]
+    validate_emdb_id_type_patterns_ = [[u'^EMD-\\d{4,}$']]
     def hasContent_(self):
         if (
             self.admin is not None or
@@ -806,7 +806,7 @@ class entry_type(GeneratedsSuper):
         if self.emdb_id is not None and 'emdb_id' not in already_processed:
             already_processed.add('emdb_id')
             outfile.write(' emdb_id=%s' % (quote_attrib(self.emdb_id), ))
-        if self.version is not None and 'version' not in already_processed:
+        if self.version != "3.0.0.0" and 'version' not in already_processed:
             already_processed.add('version')
             outfile.write(' version=%s' % (self.gds_encode(self.gds_format_string(quote_attrib(self.version), input_name='version')), ))
     def exportChildren(self, outfile, level, namespace_='', name_='entry_type', fromsubclass_=False, pretty_print=True):
@@ -1481,7 +1481,7 @@ class supersedes_type(GeneratedsSuper):
             if not self.gds_validate_simple_patterns(
                     self.validate_emdb_id_type_patterns_, value):
                 warnings_.warn('Value "%s" does not match xsd pattern restrictions: %s' % (value.encode('utf-8'), self.validate_emdb_id_type_patterns_, ))
-    validate_emdb_id_type_patterns_ = [['^EMD-\\d{4,}$']]
+    validate_emdb_id_type_patterns_ = [[u'^EMD-\\d{4,}$']]
     def hasContent_(self):
         if (
             self.date is not None or
@@ -1762,14 +1762,14 @@ class contact_details_type(GeneratedsSuper):
             if not self.gds_validate_simple_patterns(
                     self.validate_middle_nameType_patterns_, value):
                 warnings_.warn('Value "%s" does not match xsd pattern restrictions: %s' % (value.encode('utf-8'), self.validate_middle_nameType_patterns_, ))
-    validate_middle_nameType_patterns_ = [['^[A-Z]$']]
+    validate_middle_nameType_patterns_ = [[u'^[A-Z]$']]
     def validate_emailType(self, value):
         # Validate type emailType, a restriction on xs:token.
         if value is not None and Validate_simpletypes_:
             if not self.gds_validate_simple_patterns(
                     self.validate_emailType_patterns_, value):
                 warnings_.warn('Value "%s" does not match xsd pattern restrictions: %s' % (value.encode('utf-8'), self.validate_emailType_patterns_, ))
-    validate_emailType_patterns_ = [['^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,4}$']]
+    validate_emailType_patterns_ = [[u'^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,4}$']]
     def hasContent_(self):
         if (
             self.role is not None or
@@ -2018,21 +2018,21 @@ class telephone_number_type(GeneratedsSuper):
             if not self.gds_validate_simple_patterns(
                     self.validate_countryType_patterns_, value):
                 warnings_.warn('Value "%s" does not match xsd pattern restrictions: %s' % (value.encode('utf-8'), self.validate_countryType_patterns_, ))
-    validate_countryType_patterns_ = [['^\\d{1,3}$']]
+    validate_countryType_patterns_ = [[u'^\\d{1,3}$']]
     def validate_areaType(self, value):
         # Validate type areaType, a restriction on xs:token.
         if value is not None and Validate_simpletypes_:
             if not self.gds_validate_simple_patterns(
                     self.validate_areaType_patterns_, value):
                 warnings_.warn('Value "%s" does not match xsd pattern restrictions: %s' % (value.encode('utf-8'), self.validate_areaType_patterns_, ))
-    validate_areaType_patterns_ = [['^\\d{2,5}$']]
+    validate_areaType_patterns_ = [[u'^\\d{2,5}$']]
     def validate_localType(self, value):
         # Validate type localType, a restriction on xs:token.
         if value is not None and Validate_simpletypes_:
             if not self.gds_validate_simple_patterns(
                     self.validate_localType_patterns_, value):
                 warnings_.warn('Value "%s" does not match xsd pattern restrictions: %s' % (value.encode('utf-8'), self.validate_localType_patterns_, ))
-    validate_localType_patterns_ = [['^\\d+( ext. \\d+)?$']]
+    validate_localType_patterns_ = [[u'^\\d+( ext. \\d+)?$']]
     def hasContent_(self):
         if (
             self.country is not None or
@@ -3038,7 +3038,7 @@ class emdb_cross_reference_type(GeneratedsSuper):
             if not self.gds_validate_simple_patterns(
                     self.validate_emdb_id_type_patterns_, value):
                 warnings_.warn('Value "%s" does not match xsd pattern restrictions: %s' % (value.encode('utf-8'), self.validate_emdb_id_type_patterns_, ))
-    validate_emdb_id_type_patterns_ = [['^EMD-\\d{4,}$']]
+    validate_emdb_id_type_patterns_ = [[u'^EMD-\\d{4,}$']]
     def hasContent_(self):
         if (
             self.emdb_id is not None or
@@ -3228,7 +3228,7 @@ class pdb_cross_reference_type(GeneratedsSuper):
             if not self.gds_validate_simple_patterns(
                     self.validate_pdb_code_type_patterns_, value):
                 warnings_.warn('Value "%s" does not match xsd pattern restrictions: %s' % (value.encode('utf-8'), self.validate_pdb_code_type_patterns_, ))
-    validate_pdb_code_type_patterns_ = [['^\\d[\\dA-Za-z]{3}$']]
+    validate_pdb_code_type_patterns_ = [[u'^\\d[\\dA-Za-z]{3}$']]
     def hasContent_(self):
         if (
             self.pdb_id is not None or
@@ -3351,7 +3351,7 @@ class auxiliary_link_type(GeneratedsSuper):
             if not self.gds_validate_simple_patterns(
                     self.validate_linkType_patterns_, value):
                 warnings_.warn('Value "%s" does not match xsd pattern restrictions: %s' % (value.encode('utf-8'), self.validate_linkType_patterns_, ))
-    validate_linkType_patterns_ = [['^(https?$|^ftp)://.*$']]
+    validate_linkType_patterns_ = [[u'^(https?$|^ftp)://.*$']]
     def hasContent_(self):
         if (
             self.type_ is not None or
@@ -4105,7 +4105,7 @@ class organism_type(GeneratedsSuper):
 class complex_supramolecule_type(base_supramolecule_type):
     subclass = None
     superclass = base_supramolecule_type
-    def __init__(self, supramolecule_id=None, name=None, category=None, parent=None, macromolecule_list=None, details=None, number_of_copies=None, oligomeric_state=None, external_references=None, recombinant_exp_flag=None, chimera=None, natural_source=None, recombinant_expression=None, molecular_weight=None, ribosome_details=None):
+    def __init__(self, supramolecule_id=None, name=None, category=None, parent=None, macromolecule_list=None, details=None, number_of_copies=None, oligomeric_state=None, external_references=None, recombinant_exp_flag=None, chimera=True, natural_source=None, recombinant_expression=None, molecular_weight=None, ribosome_details=None):
         self.original_tagname_ = None
         super(complex_supramolecule_type, self).__init__(supramolecule_id, name, category, parent, macromolecule_list, details, number_of_copies, oligomeric_state, external_references, recombinant_exp_flag, )
         self.chimera = _cast(bool, chimera)
@@ -4180,7 +4180,7 @@ class complex_supramolecule_type(base_supramolecule_type):
             outfile.write('/>%s' % (eol_, ))
     def exportAttributes(self, outfile, level, already_processed, namespace_='', name_='complex_supramolecule_type'):
         super(complex_supramolecule_type, self).exportAttributes(outfile, level, already_processed, namespace_, name_='complex_supramolecule_type')
-        if self.chimera is not None and 'chimera' not in already_processed:
+        if not self.chimera and 'chimera' not in already_processed:
             already_processed.add('chimera')
             outfile.write(' chimera="%s"' % self.gds_format_boolean(self.chimera, input_name='chimera'))
     def exportChildren(self, outfile, level, namespace_='', name_='complex_supramolecule_type', fromsubclass_=False, pretty_print=True):
@@ -6629,7 +6629,7 @@ class protein_or_peptide_macromolecule_type(base_macromolecule_type):
             if not self.gds_validate_simple_patterns(
                     self.validate_ec_numberType_patterns_, value):
                 warnings_.warn('Value "%s" does not match xsd pattern restrictions: %s' % (value.encode('utf-8'), self.validate_ec_numberType_patterns_, ))
-    validate_ec_numberType_patterns_ = [['^\\d+(\\.(\\d+$|^\\-)){3}$']]
+    validate_ec_numberType_patterns_ = [[u'^\\d+(\\.(\\d+$|^\\-)){3}$']]
     def hasContent_(self):
         if (
             self.recombinant_expression is not None or
@@ -6781,7 +6781,7 @@ class rna_macromolecule_type(base_macromolecule_type):
             if not self.gds_validate_simple_patterns(
                     self.validate_ec_numberType21_patterns_, value):
                 warnings_.warn('Value "%s" does not match xsd pattern restrictions: %s' % (value.encode('utf-8'), self.validate_ec_numberType21_patterns_, ))
-    validate_ec_numberType21_patterns_ = [['^\\d+(\\.(\\d+$|^\\-)){3}$']]
+    validate_ec_numberType21_patterns_ = [[u'^\\d+(\\.(\\d+$|^\\-)){3}$']]
     def hasContent_(self):
         if (
             self.sequence is not None or
@@ -8442,7 +8442,7 @@ class crystallography_preparation_type(base_preparation_type):
 class crystal_formation_temperature_type(GeneratedsSuper):
     subclass = None
     superclass = None
-    def __init__(self, units=None, valueOf_=None):
+    def __init__(self, units='K', valueOf_=None):
         self.original_tagname_ = None
         self.units = _cast(None, units)
         self.valueOf_ = valueOf_
@@ -8490,7 +8490,7 @@ class crystal_formation_temperature_type(GeneratedsSuper):
         else:
             outfile.write('/>%s' % (eol_, ))
     def exportAttributes(self, outfile, level, already_processed, namespace_='', name_='crystal_formation_temperature_type'):
-        if self.units is not None and 'units' not in already_processed:
+        if self.units != "K" and 'units' not in already_processed:
             already_processed.add('units')
             outfile.write(' units=%s' % (self.gds_encode(self.gds_format_string(quote_attrib(self.units), input_name='units')), ))
     def exportChildren(self, outfile, level, namespace_='', name_='crystal_formation_temperature_type', fromsubclass_=False, pretty_print=True):
@@ -9018,7 +9018,7 @@ class fiducial_marker_type(GeneratedsSuper):
 class fiducial_marker_diameter_type(GeneratedsSuper):
     subclass = None
     superclass = None
-    def __init__(self, units=None, valueOf_=None):
+    def __init__(self, units='nanometer', valueOf_=None):
         self.original_tagname_ = None
         self.units = _cast(None, units)
         self.valueOf_ = valueOf_
@@ -9066,7 +9066,7 @@ class fiducial_marker_diameter_type(GeneratedsSuper):
         else:
             outfile.write('/>%s' % (eol_, ))
     def exportAttributes(self, outfile, level, already_processed, namespace_='', name_='fiducial_marker_diameter_type'):
-        if self.units is not None and 'units' not in already_processed:
+        if self.units != "nanometer" and 'units' not in already_processed:
             already_processed.add('units')
             outfile.write(' units=%s' % (self.gds_encode(self.gds_format_string(quote_attrib(self.units), input_name='units')), ))
     def exportChildren(self, outfile, level, namespace_='', name_='fiducial_marker_diameter_type', fromsubclass_=False, pretty_print=True):
@@ -9093,7 +9093,7 @@ class fiducial_marker_diameter_type(GeneratedsSuper):
 class temperature_type(GeneratedsSuper):
     subclass = None
     superclass = None
-    def __init__(self, units=None, valueOf_=None):
+    def __init__(self, units='K', valueOf_=None):
         self.original_tagname_ = None
         self.units = _cast(None, units)
         self.valueOf_ = valueOf_
@@ -9141,7 +9141,7 @@ class temperature_type(GeneratedsSuper):
         else:
             outfile.write('/>%s' % (eol_, ))
     def exportAttributes(self, outfile, level, already_processed, namespace_='', name_='temperature_type'):
-        if self.units is not None and 'units' not in already_processed:
+        if self.units != "K" and 'units' not in already_processed:
             already_processed.add('units')
             outfile.write(' units=%s' % (self.gds_encode(self.gds_format_string(quote_attrib(self.units), input_name='units')), ))
     def exportChildren(self, outfile, level, namespace_='', name_='temperature_type', fromsubclass_=False, pretty_print=True):
@@ -9243,7 +9243,7 @@ class ultramicrotomy_final_thickness_type(GeneratedsSuper):
 class fib_voltage_type(GeneratedsSuper):
     subclass = None
     superclass = None
-    def __init__(self, units=None, valueOf_=None):
+    def __init__(self, units='kV', valueOf_=None):
         self.original_tagname_ = None
         self.units = _cast(None, units)
         self.valueOf_ = valueOf_
@@ -9291,7 +9291,7 @@ class fib_voltage_type(GeneratedsSuper):
         else:
             outfile.write('/>%s' % (eol_, ))
     def exportAttributes(self, outfile, level, already_processed, namespace_='', name_='fib_voltage_type'):
-        if self.units is not None and 'units' not in already_processed:
+        if self.units != "kV" and 'units' not in already_processed:
             already_processed.add('units')
             outfile.write(' units=%s' % (self.gds_encode(self.gds_format_string(quote_attrib(self.units), input_name='units')), ))
     def exportChildren(self, outfile, level, namespace_='', name_='fib_voltage_type', fromsubclass_=False, pretty_print=True):
@@ -9317,7 +9317,7 @@ class fib_voltage_type(GeneratedsSuper):
 class fib_current_type(GeneratedsSuper):
     subclass = None
     superclass = None
-    def __init__(self, units=None, valueOf_=None):
+    def __init__(self, units='nA', valueOf_=None):
         self.original_tagname_ = None
         self.units = _cast(None, units)
         self.valueOf_ = valueOf_
@@ -9365,7 +9365,7 @@ class fib_current_type(GeneratedsSuper):
         else:
             outfile.write('/>%s' % (eol_, ))
     def exportAttributes(self, outfile, level, already_processed, namespace_='', name_='fib_current_type'):
-        if self.units is not None and 'units' not in already_processed:
+        if self.units != "nA" and 'units' not in already_processed:
             already_processed.add('units')
             outfile.write(' units=%s' % (self.gds_encode(self.gds_format_string(quote_attrib(self.units), input_name='units')), ))
     def exportChildren(self, outfile, level, namespace_='', name_='fib_current_type', fromsubclass_=False, pretty_print=True):
@@ -9466,7 +9466,7 @@ class fib_dose_rate_type(GeneratedsSuper):
 class fib_duration_type(GeneratedsSuper):
     subclass = None
     superclass = None
-    def __init__(self, units=None, valueOf_=None):
+    def __init__(self, units='s', valueOf_=None):
         self.original_tagname_ = None
         self.units = _cast(None, units)
         self.valueOf_ = valueOf_
@@ -9514,7 +9514,7 @@ class fib_duration_type(GeneratedsSuper):
         else:
             outfile.write('/>%s' % (eol_, ))
     def exportAttributes(self, outfile, level, already_processed, namespace_='', name_='fib_duration_type'):
-        if self.units is not None and 'units' not in already_processed:
+        if self.units != "s" and 'units' not in already_processed:
             already_processed.add('units')
             outfile.write(' units=%s' % (self.gds_encode(self.gds_format_string(quote_attrib(self.units), input_name='units')), ))
     def exportChildren(self, outfile, level, namespace_='', name_='fib_duration_type', fromsubclass_=False, pretty_print=True):
@@ -10203,7 +10203,7 @@ class base_microscopy_type(GeneratedsSuper):
 class residual_tilt_type(GeneratedsSuper):
     subclass = None
     superclass = None
-    def __init__(self, units=None, valueOf_=None):
+    def __init__(self, units='mrad', valueOf_=None):
         self.original_tagname_ = None
         self.units = _cast(None, units)
         self.valueOf_ = valueOf_
@@ -10251,7 +10251,7 @@ class residual_tilt_type(GeneratedsSuper):
         else:
             outfile.write('/>%s' % (eol_, ))
     def exportAttributes(self, outfile, level, already_processed, namespace_='', name_='residual_tilt_type'):
-        if self.units is not None and 'units' not in already_processed:
+        if self.units != "mrad" and 'units' not in already_processed:
             already_processed.add('units')
             outfile.write(' units=%s' % (self.gds_encode(self.gds_format_string(quote_attrib(self.units), input_name='units')), ))
     def exportChildren(self, outfile, level, namespace_='', name_='residual_tilt_type', fromsubclass_=False, pretty_print=True):
@@ -11422,7 +11422,7 @@ class applied_symmetry_type(GeneratedsSuper):
             if not self.gds_validate_simple_patterns(
                     self.validate_point_groupType_patterns_, value):
                 warnings_.warn('Value "%s" does not match xsd pattern restrictions: %s' % (value.encode('utf-8'), self.validate_point_groupType_patterns_, ))
-    validate_point_groupType_patterns_ = [['^C\\d+$|^D\\d+$|^O$|^T$|^I$'], ['^C\\d+$|^D\\d+$|^O$|^T$|^I$']]
+    validate_point_groupType_patterns_ = [[u'^C\\d+$|^D\\d+$|^O$|^T$|^I$'], [u'^C\\d+$|^D\\d+$|^O$|^T$|^I$']]
     def hasContent_(self):
         if (
             self.space_group is not None or
@@ -11536,7 +11536,7 @@ class helical_parameters_type(GeneratedsSuper):
             if not self.gds_validate_simple_patterns(
                     self.validate_axial_symmetryType_patterns_, value):
                 warnings_.warn('Value "%s" does not match xsd pattern restrictions: %s' % (value.encode('utf-8'), self.validate_axial_symmetryType_patterns_, ))
-    validate_axial_symmetryType_patterns_ = [['^[C$|^D][1-9][0-9]*$']]
+    validate_axial_symmetryType_patterns_ = [[u'^[C$|^D][1-9][0-9]*$']]
     def hasContent_(self):
         if (
             self.delta_z is not None or
@@ -12120,7 +12120,7 @@ class unit_cell_type(GeneratedsSuper):
 class cell_type(GeneratedsSuper):
     subclass = None
     superclass = None
-    def __init__(self, units=None, valueOf_=None):
+    def __init__(self, units='Å', valueOf_=None):
         self.original_tagname_ = None
         self.units = _cast(None, units)
         self.valueOf_ = valueOf_
@@ -12168,7 +12168,7 @@ class cell_type(GeneratedsSuper):
         else:
             outfile.write('/>%s' % (eol_, ))
     def exportAttributes(self, outfile, level, already_processed, namespace_='', name_='cell_type'):
-        if self.units is not None and 'units' not in already_processed:
+        if self.units != "Å" and 'units' not in already_processed:
             already_processed.add('units')
             outfile.write(' units=%s' % (self.gds_encode(self.gds_format_string(quote_attrib(self.units), input_name='units')), ))
     def exportChildren(self, outfile, level, namespace_='', name_='cell_type', fromsubclass_=False, pretty_print=True):
@@ -12195,7 +12195,7 @@ class cell_type(GeneratedsSuper):
 class cell_angle_type(GeneratedsSuper):
     subclass = None
     superclass = None
-    def __init__(self, units=None, valueOf_=None):
+    def __init__(self, units='deg', valueOf_=None):
         self.original_tagname_ = None
         self.units = _cast(None, units)
         self.valueOf_ = valueOf_
@@ -12243,7 +12243,7 @@ class cell_angle_type(GeneratedsSuper):
         else:
             outfile.write('/>%s' % (eol_, ))
     def exportAttributes(self, outfile, level, already_processed, namespace_='', name_='cell_angle_type'):
-        if self.units is not None and 'units' not in already_processed:
+        if self.units != "deg" and 'units' not in already_processed:
             already_processed.add('units')
             outfile.write(' units=%s' % (self.gds_encode(self.gds_format_string(quote_attrib(self.units), input_name='units')), ))
     def exportChildren(self, outfile, level, namespace_='', name_='cell_angle_type', fromsubclass_=False, pretty_print=True):
@@ -12314,7 +12314,7 @@ class starting_map_type(GeneratedsSuper):
             if not self.gds_validate_simple_patterns(
                     self.validate_emdb_id_type_patterns_, value):
                 warnings_.warn('Value "%s" does not match xsd pattern restrictions: %s' % (value.encode('utf-8'), self.validate_emdb_id_type_patterns_, ))
-    validate_emdb_id_type_patterns_ = [['^EMD-\\d{4,}$']]
+    validate_emdb_id_type_patterns_ = [[u'^EMD-\\d{4,}$']]
     def hasContent_(self):
         if (
             self.random_conical_tilt is not None or
@@ -12463,7 +12463,7 @@ class pdb_model_type(GeneratedsSuper):
             if not self.gds_validate_simple_patterns(
                     self.validate_pdb_code_type_patterns_, value):
                 warnings_.warn('Value "%s" does not match xsd pattern restrictions: %s' % (value.encode('utf-8'), self.validate_pdb_code_type_patterns_, ))
-    validate_pdb_code_type_patterns_ = [['^\\d[\\dA-Za-z]{3}$']]
+    validate_pdb_code_type_patterns_ = [[u'^\\d[\\dA-Za-z]{3}$']]
     def hasContent_(self):
         if (
             self.pdb_id is not None or
@@ -12572,14 +12572,14 @@ class chain_type(GeneratedsSuper):
             if not self.gds_validate_simple_patterns(
                     self.validate_chain_pdb_id_patterns_, value):
                 warnings_.warn('Value "%s" does not match xsd pattern restrictions: %s' % (value.encode('utf-8'), self.validate_chain_pdb_id_patterns_, ))
-    validate_chain_pdb_id_patterns_ = [['^\\d$|^[A-Za-z]$']]
+    validate_chain_pdb_id_patterns_ = [[u'^\\d$|^[A-Za-z]$']]
     def validate_residue_rangeType(self, value):
         # Validate type residue_rangeType, a restriction on xs:token.
         if value is not None and Validate_simpletypes_:
             if not self.gds_validate_simple_patterns(
                     self.validate_residue_rangeType_patterns_, value):
                 warnings_.warn('Value "%s" does not match xsd pattern restrictions: %s' % (value.encode('utf-8'), self.validate_residue_rangeType_patterns_, ))
-    validate_residue_rangeType_patterns_ = [['^\\d+-\\d+$']]
+    validate_residue_rangeType_patterns_ = [[u'^\\d+-\\d+$']]
     def hasContent_(self):
         if (
             self.chain_id or
@@ -14743,7 +14743,7 @@ class tomography_processing_type(base_image_processing_type):
 class map_type(GeneratedsSuper):
     subclass = None
     superclass = None
-    def __init__(self, format=None, size_kbytes=None, file=None, symmetry=None, data_type=None, dimensions=None, origin=None, spacing=None, cell=None, axis_order=None, statistics=None, pixel_spacing=None, contour_list=None, label=None, annotation_details=None, details=None):
+    def __init__(self, format='CCP4', size_kbytes=None, file=None, symmetry=None, data_type=None, dimensions=None, origin=None, spacing=None, cell=None, axis_order=None, statistics=None, pixel_spacing=None, contour_list=None, label=None, annotation_details=None, details=None):
         self.original_tagname_ = None
         self.format = _cast(None, format)
         self.size_kbytes = _cast(int, size_kbytes)
@@ -14812,7 +14812,7 @@ class map_type(GeneratedsSuper):
             if not self.gds_validate_simple_patterns(
                     self.validate_fileType_patterns_, value):
                 warnings_.warn('Value "%s" does not match xsd pattern restrictions: %s' % (value.encode('utf-8'), self.validate_fileType_patterns_, ))
-    validate_fileType_patterns_ = [['^emd_\\d{4,}([A-Za-z0-9_]*)\\.map(\\.gz$|^)$']]
+    validate_fileType_patterns_ = [[u'^emd_\\d{4,}([A-Za-z0-9_]*)\\.map(\\.gz$|^)$']]
     def validate_map_data_type(self, value):
         # Validate type map_data_type, a restriction on xs:string.
         if value is not None and Validate_simpletypes_:
@@ -14867,7 +14867,7 @@ class map_type(GeneratedsSuper):
         else:
             outfile.write('/>%s' % (eol_, ))
     def exportAttributes(self, outfile, level, already_processed, namespace_='', name_='map_type'):
-        if self.format is not None and 'format' not in already_processed:
+        if self.format != "CCP4" and 'format' not in already_processed:
             already_processed.add('format')
             outfile.write(' format=%s' % (self.gds_encode(self.gds_format_string(quote_attrib(self.format), input_name='format')), ))
         if self.size_kbytes is not None and 'size_kbytes' not in already_processed:
@@ -15253,7 +15253,7 @@ class map_statistics_type(GeneratedsSuper):
 class pixel_spacing_type(GeneratedsSuper):
     subclass = None
     superclass = None
-    def __init__(self, units=None, valueOf_=None):
+    def __init__(self, units='Å', valueOf_=None):
         self.original_tagname_ = None
         self.units = _cast(None, units)
         self.valueOf_ = valueOf_
@@ -15301,7 +15301,7 @@ class pixel_spacing_type(GeneratedsSuper):
         else:
             outfile.write('/>%s' % (eol_, ))
     def exportAttributes(self, outfile, level, already_processed, namespace_='', name_='pixel_spacing_type'):
-        if self.units is not None and 'units' not in already_processed:
+        if self.units != "Å" and 'units' not in already_processed:
             already_processed.add('units')
             outfile.write(' units=%s' % (self.gds_encode(self.gds_format_string(quote_attrib(self.units), input_name='units')), ))
     def exportChildren(self, outfile, level, namespace_='', name_='pixel_spacing_type', fromsubclass_=False, pretty_print=True):
@@ -15667,7 +15667,7 @@ class figure_type(GeneratedsSuper):
             if not self.gds_validate_simple_patterns(
                     self.validate_fileType44_patterns_, value):
                 warnings_.warn('Value "%s" does not match xsd pattern restrictions: %s' % (value.encode('utf-8'), self.validate_fileType44_patterns_, ))
-    validate_fileType44_patterns_ = [['^emd_\\d{4,}.+$']]
+    validate_fileType44_patterns_ = [[u'^emd_\\d{4,}.+$']]
     def hasContent_(self):
         if (
             self.file is not None or
@@ -15769,7 +15769,7 @@ class validation_type(GeneratedsSuper):
             if not self.gds_validate_simple_patterns(
                     self.validate_fileType45_patterns_, value):
                 warnings_.warn('Value "%s" does not match xsd pattern restrictions: %s' % (value.encode('utf-8'), self.validate_fileType45_patterns_, ))
-    validate_fileType45_patterns_ = [['^emd_\\d{4,}_fsc.xml$']]
+    validate_fileType45_patterns_ = [[u'^emd_\\d{4,}_fsc.xml$']]
     def hasContent_(self):
         if (
             self.file is not None or
@@ -17294,7 +17294,7 @@ class grant_supportType(GeneratedsSuper):
 class contact_authorType(contact_details_type):
     subclass = None
     superclass = contact_details_type
-    def __init__(self, role=None, title=None, first_name=None, middle_name=None, last_name=None, organization=None, street=None, town_or_city=None, state_or_province=None, country=None, post_or_zip_code=None, email=None, telephone=None, fax=None, private=None):
+    def __init__(self, role=None, title=None, first_name=None, middle_name=None, last_name=None, organization=None, street=None, town_or_city=None, state_or_province=None, country=None, post_or_zip_code=None, email=None, telephone=None, fax=None, private='true'):
         self.original_tagname_ = None
         super(contact_authorType, self).__init__(role, title, first_name, middle_name, last_name, organization, street, town_or_city, state_or_province, country, post_or_zip_code, email, telephone, fax, )
         self.private = _cast(None, private)
@@ -17341,7 +17341,7 @@ class contact_authorType(contact_details_type):
             outfile.write('/>%s' % (eol_, ))
     def exportAttributes(self, outfile, level, already_processed, namespace_='', name_='contact_authorType'):
         super(contact_authorType, self).exportAttributes(outfile, level, already_processed, namespace_, name_='contact_authorType')
-        if self.private is not None and 'private' not in already_processed:
+        if self.private != "true" and 'private' not in already_processed:
             already_processed.add('private')
             outfile.write(' private=%s' % (self.gds_encode(self.gds_format_string(quote_attrib(self.private), input_name='private')), ))
     def exportChildren(self, outfile, level, namespace_='', name_='contact_authorType', fromsubclass_=False, pretty_print=True):
@@ -17396,7 +17396,7 @@ class authors_listType(GeneratedsSuper):
             if not self.gds_validate_simple_patterns(
                     self.validate_author_type_patterns_, value):
                 warnings_.warn('Value "%s" does not match xsd pattern restrictions: %s' % (value.encode('utf-8'), self.validate_author_type_patterns_, ))
-    validate_author_type_patterns_ = [["^[A-Za-z '\\-]+ [A-Z\\-]+$"]]
+    validate_author_type_patterns_ = [[u"^[A-Za-z '\\-]+ [A-Z\\-]+$"]]
     def hasContent_(self):
         if (
             self.author
@@ -17540,7 +17540,7 @@ class statusType(version_type):
 class annotatorType(GeneratedsSuper):
     subclass = None
     superclass = None
-    def __init__(self, private=None, valueOf_=None):
+    def __init__(self, private='true', valueOf_=None):
         self.original_tagname_ = None
         self.private = _cast(None, private)
         self.valueOf_ = valueOf_
@@ -17588,7 +17588,7 @@ class annotatorType(GeneratedsSuper):
         else:
             outfile.write('/>%s' % (eol_, ))
     def exportAttributes(self, outfile, level, already_processed, namespace_='', name_='annotatorType'):
-        if self.private is not None and 'private' not in already_processed:
+        if self.private != "true" and 'private' not in already_processed:
             already_processed.add('private')
             outfile.write(' private=%s' % (self.gds_encode(self.gds_format_string(quote_attrib(self.private), input_name='private')), ))
     def exportChildren(self, outfile, level, namespace_='', name_='annotatorType', fromsubclass_=False, pretty_print=True):
@@ -19158,7 +19158,7 @@ class virus_shellType(GeneratedsSuper):
 class diameterType(GeneratedsSuper):
     subclass = None
     superclass = None
-    def __init__(self, units=None, valueOf_=None):
+    def __init__(self, units='Å', valueOf_=None):
         self.original_tagname_ = None
         self.units = _cast(None, units)
         self.valueOf_ = valueOf_
@@ -19206,7 +19206,7 @@ class diameterType(GeneratedsSuper):
         else:
             outfile.write('/>%s' % (eol_, ))
     def exportAttributes(self, outfile, level, already_processed, namespace_='', name_='diameterType'):
-        if self.units is not None and 'units' not in already_processed:
+        if self.units != "Å" and 'units' not in already_processed:
             already_processed.add('units')
             outfile.write(' units=%s' % (self.gds_encode(self.gds_format_string(quote_attrib(self.units), input_name='units')), ))
     def exportChildren(self, outfile, level, namespace_='', name_='diameterType', fromsubclass_=False, pretty_print=True):
@@ -19366,7 +19366,7 @@ class discrepancy_listType(GeneratedsSuper):
             if not self.gds_validate_simple_patterns(
                     self.validate_discrepancyType_patterns_, value):
                 warnings_.warn('Value "%s" does not match xsd pattern restrictions: %s' % (value.encode('utf-8'), self.validate_discrepancyType_patterns_, ))
-    validate_discrepancyType_patterns_ = [['^[ ARNDCEQGHILKMFPSTWYVUOBZJX\\(\\)]\\d+[ ARNDCEQGHILKMFPSTWYVUOBZJX\\(\\)]$']]
+    validate_discrepancyType_patterns_ = [[u'^[ ARNDCEQGHILKMFPSTWYVUOBZJX\\(\\)]\\d+[ ARNDCEQGHILKMFPSTWYVUOBZJX\\(\\)]$']]
     def hasContent_(self):
         if (
             self.discrepancy
@@ -19722,7 +19722,7 @@ class discrepancy_listType9(GeneratedsSuper):
             if not self.gds_validate_simple_patterns(
                     self.validate_discrepancyType10_patterns_, value):
                 warnings_.warn('Value "%s" does not match xsd pattern restrictions: %s' % (value.encode('utf-8'), self.validate_discrepancyType10_patterns_, ))
-    validate_discrepancyType10_patterns_ = [['^[AGCTRYSWKMBDHVN\\.-]\\d+[AGCTRYSWKMBDHVN\\.-]$']]
+    validate_discrepancyType10_patterns_ = [[u'^[AGCTRYSWKMBDHVN\\.-]\\d+[AGCTRYSWKMBDHVN\\.-]$']]
     def hasContent_(self):
         if (
             self.discrepancy
@@ -20007,7 +20007,7 @@ class discrepancy_listType13(GeneratedsSuper):
             if not self.gds_validate_simple_patterns(
                     self.validate_discrepancyType14_patterns_, value):
                 warnings_.warn('Value "%s" does not match xsd pattern restrictions: %s' % (value.encode('utf-8'), self.validate_discrepancyType14_patterns_, ))
-    validate_discrepancyType14_patterns_ = [['^[ARNDCEQGHILKMFPSTWYVUOBZJX]\\d+[ARNDCEQGHILKMFPSTWYVUOBZJX]$']]
+    validate_discrepancyType14_patterns_ = [[u'^[ARNDCEQGHILKMFPSTWYVUOBZJX]\\d+[ARNDCEQGHILKMFPSTWYVUOBZJX]$']]
     def hasContent_(self):
         if (
             self.discrepancy
@@ -20575,7 +20575,7 @@ class discrepancy_listType17(GeneratedsSuper):
             if not self.gds_validate_simple_patterns(
                     self.validate_discrepancyType18_patterns_, value):
                 warnings_.warn('Value "%s" does not match xsd pattern restrictions: %s' % (value.encode('utf-8'), self.validate_discrepancyType18_patterns_, ))
-    validate_discrepancyType18_patterns_ = [['^[ ARNDCEQGHILKMFPSTWYVUOBZJX\\(\\)]\\d+[ ARNDCEQGHILKMFPSTWYVUOBZJX\\(\\)]$']]
+    validate_discrepancyType18_patterns_ = [[u'^[ ARNDCEQGHILKMFPSTWYVUOBZJX\\(\\)]\\d+[ ARNDCEQGHILKMFPSTWYVUOBZJX\\(\\)]$']]
     def hasContent_(self):
         if (
             self.discrepancy
@@ -21395,7 +21395,7 @@ class shadowingType(GeneratedsSuper):
 class angleType(GeneratedsSuper):
     subclass = None
     superclass = None
-    def __init__(self, units=None, valueOf_=None):
+    def __init__(self, units='deg', valueOf_=None):
         self.original_tagname_ = None
         self.units = _cast(None, units)
         self.valueOf_ = valueOf_
@@ -21443,7 +21443,7 @@ class angleType(GeneratedsSuper):
         else:
             outfile.write('/>%s' % (eol_, ))
     def exportAttributes(self, outfile, level, already_processed, namespace_='', name_='angleType'):
-        if self.units is not None and 'units' not in already_processed:
+        if self.units != "deg" and 'units' not in already_processed:
             already_processed.add('units')
             outfile.write(' units=%s' % (self.gds_encode(self.gds_format_string(quote_attrib(self.units), input_name='units')), ))
     def exportChildren(self, outfile, level, namespace_='', name_='angleType', fromsubclass_=False, pretty_print=True):
@@ -21470,7 +21470,7 @@ class angleType(GeneratedsSuper):
 class thicknessType(GeneratedsSuper):
     subclass = None
     superclass = None
-    def __init__(self, units=None, valueOf_=None):
+    def __init__(self, units='nm', valueOf_=None):
         self.original_tagname_ = None
         self.units = _cast(None, units)
         self.valueOf_ = valueOf_
@@ -21518,7 +21518,7 @@ class thicknessType(GeneratedsSuper):
         else:
             outfile.write('/>%s' % (eol_, ))
     def exportAttributes(self, outfile, level, already_processed, namespace_='', name_='thicknessType'):
-        if self.units is not None and 'units' not in already_processed:
+        if self.units != "nm" and 'units' not in already_processed:
             already_processed.add('units')
             outfile.write(' units=%s' % (self.gds_encode(self.gds_format_string(quote_attrib(self.units), input_name='units')), ))
     def exportChildren(self, outfile, level, namespace_='', name_='thicknessType', fromsubclass_=False, pretty_print=True):
@@ -21620,7 +21620,7 @@ class concentrationType25(GeneratedsSuper):
 class film_thicknessType(GeneratedsSuper):
     subclass = None
     superclass = None
-    def __init__(self, units=None, valueOf_=None):
+    def __init__(self, units='nm', valueOf_=None):
         self.original_tagname_ = None
         self.units = _cast(None, units)
         self.valueOf_ = valueOf_
@@ -21668,7 +21668,7 @@ class film_thicknessType(GeneratedsSuper):
         else:
             outfile.write('/>%s' % (eol_, ))
     def exportAttributes(self, outfile, level, already_processed, namespace_='', name_='film_thicknessType'):
-        if self.units is not None and 'units' not in already_processed:
+        if self.units != "nm" and 'units' not in already_processed:
             already_processed.add('units')
             outfile.write(' units=%s' % (self.gds_encode(self.gds_format_string(quote_attrib(self.units), input_name='units')), ))
     def exportChildren(self, outfile, level, namespace_='', name_='film_thicknessType', fromsubclass_=False, pretty_print=True):
@@ -21695,7 +21695,7 @@ class film_thicknessType(GeneratedsSuper):
 class timeType(GeneratedsSuper):
     subclass = None
     superclass = None
-    def __init__(self, units=None, valueOf_=None):
+    def __init__(self, units='s', valueOf_=None):
         self.original_tagname_ = None
         self.units = _cast(None, units)
         self.valueOf_ = valueOf_
@@ -21743,7 +21743,7 @@ class timeType(GeneratedsSuper):
         else:
             outfile.write('/>%s' % (eol_, ))
     def exportAttributes(self, outfile, level, already_processed, namespace_='', name_='timeType'):
-        if self.units is not None and 'units' not in already_processed:
+        if self.units != "s" and 'units' not in already_processed:
             already_processed.add('units')
             outfile.write(' units=%s' % (self.gds_encode(self.gds_format_string(quote_attrib(self.units), input_name='units')), ))
     def exportChildren(self, outfile, level, namespace_='', name_='timeType', fromsubclass_=False, pretty_print=True):
@@ -21770,7 +21770,7 @@ class timeType(GeneratedsSuper):
 class pressureType(GeneratedsSuper):
     subclass = None
     superclass = None
-    def __init__(self, units=None, valueOf_=None):
+    def __init__(self, units='kPa', valueOf_=None):
         self.original_tagname_ = None
         self.units = _cast(None, units)
         self.valueOf_ = valueOf_
@@ -21818,7 +21818,7 @@ class pressureType(GeneratedsSuper):
         else:
             outfile.write('/>%s' % (eol_, ))
     def exportAttributes(self, outfile, level, already_processed, namespace_='', name_='pressureType'):
-        if self.units is not None and 'units' not in already_processed:
+        if self.units != "kPa" and 'units' not in already_processed:
             already_processed.add('units')
             outfile.write(' units=%s' % (self.gds_encode(self.gds_format_string(quote_attrib(self.units), input_name='units')), ))
     def exportChildren(self, outfile, level, namespace_='', name_='pressureType', fromsubclass_=False, pretty_print=True):
@@ -21845,7 +21845,7 @@ class pressureType(GeneratedsSuper):
 class chamber_humidityType(GeneratedsSuper):
     subclass = None
     superclass = None
-    def __init__(self, units=None, valueOf_=None):
+    def __init__(self, units='percentage', valueOf_=None):
         self.original_tagname_ = None
         self.units = _cast(None, units)
         self.valueOf_ = valueOf_
@@ -21893,7 +21893,7 @@ class chamber_humidityType(GeneratedsSuper):
         else:
             outfile.write('/>%s' % (eol_, ))
     def exportAttributes(self, outfile, level, already_processed, namespace_='', name_='chamber_humidityType'):
-        if self.units is not None and 'units' not in already_processed:
+        if self.units != "percentage" and 'units' not in already_processed:
             already_processed.add('units')
             outfile.write(' units=%s' % (self.gds_encode(self.gds_format_string(quote_attrib(self.units), input_name='units')), ))
     def exportChildren(self, outfile, level, namespace_='', name_='chamber_humidityType', fromsubclass_=False, pretty_print=True):
@@ -21920,7 +21920,7 @@ class chamber_humidityType(GeneratedsSuper):
 class chamber_temperatureType(GeneratedsSuper):
     subclass = None
     superclass = None
-    def __init__(self, units=None, valueOf_=None):
+    def __init__(self, units='K', valueOf_=None):
         self.original_tagname_ = None
         self.units = _cast(None, units)
         self.valueOf_ = valueOf_
@@ -21968,7 +21968,7 @@ class chamber_temperatureType(GeneratedsSuper):
         else:
             outfile.write('/>%s' % (eol_, ))
     def exportAttributes(self, outfile, level, already_processed, namespace_='', name_='chamber_temperatureType'):
-        if self.units is not None and 'units' not in already_processed:
+        if self.units != "K" and 'units' not in already_processed:
             already_processed.add('units')
             outfile.write(' units=%s' % (self.gds_encode(self.gds_format_string(quote_attrib(self.units), input_name='units')), ))
     def exportChildren(self, outfile, level, namespace_='', name_='chamber_temperatureType', fromsubclass_=False, pretty_print=True):
@@ -22839,7 +22839,7 @@ class specimen_preparationsType(GeneratedsSuper):
 class acceleration_voltageType(GeneratedsSuper):
     subclass = None
     superclass = None
-    def __init__(self, units=None, valueOf_=None):
+    def __init__(self, units='kV', valueOf_=None):
         self.original_tagname_ = None
         self.units = _cast(None, units)
         self.valueOf_ = valueOf_
@@ -22887,7 +22887,7 @@ class acceleration_voltageType(GeneratedsSuper):
         else:
             outfile.write('/>%s' % (eol_, ))
     def exportAttributes(self, outfile, level, already_processed, namespace_='', name_='acceleration_voltageType'):
-        if self.units is not None and 'units' not in already_processed:
+        if self.units != "kV" and 'units' not in already_processed:
             already_processed.add('units')
             outfile.write(' units=%s' % (self.gds_encode(self.gds_format_string(quote_attrib(self.units), input_name='units')), ))
     def exportChildren(self, outfile, level, namespace_='', name_='acceleration_voltageType', fromsubclass_=False, pretty_print=True):
@@ -22914,7 +22914,7 @@ class acceleration_voltageType(GeneratedsSuper):
 class c2_aperture_diameterType(GeneratedsSuper):
     subclass = None
     superclass = None
-    def __init__(self, units=None, valueOf_=None):
+    def __init__(self, units='µm', valueOf_=None):
         self.original_tagname_ = None
         self.units = _cast(None, units)
         self.valueOf_ = valueOf_
@@ -22962,7 +22962,7 @@ class c2_aperture_diameterType(GeneratedsSuper):
         else:
             outfile.write('/>%s' % (eol_, ))
     def exportAttributes(self, outfile, level, already_processed, namespace_='', name_='c2_aperture_diameterType'):
-        if self.units is not None and 'units' not in already_processed:
+        if self.units != "µm" and 'units' not in already_processed:
             already_processed.add('units')
             outfile.write(' units=%s' % (self.gds_encode(self.gds_format_string(quote_attrib(self.units), input_name='units')), ))
     def exportChildren(self, outfile, level, namespace_='', name_='c2_aperture_diameterType', fromsubclass_=False, pretty_print=True):
@@ -22989,7 +22989,7 @@ class c2_aperture_diameterType(GeneratedsSuper):
 class nominal_csType(GeneratedsSuper):
     subclass = None
     superclass = None
-    def __init__(self, units=None, valueOf_=None):
+    def __init__(self, units='mm', valueOf_=None):
         self.original_tagname_ = None
         self.units = _cast(None, units)
         self.valueOf_ = valueOf_
@@ -23037,7 +23037,7 @@ class nominal_csType(GeneratedsSuper):
         else:
             outfile.write('/>%s' % (eol_, ))
     def exportAttributes(self, outfile, level, already_processed, namespace_='', name_='nominal_csType'):
-        if self.units is not None and 'units' not in already_processed:
+        if self.units != "mm" and 'units' not in already_processed:
             already_processed.add('units')
             outfile.write(' units=%s' % (self.gds_encode(self.gds_format_string(quote_attrib(self.units), input_name='units')), ))
     def exportChildren(self, outfile, level, namespace_='', name_='nominal_csType', fromsubclass_=False, pretty_print=True):
@@ -23064,7 +23064,7 @@ class nominal_csType(GeneratedsSuper):
 class nominal_defocus_minType(GeneratedsSuper):
     subclass = None
     superclass = None
-    def __init__(self, units=None, valueOf_=None):
+    def __init__(self, units='µm', valueOf_=None):
         self.original_tagname_ = None
         self.units = _cast(None, units)
         self.valueOf_ = valueOf_
@@ -23112,7 +23112,7 @@ class nominal_defocus_minType(GeneratedsSuper):
         else:
             outfile.write('/>%s' % (eol_, ))
     def exportAttributes(self, outfile, level, already_processed, namespace_='', name_='nominal_defocus_minType'):
-        if self.units is not None and 'units' not in already_processed:
+        if self.units != "µm" and 'units' not in already_processed:
             already_processed.add('units')
             outfile.write(' units=%s' % (self.gds_encode(self.gds_format_string(quote_attrib(self.units), input_name='units')), ))
     def exportChildren(self, outfile, level, namespace_='', name_='nominal_defocus_minType', fromsubclass_=False, pretty_print=True):
@@ -23139,7 +23139,7 @@ class nominal_defocus_minType(GeneratedsSuper):
 class calibrated_defocus_minType(GeneratedsSuper):
     subclass = None
     superclass = None
-    def __init__(self, units=None, valueOf_=None):
+    def __init__(self, units='µm', valueOf_=None):
         self.original_tagname_ = None
         self.units = _cast(None, units)
         self.valueOf_ = valueOf_
@@ -23187,7 +23187,7 @@ class calibrated_defocus_minType(GeneratedsSuper):
         else:
             outfile.write('/>%s' % (eol_, ))
     def exportAttributes(self, outfile, level, already_processed, namespace_='', name_='calibrated_defocus_minType'):
-        if self.units is not None and 'units' not in already_processed:
+        if self.units != "µm" and 'units' not in already_processed:
             already_processed.add('units')
             outfile.write(' units=%s' % (self.gds_encode(self.gds_format_string(quote_attrib(self.units), input_name='units')), ))
     def exportChildren(self, outfile, level, namespace_='', name_='calibrated_defocus_minType', fromsubclass_=False, pretty_print=True):
@@ -23214,7 +23214,7 @@ class calibrated_defocus_minType(GeneratedsSuper):
 class nominal_defocus_maxType(GeneratedsSuper):
     subclass = None
     superclass = None
-    def __init__(self, units=None, valueOf_=None):
+    def __init__(self, units='µm', valueOf_=None):
         self.original_tagname_ = None
         self.units = _cast(None, units)
         self.valueOf_ = valueOf_
@@ -23262,7 +23262,7 @@ class nominal_defocus_maxType(GeneratedsSuper):
         else:
             outfile.write('/>%s' % (eol_, ))
     def exportAttributes(self, outfile, level, already_processed, namespace_='', name_='nominal_defocus_maxType'):
-        if self.units is not None and 'units' not in already_processed:
+        if self.units != "µm" and 'units' not in already_processed:
             already_processed.add('units')
             outfile.write(' units=%s' % (self.gds_encode(self.gds_format_string(quote_attrib(self.units), input_name='units')), ))
     def exportChildren(self, outfile, level, namespace_='', name_='nominal_defocus_maxType', fromsubclass_=False, pretty_print=True):
@@ -23289,7 +23289,7 @@ class nominal_defocus_maxType(GeneratedsSuper):
 class calibrated_defocus_maxType(GeneratedsSuper):
     subclass = None
     superclass = None
-    def __init__(self, units=None, valueOf_=None):
+    def __init__(self, units='µm', valueOf_=None):
         self.original_tagname_ = None
         self.units = _cast(None, units)
         self.valueOf_ = valueOf_
@@ -23337,7 +23337,7 @@ class calibrated_defocus_maxType(GeneratedsSuper):
         else:
             outfile.write('/>%s' % (eol_, ))
     def exportAttributes(self, outfile, level, already_processed, namespace_='', name_='calibrated_defocus_maxType'):
-        if self.units is not None and 'units' not in already_processed:
+        if self.units != "µm" and 'units' not in already_processed:
             already_processed.add('units')
             outfile.write(' units=%s' % (self.gds_encode(self.gds_format_string(quote_attrib(self.units), input_name='units')), ))
     def exportChildren(self, outfile, level, namespace_='', name_='calibrated_defocus_maxType', fromsubclass_=False, pretty_print=True):
@@ -24627,7 +24627,7 @@ class dimensionsType(GeneratedsSuper):
 class widthType(GeneratedsSuper):
     subclass = None
     superclass = None
-    def __init__(self, units=None, valueOf_=None):
+    def __init__(self, units='pixel', valueOf_=None):
         self.original_tagname_ = None
         self.units = _cast(None, units)
         self.valueOf_ = valueOf_
@@ -24675,7 +24675,7 @@ class widthType(GeneratedsSuper):
         else:
             outfile.write('/>%s' % (eol_, ))
     def exportAttributes(self, outfile, level, already_processed, namespace_='', name_='widthType'):
-        if self.units is not None and 'units' not in already_processed:
+        if self.units != "pixel" and 'units' not in already_processed:
             already_processed.add('units')
             outfile.write(' units=%s' % (self.gds_encode(self.gds_format_string(quote_attrib(self.units), input_name='units')), ))
     def exportChildren(self, outfile, level, namespace_='', name_='widthType', fromsubclass_=False, pretty_print=True):
@@ -24702,7 +24702,7 @@ class widthType(GeneratedsSuper):
 class heightType(GeneratedsSuper):
     subclass = None
     superclass = None
-    def __init__(self, units=None, valueOf_=None):
+    def __init__(self, units='pixel', valueOf_=None):
         self.original_tagname_ = None
         self.units = _cast(None, units)
         self.valueOf_ = valueOf_
@@ -24750,7 +24750,7 @@ class heightType(GeneratedsSuper):
         else:
             outfile.write('/>%s' % (eol_, ))
     def exportAttributes(self, outfile, level, already_processed, namespace_='', name_='heightType'):
-        if self.units is not None and 'units' not in already_processed:
+        if self.units != "pixel" and 'units' not in already_processed:
             already_processed.add('units')
             outfile.write(' units=%s' % (self.gds_encode(self.gds_format_string(quote_attrib(self.units), input_name='units')), ))
     def exportChildren(self, outfile, level, namespace_='', name_='heightType', fromsubclass_=False, pretty_print=True):
@@ -24777,7 +24777,7 @@ class heightType(GeneratedsSuper):
 class sampling_intervalType(GeneratedsSuper):
     subclass = None
     superclass = None
-    def __init__(self, units=None, valueOf_=None):
+    def __init__(self, units='µm', valueOf_=None):
         self.original_tagname_ = None
         self.units = _cast(None, units)
         self.valueOf_ = valueOf_
@@ -24825,7 +24825,7 @@ class sampling_intervalType(GeneratedsSuper):
         else:
             outfile.write('/>%s' % (eol_, ))
     def exportAttributes(self, outfile, level, already_processed, namespace_='', name_='sampling_intervalType'):
-        if self.units is not None and 'units' not in already_processed:
+        if self.units != "µm" and 'units' not in already_processed:
             already_processed.add('units')
             outfile.write(' units=%s' % (self.gds_encode(self.gds_format_string(quote_attrib(self.units), input_name='units')), ))
     def exportChildren(self, outfile, level, namespace_='', name_='sampling_intervalType', fromsubclass_=False, pretty_print=True):
@@ -24852,7 +24852,7 @@ class sampling_intervalType(GeneratedsSuper):
 class average_exposure_timeType(GeneratedsSuper):
     subclass = None
     superclass = None
-    def __init__(self, units=None, valueOf_=None):
+    def __init__(self, units='s', valueOf_=None):
         self.original_tagname_ = None
         self.units = _cast(None, units)
         self.valueOf_ = valueOf_
@@ -24900,7 +24900,7 @@ class average_exposure_timeType(GeneratedsSuper):
         else:
             outfile.write('/>%s' % (eol_, ))
     def exportAttributes(self, outfile, level, already_processed, namespace_='', name_='average_exposure_timeType'):
-        if self.units is not None and 'units' not in already_processed:
+        if self.units != "s" and 'units' not in already_processed:
             already_processed.add('units')
             outfile.write(' units=%s' % (self.gds_encode(self.gds_format_string(quote_attrib(self.units), input_name='units')), ))
     def exportChildren(self, outfile, level, namespace_='', name_='average_exposure_timeType', fromsubclass_=False, pretty_print=True):
@@ -24927,7 +24927,7 @@ class average_exposure_timeType(GeneratedsSuper):
 class average_electron_dose_per_imageType(GeneratedsSuper):
     subclass = None
     superclass = None
-    def __init__(self, units=None, valueOf_=None):
+    def __init__(self, units='e/Å^2', valueOf_=None):
         self.original_tagname_ = None
         self.units = _cast(None, units)
         self.valueOf_ = valueOf_
@@ -24975,7 +24975,7 @@ class average_electron_dose_per_imageType(GeneratedsSuper):
         else:
             outfile.write('/>%s' % (eol_, ))
     def exportAttributes(self, outfile, level, already_processed, namespace_='', name_='average_electron_dose_per_imageType'):
-        if self.units is not None and 'units' not in already_processed:
+        if self.units != "e/Å^2" and 'units' not in already_processed:
             already_processed.add('units')
             outfile.write(' units=%s' % (self.gds_encode(self.gds_format_string(quote_attrib(self.units), input_name='units')), ))
     def exportChildren(self, outfile, level, namespace_='', name_='average_electron_dose_per_imageType', fromsubclass_=False, pretty_print=True):
@@ -25113,7 +25113,7 @@ class energy_filterType(GeneratedsSuper):
 class slit_widthType(GeneratedsSuper):
     subclass = None
     superclass = None
-    def __init__(self, units=None, valueOf_=None):
+    def __init__(self, units='eV', valueOf_=None):
         self.original_tagname_ = None
         self.units = _cast(None, units)
         self.valueOf_ = valueOf_
@@ -25161,7 +25161,7 @@ class slit_widthType(GeneratedsSuper):
         else:
             outfile.write('/>%s' % (eol_, ))
     def exportAttributes(self, outfile, level, already_processed, namespace_='', name_='slit_widthType'):
-        if self.units is not None and 'units' not in already_processed:
+        if self.units != "eV" and 'units' not in already_processed:
             already_processed.add('units')
             outfile.write(' units=%s' % (self.gds_encode(self.gds_format_string(quote_attrib(self.units), input_name='units')), ))
     def exportChildren(self, outfile, level, namespace_='', name_='slit_widthType', fromsubclass_=False, pretty_print=True):
@@ -25188,7 +25188,7 @@ class slit_widthType(GeneratedsSuper):
 class lower_energy_thresholdType(GeneratedsSuper):
     subclass = None
     superclass = None
-    def __init__(self, units=None, valueOf_=None):
+    def __init__(self, units='eV', valueOf_=None):
         self.original_tagname_ = None
         self.units = _cast(None, units)
         self.valueOf_ = valueOf_
@@ -25236,7 +25236,7 @@ class lower_energy_thresholdType(GeneratedsSuper):
         else:
             outfile.write('/>%s' % (eol_, ))
     def exportAttributes(self, outfile, level, already_processed, namespace_='', name_='lower_energy_thresholdType'):
-        if self.units is not None and 'units' not in already_processed:
+        if self.units != "eV" and 'units' not in already_processed:
             already_processed.add('units')
             outfile.write(' units=%s' % (self.gds_encode(self.gds_format_string(quote_attrib(self.units), input_name='units')), ))
     def exportChildren(self, outfile, level, namespace_='', name_='lower_energy_thresholdType', fromsubclass_=False, pretty_print=True):
@@ -25263,7 +25263,7 @@ class lower_energy_thresholdType(GeneratedsSuper):
 class upper_energy_thresholdType(GeneratedsSuper):
     subclass = None
     superclass = None
-    def __init__(self, units=None, valueOf_=None):
+    def __init__(self, units='eV', valueOf_=None):
         self.original_tagname_ = None
         self.units = _cast(None, units)
         self.valueOf_ = valueOf_
@@ -25311,7 +25311,7 @@ class upper_energy_thresholdType(GeneratedsSuper):
         else:
             outfile.write('/>%s' % (eol_, ))
     def exportAttributes(self, outfile, level, already_processed, namespace_='', name_='upper_energy_thresholdType'):
-        if self.units is not None and 'units' not in already_processed:
+        if self.units != "eV" and 'units' not in already_processed:
             already_processed.add('units')
             outfile.write(' units=%s' % (self.gds_encode(self.gds_format_string(quote_attrib(self.units), input_name='units')), ))
     def exportChildren(self, outfile, level, namespace_='', name_='upper_energy_thresholdType', fromsubclass_=False, pretty_print=True):
@@ -25338,7 +25338,7 @@ class upper_energy_thresholdType(GeneratedsSuper):
 class camera_lengthType(GeneratedsSuper):
     subclass = None
     superclass = None
-    def __init__(self, units=None, valueOf_=None):
+    def __init__(self, units='mm', valueOf_=None):
         self.original_tagname_ = None
         self.units = _cast(None, units)
         self.valueOf_ = valueOf_
@@ -25386,7 +25386,7 @@ class camera_lengthType(GeneratedsSuper):
         else:
             outfile.write('/>%s' % (eol_, ))
     def exportAttributes(self, outfile, level, already_processed, namespace_='', name_='camera_lengthType'):
-        if self.units is not None and 'units' not in already_processed:
+        if self.units != "mm" and 'units' not in already_processed:
             already_processed.add('units')
             outfile.write(' units=%s' % (self.gds_encode(self.gds_format_string(quote_attrib(self.units), input_name='units')), ))
     def exportChildren(self, outfile, level, namespace_='', name_='camera_lengthType', fromsubclass_=False, pretty_print=True):
@@ -25588,7 +25588,7 @@ class axis2Type(axis_type):
 class axis_rotationType(GeneratedsSuper):
     subclass = None
     superclass = None
-    def __init__(self, units=None, valueOf_=None):
+    def __init__(self, units='deg', valueOf_=None):
         self.original_tagname_ = None
         self.units = _cast(None, units)
         self.valueOf_ = valueOf_
@@ -25636,7 +25636,7 @@ class axis_rotationType(GeneratedsSuper):
         else:
             outfile.write('/>%s' % (eol_, ))
     def exportAttributes(self, outfile, level, already_processed, namespace_='', name_='axis_rotationType'):
-        if self.units is not None and 'units' not in already_processed:
+        if self.units != "deg" and 'units' not in already_processed:
             already_processed.add('units')
             outfile.write(' units=%s' % (self.gds_encode(self.gds_format_string(quote_attrib(self.units), input_name='units')), ))
     def exportChildren(self, outfile, level, namespace_='', name_='axis_rotationType', fromsubclass_=False, pretty_print=True):
@@ -25663,7 +25663,7 @@ class axis_rotationType(GeneratedsSuper):
 class min_angleType(GeneratedsSuper):
     subclass = None
     superclass = None
-    def __init__(self, units=None, valueOf_=None):
+    def __init__(self, units='deg', valueOf_=None):
         self.original_tagname_ = None
         self.units = _cast(None, units)
         self.valueOf_ = valueOf_
@@ -25711,7 +25711,7 @@ class min_angleType(GeneratedsSuper):
         else:
             outfile.write('/>%s' % (eol_, ))
     def exportAttributes(self, outfile, level, already_processed, namespace_='', name_='min_angleType'):
-        if self.units is not None and 'units' not in already_processed:
+        if self.units != "deg" and 'units' not in already_processed:
             already_processed.add('units')
             outfile.write(' units=%s' % (self.gds_encode(self.gds_format_string(quote_attrib(self.units), input_name='units')), ))
     def exportChildren(self, outfile, level, namespace_='', name_='min_angleType', fromsubclass_=False, pretty_print=True):
@@ -25737,7 +25737,7 @@ class min_angleType(GeneratedsSuper):
 class max_angleType(GeneratedsSuper):
     subclass = None
     superclass = None
-    def __init__(self, units=None, valueOf_=None):
+    def __init__(self, units='deg', valueOf_=None):
         self.original_tagname_ = None
         self.units = _cast(None, units)
         self.valueOf_ = valueOf_
@@ -25785,7 +25785,7 @@ class max_angleType(GeneratedsSuper):
         else:
             outfile.write('/>%s' % (eol_, ))
     def exportAttributes(self, outfile, level, already_processed, namespace_='', name_='max_angleType'):
-        if self.units is not None and 'units' not in already_processed:
+        if self.units != "deg" and 'units' not in already_processed:
             already_processed.add('units')
             outfile.write(' units=%s' % (self.gds_encode(self.gds_format_string(quote_attrib(self.units), input_name='units')), ))
     def exportChildren(self, outfile, level, namespace_='', name_='max_angleType', fromsubclass_=False, pretty_print=True):
@@ -25811,7 +25811,7 @@ class max_angleType(GeneratedsSuper):
 class angle_incrementType(GeneratedsSuper):
     subclass = None
     superclass = None
-    def __init__(self, units=None, valueOf_=None):
+    def __init__(self, units='deg', valueOf_=None):
         self.original_tagname_ = None
         self.units = _cast(None, units)
         self.valueOf_ = valueOf_
@@ -25859,7 +25859,7 @@ class angle_incrementType(GeneratedsSuper):
         else:
             outfile.write('/>%s' % (eol_, ))
     def exportAttributes(self, outfile, level, already_processed, namespace_='', name_='angle_incrementType'):
-        if self.units is not None and 'units' not in already_processed:
+        if self.units != "deg" and 'units' not in already_processed:
             already_processed.add('units')
             outfile.write(' units=%s' % (self.gds_encode(self.gds_format_string(quote_attrib(self.units), input_name='units')), ))
     def exportChildren(self, outfile, level, namespace_='', name_='angle_incrementType', fromsubclass_=False, pretty_print=True):
@@ -25885,7 +25885,7 @@ class angle_incrementType(GeneratedsSuper):
 class delta_zType(GeneratedsSuper):
     subclass = None
     superclass = None
-    def __init__(self, units=None, valueOf_=None):
+    def __init__(self, units='Å', valueOf_=None):
         self.original_tagname_ = None
         self.units = _cast(None, units)
         self.valueOf_ = valueOf_
@@ -25933,7 +25933,7 @@ class delta_zType(GeneratedsSuper):
         else:
             outfile.write('/>%s' % (eol_, ))
     def exportAttributes(self, outfile, level, already_processed, namespace_='', name_='delta_zType'):
-        if self.units is not None and 'units' not in already_processed:
+        if self.units != "Å" and 'units' not in already_processed:
             already_processed.add('units')
             outfile.write(' units=%s' % (self.gds_encode(self.gds_format_string(quote_attrib(self.units), input_name='units')), ))
     def exportChildren(self, outfile, level, namespace_='', name_='delta_zType', fromsubclass_=False, pretty_print=True):
@@ -25960,7 +25960,7 @@ class delta_zType(GeneratedsSuper):
 class delta_phiType(GeneratedsSuper):
     subclass = None
     superclass = None
-    def __init__(self, units=None, valueOf_=None):
+    def __init__(self, units='deg', valueOf_=None):
         self.original_tagname_ = None
         self.units = _cast(None, units)
         self.valueOf_ = valueOf_
@@ -26008,7 +26008,7 @@ class delta_phiType(GeneratedsSuper):
         else:
             outfile.write('/>%s' % (eol_, ))
     def exportAttributes(self, outfile, level, already_processed, namespace_='', name_='delta_phiType'):
-        if self.units is not None and 'units' not in already_processed:
+        if self.units != "deg" and 'units' not in already_processed:
             already_processed.add('units')
             outfile.write(' units=%s' % (self.gds_encode(self.gds_format_string(quote_attrib(self.units), input_name='units')), ))
     def exportChildren(self, outfile, level, namespace_='', name_='delta_phiType', fromsubclass_=False, pretty_print=True):
@@ -26157,7 +26157,7 @@ class spatial_filteringType(GeneratedsSuper):
 class low_frequency_cutoffType(GeneratedsSuper):
     subclass = None
     superclass = None
-    def __init__(self, units=None, valueOf_=None):
+    def __init__(self, units='1/Å', valueOf_=None):
         self.original_tagname_ = None
         self.units = _cast(None, units)
         self.valueOf_ = valueOf_
@@ -26205,7 +26205,7 @@ class low_frequency_cutoffType(GeneratedsSuper):
         else:
             outfile.write('/>%s' % (eol_, ))
     def exportAttributes(self, outfile, level, already_processed, namespace_='', name_='low_frequency_cutoffType'):
-        if self.units is not None and 'units' not in already_processed:
+        if self.units != "1/Å" and 'units' not in already_processed:
             already_processed.add('units')
             outfile.write(' units=%s' % (self.gds_encode(self.gds_format_string(quote_attrib(self.units), input_name='units')), ))
     def exportChildren(self, outfile, level, namespace_='', name_='low_frequency_cutoffType', fromsubclass_=False, pretty_print=True):
@@ -26231,7 +26231,7 @@ class low_frequency_cutoffType(GeneratedsSuper):
 class high_frequency_cutoffType(GeneratedsSuper):
     subclass = None
     superclass = None
-    def __init__(self, units=None, valueOf_=None):
+    def __init__(self, units='1/Å', valueOf_=None):
         self.original_tagname_ = None
         self.units = _cast(None, units)
         self.valueOf_ = valueOf_
@@ -26279,7 +26279,7 @@ class high_frequency_cutoffType(GeneratedsSuper):
         else:
             outfile.write('/>%s' % (eol_, ))
     def exportAttributes(self, outfile, level, already_processed, namespace_='', name_='high_frequency_cutoffType'):
-        if self.units is not None and 'units' not in already_processed:
+        if self.units != "1/Å" and 'units' not in already_processed:
             already_processed.add('units')
             outfile.write(' units=%s' % (self.gds_encode(self.gds_format_string(quote_attrib(self.units), input_name='units')), ))
     def exportChildren(self, outfile, level, namespace_='', name_='high_frequency_cutoffType', fromsubclass_=False, pretty_print=True):
@@ -26486,7 +26486,7 @@ class b_factorSharpeningType(GeneratedsSuper):
 class _brestoreType(GeneratedsSuper):
     subclass = None
     superclass = None
-    def __init__(self, units=None, valueOf_=None):
+    def __init__(self, units='Å^2', valueOf_=None):
         self.original_tagname_ = None
         self.units = _cast(None, units)
         self.valueOf_ = valueOf_
@@ -26534,7 +26534,7 @@ class _brestoreType(GeneratedsSuper):
         else:
             outfile.write('/>%s' % (eol_, ))
     def exportAttributes(self, outfile, level, already_processed, namespace_='', name_='_brestoreType'):
-        if self.units is not None and 'units' not in already_processed:
+        if self.units != "Å^2" and 'units' not in already_processed:
             already_processed.add('units')
             outfile.write(' units=%s' % (self.gds_encode(self.gds_format_string(quote_attrib(self.units), input_name='units')), ))
     def exportChildren(self, outfile, level, namespace_='', name_='_brestoreType', fromsubclass_=False, pretty_print=True):
@@ -27166,7 +27166,7 @@ class random_conical_tiltType(GeneratedsSuper):
 class tilt_angleType(GeneratedsSuper):
     subclass = None
     superclass = None
-    def __init__(self, units=None, valueOf_=None):
+    def __init__(self, units='degrees', valueOf_=None):
         self.original_tagname_ = None
         self.units = _cast(None, units)
         self.valueOf_ = valueOf_
@@ -27214,7 +27214,7 @@ class tilt_angleType(GeneratedsSuper):
         else:
             outfile.write('/>%s' % (eol_, ))
     def exportAttributes(self, outfile, level, already_processed, namespace_='', name_='tilt_angleType'):
-        if self.units is not None and 'units' not in already_processed:
+        if self.units != "degrees" and 'units' not in already_processed:
             already_processed.add('units')
             outfile.write(' units=%s' % (self.gds_encode(self.gds_format_string(quote_attrib(self.units), input_name='units')), ))
     def exportChildren(self, outfile, level, namespace_='', name_='tilt_angleType', fromsubclass_=False, pretty_print=True):
@@ -27365,7 +27365,7 @@ class orthogonal_tiltType(GeneratedsSuper):
 class tilt_angle1Type(GeneratedsSuper):
     subclass = None
     superclass = None
-    def __init__(self, units=None, valueOf_=None):
+    def __init__(self, units='degrees', valueOf_=None):
         self.original_tagname_ = None
         self.units = _cast(None, units)
         self.valueOf_ = valueOf_
@@ -27413,7 +27413,7 @@ class tilt_angle1Type(GeneratedsSuper):
         else:
             outfile.write('/>%s' % (eol_, ))
     def exportAttributes(self, outfile, level, already_processed, namespace_='', name_='tilt_angle1Type'):
-        if self.units is not None and 'units' not in already_processed:
+        if self.units != "degrees" and 'units' not in already_processed:
             already_processed.add('units')
             outfile.write(' units=%s' % (self.gds_encode(self.gds_format_string(quote_attrib(self.units), input_name='units')), ))
     def exportChildren(self, outfile, level, namespace_='', name_='tilt_angle1Type', fromsubclass_=False, pretty_print=True):
@@ -27440,7 +27440,7 @@ class tilt_angle1Type(GeneratedsSuper):
 class tilt_angle2Type(GeneratedsSuper):
     subclass = None
     superclass = None
-    def __init__(self, units=None, valueOf_=None):
+    def __init__(self, units='degrees', valueOf_=None):
         self.original_tagname_ = None
         self.units = _cast(None, units)
         self.valueOf_ = valueOf_
@@ -27488,7 +27488,7 @@ class tilt_angle2Type(GeneratedsSuper):
         else:
             outfile.write('/>%s' % (eol_, ))
     def exportAttributes(self, outfile, level, already_processed, namespace_='', name_='tilt_angle2Type'):
-        if self.units is not None and 'units' not in already_processed:
+        if self.units != "degrees" and 'units' not in already_processed:
             already_processed.add('units')
             outfile.write(' units=%s' % (self.gds_encode(self.gds_format_string(quote_attrib(self.units), input_name='units')), ))
     def exportChildren(self, outfile, level, namespace_='', name_='tilt_angle2Type', fromsubclass_=False, pretty_print=True):
@@ -27757,7 +27757,7 @@ class starting_modelType(GeneratedsSuper):
             if not self.gds_validate_simple_patterns(
                     self.validate_pdb_code_type_patterns_, value):
                 warnings_.warn('Value "%s" does not match xsd pattern restrictions: %s' % (value.encode('utf-8'), self.validate_pdb_code_type_patterns_, ))
-    validate_pdb_code_type_patterns_ = [['^\\d[\\dA-Za-z]{3}$']]
+    validate_pdb_code_type_patterns_ = [[u'^\\d[\\dA-Za-z]{3}$']]
     def hasContent_(self):
         if (
             self.access_code is not None or
@@ -27916,7 +27916,7 @@ class resolution_rangeType(GeneratedsSuper):
 class high_resolutionType(GeneratedsSuper):
     subclass = None
     superclass = None
-    def __init__(self, units=None, valueOf_=None):
+    def __init__(self, units='Å', valueOf_=None):
         self.original_tagname_ = None
         self.units = _cast(None, units)
         self.valueOf_ = valueOf_
@@ -27964,7 +27964,7 @@ class high_resolutionType(GeneratedsSuper):
         else:
             outfile.write('/>%s' % (eol_, ))
     def exportAttributes(self, outfile, level, already_processed, namespace_='', name_='high_resolutionType'):
-        if self.units is not None and 'units' not in already_processed:
+        if self.units != "Å" and 'units' not in already_processed:
             already_processed.add('units')
             outfile.write(' units=%s' % (self.gds_encode(self.gds_format_string(quote_attrib(self.units), input_name='units')), ))
     def exportChildren(self, outfile, level, namespace_='', name_='high_resolutionType', fromsubclass_=False, pretty_print=True):
@@ -27991,7 +27991,7 @@ class high_resolutionType(GeneratedsSuper):
 class low_resolutionType(GeneratedsSuper):
     subclass = None
     superclass = None
-    def __init__(self, units=None, valueOf_=None):
+    def __init__(self, units='Å', valueOf_=None):
         self.original_tagname_ = None
         self.units = _cast(None, units)
         self.valueOf_ = valueOf_
@@ -28039,7 +28039,7 @@ class low_resolutionType(GeneratedsSuper):
         else:
             outfile.write('/>%s' % (eol_, ))
     def exportAttributes(self, outfile, level, already_processed, namespace_='', name_='low_resolutionType'):
-        if self.units is not None and 'units' not in already_processed:
+        if self.units != "Å" and 'units' not in already_processed:
             already_processed.add('units')
             outfile.write(' units=%s' % (self.gds_encode(self.gds_format_string(quote_attrib(self.units), input_name='units')), ))
     def exportChildren(self, outfile, level, namespace_='', name_='low_resolutionType', fromsubclass_=False, pretty_print=True):
@@ -28066,7 +28066,7 @@ class low_resolutionType(GeneratedsSuper):
 class high_resolutionType33(GeneratedsSuper):
     subclass = None
     superclass = None
-    def __init__(self, units=None, valueOf_=None):
+    def __init__(self, units='Å', valueOf_=None):
         self.original_tagname_ = None
         self.units = _cast(None, units)
         self.valueOf_ = valueOf_
@@ -28114,7 +28114,7 @@ class high_resolutionType33(GeneratedsSuper):
         else:
             outfile.write('/>%s' % (eol_, ))
     def exportAttributes(self, outfile, level, already_processed, namespace_='', name_='high_resolutionType33'):
-        if self.units is not None and 'units' not in already_processed:
+        if self.units != "Å" and 'units' not in already_processed:
             already_processed.add('units')
             outfile.write(' units=%s' % (self.gds_encode(self.gds_format_string(quote_attrib(self.units), input_name='units')), ))
     def exportChildren(self, outfile, level, namespace_='', name_='high_resolutionType33', fromsubclass_=False, pretty_print=True):
@@ -28381,7 +28381,7 @@ class shellType(GeneratedsSuper):
 class high_resolutionType34(GeneratedsSuper):
     subclass = None
     superclass = None
-    def __init__(self, units=None, valueOf_=None):
+    def __init__(self, units='Å', valueOf_=None):
         self.original_tagname_ = None
         self.units = _cast(None, units)
         self.valueOf_ = valueOf_
@@ -28429,7 +28429,7 @@ class high_resolutionType34(GeneratedsSuper):
         else:
             outfile.write('/>%s' % (eol_, ))
     def exportAttributes(self, outfile, level, already_processed, namespace_='', name_='high_resolutionType34'):
-        if self.units is not None and 'units' not in already_processed:
+        if self.units != "Å" and 'units' not in already_processed:
             already_processed.add('units')
             outfile.write(' units=%s' % (self.gds_encode(self.gds_format_string(quote_attrib(self.units), input_name='units')), ))
     def exportChildren(self, outfile, level, namespace_='', name_='high_resolutionType34', fromsubclass_=False, pretty_print=True):
@@ -28456,7 +28456,7 @@ class high_resolutionType34(GeneratedsSuper):
 class low_resolutionType35(GeneratedsSuper):
     subclass = None
     superclass = None
-    def __init__(self, units=None, valueOf_=None):
+    def __init__(self, units='Å', valueOf_=None):
         self.original_tagname_ = None
         self.units = _cast(None, units)
         self.valueOf_ = valueOf_
@@ -28504,7 +28504,7 @@ class low_resolutionType35(GeneratedsSuper):
         else:
             outfile.write('/>%s' % (eol_, ))
     def exportAttributes(self, outfile, level, already_processed, namespace_='', name_='low_resolutionType35'):
-        if self.units is not None and 'units' not in already_processed:
+        if self.units != "Å" and 'units' not in already_processed:
             already_processed.add('units')
             outfile.write(' units=%s' % (self.gds_encode(self.gds_format_string(quote_attrib(self.units), input_name='units')), ))
     def exportChildren(self, outfile, level, namespace_='', name_='low_resolutionType35', fromsubclass_=False, pretty_print=True):
@@ -28531,7 +28531,7 @@ class low_resolutionType35(GeneratedsSuper):
 class segment_lengthType(GeneratedsSuper):
     subclass = None
     superclass = None
-    def __init__(self, units=None, valueOf_=None):
+    def __init__(self, units='Å', valueOf_=None):
         self.original_tagname_ = None
         self.units = _cast(None, units)
         self.valueOf_ = valueOf_
@@ -28579,7 +28579,7 @@ class segment_lengthType(GeneratedsSuper):
         else:
             outfile.write('/>%s' % (eol_, ))
     def exportAttributes(self, outfile, level, already_processed, namespace_='', name_='segment_lengthType'):
-        if self.units is not None and 'units' not in already_processed:
+        if self.units != "Å" and 'units' not in already_processed:
             already_processed.add('units')
             outfile.write(' units=%s' % (self.gds_encode(self.gds_format_string(quote_attrib(self.units), input_name='units')), ))
     def exportChildren(self, outfile, level, namespace_='', name_='segment_lengthType', fromsubclass_=False, pretty_print=True):
@@ -28606,7 +28606,7 @@ class segment_lengthType(GeneratedsSuper):
 class segment_overlapType(GeneratedsSuper):
     subclass = None
     superclass = None
-    def __init__(self, units=None, valueOf_=None):
+    def __init__(self, units='Å', valueOf_=None):
         self.original_tagname_ = None
         self.units = _cast(None, units)
         self.valueOf_ = valueOf_
@@ -28654,7 +28654,7 @@ class segment_overlapType(GeneratedsSuper):
         else:
             outfile.write('/>%s' % (eol_, ))
     def exportAttributes(self, outfile, level, already_processed, namespace_='', name_='segment_overlapType'):
-        if self.units is not None and 'units' not in already_processed:
+        if self.units != "Å" and 'units' not in already_processed:
             already_processed.add('units')
             outfile.write(' units=%s' % (self.gds_encode(self.gds_format_string(quote_attrib(self.units), input_name='units')), ))
     def exportChildren(self, outfile, level, namespace_='', name_='segment_overlapType', fromsubclass_=False, pretty_print=True):
@@ -28681,7 +28681,7 @@ class segment_overlapType(GeneratedsSuper):
 class total_filament_lengthType(GeneratedsSuper):
     subclass = None
     superclass = None
-    def __init__(self, units=None, valueOf_=None):
+    def __init__(self, units='Å', valueOf_=None):
         self.original_tagname_ = None
         self.units = _cast(None, units)
         self.valueOf_ = valueOf_
@@ -28729,7 +28729,7 @@ class total_filament_lengthType(GeneratedsSuper):
         else:
             outfile.write('/>%s' % (eol_, ))
     def exportAttributes(self, outfile, level, already_processed, namespace_='', name_='total_filament_lengthType'):
-        if self.units is not None and 'units' not in already_processed:
+        if self.units != "Å" and 'units' not in already_processed:
             already_processed.add('units')
             outfile.write(' units=%s' % (self.gds_encode(self.gds_format_string(quote_attrib(self.units), input_name='units')), ))
     def exportChildren(self, outfile, level, namespace_='', name_='total_filament_lengthType', fromsubclass_=False, pretty_print=True):
@@ -29300,7 +29300,7 @@ class projection_matching_processingType(GeneratedsSuper):
 class angular_samplingType(GeneratedsSuper):
     subclass = None
     superclass = None
-    def __init__(self, units=None, valueOf_=None):
+    def __init__(self, units='degrees', valueOf_=None):
         self.original_tagname_ = None
         self.units = _cast(None, units)
         self.valueOf_ = valueOf_
@@ -29348,7 +29348,7 @@ class angular_samplingType(GeneratedsSuper):
         else:
             outfile.write('/>%s' % (eol_, ))
     def exportAttributes(self, outfile, level, already_processed, namespace_='', name_='angular_samplingType'):
-        if self.units is not None and 'units' not in already_processed:
+        if self.units != "degrees" and 'units' not in already_processed:
             already_processed.add('units')
             outfile.write(' units=%s' % (self.gds_encode(self.gds_format_string(quote_attrib(self.units), input_name='units')), ))
     def exportChildren(self, outfile, level, namespace_='', name_='angular_samplingType', fromsubclass_=False, pretty_print=True):
@@ -29499,7 +29499,7 @@ class final_multi_reference_alignmentType(GeneratedsSuper):
 class angular_samplingType37(GeneratedsSuper):
     subclass = None
     superclass = None
-    def __init__(self, units=None, valueOf_=None):
+    def __init__(self, units='degrees', valueOf_=None):
         self.original_tagname_ = None
         self.units = _cast(None, units)
         self.valueOf_ = valueOf_
@@ -29547,7 +29547,7 @@ class angular_samplingType37(GeneratedsSuper):
         else:
             outfile.write('/>%s' % (eol_, ))
     def exportAttributes(self, outfile, level, already_processed, namespace_='', name_='angular_samplingType37'):
-        if self.units is not None and 'units' not in already_processed:
+        if self.units != "degrees" and 'units' not in already_processed:
             already_processed.add('units')
             outfile.write(' units=%s' % (self.gds_encode(self.gds_format_string(quote_attrib(self.units), input_name='units')), ))
     def exportChildren(self, outfile, level, namespace_='', name_='angular_samplingType37', fromsubclass_=False, pretty_print=True):
@@ -29698,7 +29698,7 @@ class final_multi_reference_alignmentType38(GeneratedsSuper):
 class angular_samplingType39(GeneratedsSuper):
     subclass = None
     superclass = None
-    def __init__(self, units=None, valueOf_=None):
+    def __init__(self, units='degrees', valueOf_=None):
         self.original_tagname_ = None
         self.units = _cast(None, units)
         self.valueOf_ = valueOf_
@@ -29746,7 +29746,7 @@ class angular_samplingType39(GeneratedsSuper):
         else:
             outfile.write('/>%s' % (eol_, ))
     def exportAttributes(self, outfile, level, already_processed, namespace_='', name_='angular_samplingType39'):
-        if self.units is not None and 'units' not in already_processed:
+        if self.units != "degrees" and 'units' not in already_processed:
             already_processed.add('units')
             outfile.write(' units=%s' % (self.gds_encode(self.gds_format_string(quote_attrib(self.units), input_name='units')), ))
     def exportChildren(self, outfile, level, namespace_='', name_='angular_samplingType39', fromsubclass_=False, pretty_print=True):
@@ -30289,7 +30289,7 @@ class final_multi_reference_alignmentType42(GeneratedsSuper):
 class resolutionType(GeneratedsSuper):
     subclass = None
     superclass = None
-    def __init__(self, units=None, res_type=None, valueOf_=None):
+    def __init__(self, units='Å', res_type=None, valueOf_=None):
         self.original_tagname_ = None
         self.units = _cast(None, units)
         self.res_type = _cast(None, res_type)
@@ -30340,7 +30340,7 @@ class resolutionType(GeneratedsSuper):
         else:
             outfile.write('/>%s' % (eol_, ))
     def exportAttributes(self, outfile, level, already_processed, namespace_='', name_='resolutionType'):
-        if self.units is not None and 'units' not in already_processed:
+        if self.units != "Å" and 'units' not in already_processed:
             already_processed.add('units')
             outfile.write(' units=%s' % (self.gds_encode(self.gds_format_string(quote_attrib(self.units), input_name='units')), ))
         if self.res_type is not None and 'res_type' not in already_processed:
@@ -30757,21 +30757,21 @@ class axis_orderType(GeneratedsSuper):
             if not self.gds_validate_simple_patterns(
                     self.validate_fastType_patterns_, value):
                 warnings_.warn('Value "%s" does not match xsd pattern restrictions: %s' % (value.encode('utf-8'), self.validate_fastType_patterns_, ))
-    validate_fastType_patterns_ = [['^X$|^Y$|^Z$']]
+    validate_fastType_patterns_ = [[u'^X$|^Y$|^Z$']]
     def validate_mediumType(self, value):
         # Validate type mediumType, a restriction on xs:token.
         if value is not None and Validate_simpletypes_:
             if not self.gds_validate_simple_patterns(
                     self.validate_mediumType_patterns_, value):
                 warnings_.warn('Value "%s" does not match xsd pattern restrictions: %s' % (value.encode('utf-8'), self.validate_mediumType_patterns_, ))
-    validate_mediumType_patterns_ = [['^X$|^Y$|^Z$']]
+    validate_mediumType_patterns_ = [[u'^X$|^Y$|^Z$']]
     def validate_slowType(self, value):
         # Validate type slowType, a restriction on xs:token.
         if value is not None and Validate_simpletypes_:
             if not self.gds_validate_simple_patterns(
                     self.validate_slowType_patterns_, value):
                 warnings_.warn('Value "%s" does not match xsd pattern restrictions: %s' % (value.encode('utf-8'), self.validate_slowType_patterns_, ))
-    validate_slowType_patterns_ = [['^X$|^Y$|^Z$']]
+    validate_slowType_patterns_ = [[u'^X$|^Y$|^Z$']]
     def hasContent_(self):
         if (
             self.fast is not None or
@@ -31430,7 +31430,7 @@ class segmentationType(GeneratedsSuper):
             if not self.gds_validate_simple_patterns(
                     self.validate_fileType43_patterns_, value):
                 warnings_.warn('Value "%s" does not match xsd pattern restrictions: %s' % (value.encode('utf-8'), self.validate_fileType43_patterns_, ))
-    validate_fileType43_patterns_ = [['^[emd_\\d{4,}]+.*$']]
+    validate_fileType43_patterns_ = [[u'^[emd_\\d{4,}]+.*$']]
     def hasContent_(self):
         if (
             self.file is not None or
@@ -31786,7 +31786,7 @@ class initial_modelType(GeneratedsSuper):
             if not self.gds_validate_simple_patterns(
                     self.validate_access_codeType_patterns_, value):
                 warnings_.warn('Value "%s" does not match xsd pattern restrictions: %s' % (value.encode('utf-8'), self.validate_access_codeType_patterns_, ))
-    validate_access_codeType_patterns_ = [['^\\d[\\dA-Za-z]{3}$'], ['^\\d[\\dA-Za-z]{3}$']]
+    validate_access_codeType_patterns_ = [[u'^\\d[\\dA-Za-z]{3}$'], [u'^\\d[\\dA-Za-z]{3}$']]
     def hasContent_(self):
         if (
             self.access_code is not None or
@@ -31986,7 +31986,7 @@ class final_modelType(GeneratedsSuper):
             if not self.gds_validate_simple_patterns(
                     self.validate_pdb_code_type_patterns_, value):
                 warnings_.warn('Value "%s" does not match xsd pattern restrictions: %s' % (value.encode('utf-8'), self.validate_pdb_code_type_patterns_, ))
-    validate_pdb_code_type_patterns_ = [['^\\d[\\dA-Za-z]{3}$']]
+    validate_pdb_code_type_patterns_ = [[u'^\\d[\\dA-Za-z]{3}$']]
     def hasContent_(self):
         if (
             self.access_code is not None or
