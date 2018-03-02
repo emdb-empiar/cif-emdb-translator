@@ -806,7 +806,7 @@ class entry_type(GeneratedsSuper):
         if self.emdb_id is not None and 'emdb_id' not in already_processed:
             already_processed.add('emdb_id')
             outfile.write(' emdb_id=%s' % (quote_attrib(self.emdb_id), ))
-        if self.version != "3.0.0.0" and 'version' not in already_processed:
+        if self.version is not None and 'version' not in already_processed:
             already_processed.add('version')
             outfile.write(' version=%s' % (self.gds_encode(self.gds_format_string(quote_attrib(self.version), input_name='version')), ))
     def exportChildren(self, outfile, level, namespace_='', name_='entry_type', fromsubclass_=False, pretty_print=True):
