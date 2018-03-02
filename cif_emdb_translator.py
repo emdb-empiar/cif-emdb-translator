@@ -46,8 +46,7 @@ class CifEMDBTranslator(object):
         There are many constants in use for the translation.
         They have been collected here for ease of use.
         """
-        # the XML version is now read from emdb.py
-        # XML_OUT_VERSION = '3.0.0.0'
+        XML_OUT_VERSION = '3.0.0.0'
 
         # Cif categories
         CITATION = 'citation'
@@ -9356,8 +9355,7 @@ class CifEMDBTranslator(object):
                 XSD: <xs:attribute name="version" use="required">
                 NOT IN CIF: The value is added in here - 
                 """
-                # version is already set; it's a fixed value
-                # self.xml_out.set_version(const.XML_OUT_VERSION)
+                self.xml_out.set_version(const.XML_OUT_VERSION)
 
             def set_el_admin():
                 """
