@@ -6296,18 +6296,19 @@ class CifEMDBTranslator(object):
                     im_dig_dict_in = make_dict(const.EMD_IMAGE_DIGITIZATION, const.K_EMD_IMAGE_RECORDING_ID)
 
                     if mic_id not in im_rec_dict_in:
-                        raise KeyError('No emd_image_recording found for microscope: %s' % mic_id)
-                        # ADD LOGGER ERROR
-                    im_rec_list_in = im_rec_dict_in[mic_id]
-                    im_rec_list = emdb.image_recording_listType()
-                    for im_rec_in in im_rec_list_in:
-                        im_rec = emdb.image_recordingType()
-                        set_image_recording_type(im_rec, im_rec_in, im_dig_dict_in)
-                        if im_rec.hasContent_():
-                            im_rec_list.add_image_recording(im_rec)
+                        self.logger.critical('')
+                        self.logger.critical(const.REQUIRED_ALERT+'No emd_image_recording found for microscope: %s' % mic_id)
+                    else:
+                        im_rec_list_in = im_rec_dict_in[mic_id]
+                        im_rec_list = emdb.image_recording_listType()
+                        for im_rec_in in im_rec_list_in:
+                            im_rec = emdb.image_recordingType()
+                            set_image_recording_type(im_rec, im_rec_in, im_dig_dict_in)
+                            if im_rec.hasContent_():
+                                im_rec_list.add_image_recording(im_rec)
 
-                    if im_rec_list.hasContent_():
-                        mic.set_image_recording_list(im_rec_list)
+                        if im_rec_list.hasContent_():
+                            mic.set_image_recording_list(im_rec_list)
 
                 def set_base_microscopy(mic_in, mic, mic_id):
                     """
