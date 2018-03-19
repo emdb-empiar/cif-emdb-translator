@@ -2375,24 +2375,23 @@ class CifEMDBTranslator(object):
                             else:
                                 citation = emdb.secondary_citationType()
                                 citation_list.add_secondary_citation(citation)
-                            if not any_primary_citations:
-                                self.logger.critical('')
-                                self.logger.critical(const.REQUIRED_ALERT+'No primary citations given')
-                            else:
-                                if citation is not None:
-                                    # Is this a book (non-journal) or journal citation?
-                                    # These are the two citation_types
-                                    jrnl_abbrev_in = get_cif_value('journal_abbrev', const.CITATION, cite_in)
-                                    if jrnl_abbrev_in is not None:
-                                        jrnl = emdb.journal_citation()
-                                        set_journal_citation(jrnl, cite_in, cite_id_in, auth_dict, cite_ref_type_list, jrnl_abbrev_in)
-                                        citation.set_citation_type(jrnl)
-                                    else:
-                                        non_jrnl = emdb.non_journal_citation()
-                                        set_non_journal_citation(non_jrnl, cite_in, cite_id_in, auth_dict, cite_ref_type_list)
-                                        citation.set_citation_type(non_jrnl)
+                            if citation is not None:
+                                # Is this a book (non-journal) or journal citation?
+                                # These are the two citation_types
+                                jrnl_abbrev_in = get_cif_value('journal_abbrev', const.CITATION, cite_in)
+                                if jrnl_abbrev_in is not None:
+                                    jrnl = emdb.journal_citation()
+                                    set_journal_citation(jrnl, cite_in, cite_id_in, auth_dict, cite_ref_type_list, jrnl_abbrev_in)
+                                    citation.set_citation_type(jrnl)
                                 else:
-                                    self.logger.error(const.NOT_REQUIRED_ALERT+'Citations cannot be set. _citation_author.citation_id should be either primary or a number but are not.')
+                                    non_jrnl = emdb.non_journal_citation()
+                                    set_non_journal_citation(non_jrnl, cite_in, cite_id_in, auth_dict, cite_ref_type_list)
+                                    citation.set_citation_type(non_jrnl)
+                            else:
+                                self.logger.error(const.NOT_REQUIRED_ALERT+'Citations cannot be set. _citation_author.citation_id should be either primary or a number but are not.')
+                        if not any_primary_citations:
+                            self.logger.critical('')
+                            self.logger.critical(const.REQUIRED_ALERT+'No primary citations given')
                     else:
                         self.logger.critical('')
                         self.logger.critical(const.REQUIRED_ALERT+'CIF category %s missing', const.CITATION)
