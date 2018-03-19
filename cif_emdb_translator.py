@@ -3310,7 +3310,7 @@ class CifEMDBTranslator(object):
                         macro_list_str_in = get_cif_value('entity_id_list', const.EMD_SUPRAMOLECULE, sup_in)
                         id_list_item = get_cif_item('entity_id_list', const.EMD_SUPRAMOLECULE)
                         if macro_list_str_in is not None:
-                            macro_list_in = macro_list_str_in.split(',')
+                            macro_list_in = macro_list_str_in.rstrip().rstrip(',').split(',')
                             if macro_list_in is not None and len(macro_list_in) > 0:
                                 macro_list = emdb.macromolecule_list_type()
                                 for m_in in macro_list_in:
