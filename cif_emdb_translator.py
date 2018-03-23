@@ -265,6 +265,66 @@ class CifEMDBTranslator(object):
         CHANGE_MADE = 'CHANGE MADE: '
         NOT_CHANGED_FOR_NOW = 'NOT CHANGED FOR NOW: '
 
+        CENTER_NAMES_USED_FOR_AUTHORS = {
+            'Accelerated Technologies Center for Gene to 3D Structure (ATCG3D)',
+            'Assembly, Dynamics and Evolution of Cell-Cell and Cell-Matrix Adhesions (CELLMAT)',
+            'Atoms-to-Animals: The Immune Function Network (IFN)',
+            'Bacterial targets at IGS-CNRS, France (BIGS)',
+            'Berkeley Structural Genomics Center (BSGC)',
+            'Center for Eukaryotic Structural Genomics (CESG)',
+            'Center for High-Throughput Structural Biology (CHTSB)',
+            'Center for Membrane Proteins of Infectious Diseases (MPID)',
+            'Center for Structural Genomics of Infectious Diseases (CSGID)',
+            'Center for Structures of Membrane Proteins (CSMP)',
+            'Center for the X-ray Structure Determination of Human Transporters (TransportPDB)',
+            'Chaperone-Enabled Studies of Epigenetic Regulation Enzymes (CEBS)',
+            'Enzyme Discovery for Natural Product Biosynthesis (NatPro)',
+            'GPCR Network (GPCR)',
+            'Integrated Center for Structure and Function Innovation (ISFI)',
+            'Israel Structural Proteomics Center (ISPC)',
+            'Joint Center for Structural Genomics (JCSG)',
+            'Marseilles Structural Genomics Program @ AFMB (MSGP)',
+            'Medical Structural Genomics of Pathogenic Protozoa (MSGPP)',
+            'Membrane Protein Structural Biology Consortium (MPSBC)',
+            'Membrane Protein Structures by Solution NMR (MPSbyNMR)',
+            'Midwest Center for Macromolecular Research (MCMR)',
+            'Midwest Center for Structural Genomics (MCSG)',
+            'Mitochondrial Protein Partnership (MPP)',
+            'Montreal-Kingston Bacterial Structural Genomics Initiative (BSGI)',
+            'Mycobacterium Tuberculosis Structural Proteomics Project (XMTB)',
+            'New York Consortium on Membrane Protein Structure (NYCOMPS)',
+            'New York SGX Research Center for Structural Genomics (NYSGXRC)',
+            'New York Structural GenomiX Research Consortium (NYSGXRC)',
+            'New York Structural Genomics Research Consortium (NYSGRC)',
+            'Northeast Structural Genomics Consortium (NESG)',
+            'Nucleocytoplasmic Transport: a Target for Cellular Control (NPCXstals)',
+            'Ontario Centre for Structural Proteomics (OCSP)',
+            'Oxford Protein Production Facility (OPPF)',
+            'Paris-Sud Yeast Structural Genomics (YSG)'
+            'Partnership for Nuclear Receptor Signaling Code Biology (NHRs)',
+            'Partnership for Stem Cell Biology (STEMCELL)',
+            'Partnership for T-Cell Biology (TCELL)',
+            'Program for the Characterization of Secreted Effector Proteins (PCSEP)',
+            'Protein Structure Factory (PSF)',
+            'RIKEN Structural Genomics/Proteomics Initiative (RSGI)',
+            'Scottish Structural Proteomics Facility (SSPF)',
+            'Seattle Structural Genomics Center for Infectious Disease (SSGCID)',
+            'South Africa Structural Targets Annotation Database (SASTAD)',
+            'Southeast Collaboratory for Structural Genomics (SECSG)',
+            'Structural Genomics Consortium (SGC)',
+            'Structural Genomics Consortium for Research on Gene Expression (SGCGES)',
+            'Structural Genomics of Pathogenic Protozoa Consortium (SGPP)',
+            'Structural Proteomics in Europe (SPINE)',
+            'Structural Proteomics in Europe 2 (SPINE-2)',
+            'Structure 2 Function Project (S2F)',
+            'Structure, Dynamics and Activation Mechanisms of Chemokine Receptors (CHSAM)',
+            'Structure-Function Analysis of Polymorphic CDI Toxin-Immunity Protein Complexes (UC4CDI)',
+            'Structure-Function Studies of Tight Junction Membrane Proteins (TJMP)',
+            'Structures of Mtb Proteins Conferring Susceptibility to Known Mtb Inhibitors (MTBI)',
+            'TB Structural Genomics Consortium (TBSGC)',
+            'Transcontinental EM Initiative for Membrane Protein Structure (TEMIMPS)',
+            'Transmembrane Protein Center (TMPC)'}
+
         MMCIF_TO_XSD = {
             '_emd_admin.current_status':'<xs:element name="code" type="code_type">',
             '_emd.admin last_update':'<xs:element name="date" minOccurs="0">',
@@ -1338,14 +1398,16 @@ class CifEMDBTranslator(object):
             @param auth_in: string author name in CIF format
             @return auth_out: author in EMDB format
             """
-            auth_match = re.match(const.CIF_AUTHOR_RE, auth_in)
-            if auth_match is not None and (not auth_in.isspace()):
-                match_groups = auth_match.groups()
-                auth_out = '%s %s' % (match_groups[0], match_groups[1].replace('.', ''))
-            else:
-                self.logger.error(const.REQUIRED_ALERT+'Author name: %s is not in a required CIF format!', auth_in)
-                self.logger.error('')
-                auth_out = ''
+            auth_out = auth_in
+            if auth_in not in const.CENTER_NAMES_USED_FOR_AUTHORS:
+                auth_match = re.match(const.CIF_AUTHOR_RE, auth_in)
+                if auth_match is not None and not auth_in.isspace():
+                        match_groups = auth_match.groups()
+                        auth_out = '%s %s' % (match_groups[0], match_groups[1].replace('.', ''))
+                else:
+                    self.logger.error(const.REQUIRED_ALERT+'Author name: %s is not in a required CIF format!', auth_in)
+                    self.logger.error('')
+                    auth_out = ''
 
             return auth_out
 
