@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 #
-# Generated Mon Mar 19 11:44:24 2018 by generateDS.py version 2.23a.
+# Generated Fri Mar 23 13:43:37 2018 by generateDS.py version 2.23a.
 #
 # Command line options:
 #   ('--root-element', 'emd')
@@ -16576,11 +16576,7 @@ class authors_listType(GeneratedsSuper):
     def replace_author_at(self, index, value): self.author[index] = value
     def validate_author_type(self, value):
         # Validate type author_type, a restriction on xs:token.
-        if value is not None and Validate_simpletypes_:
-            if not self.gds_validate_simple_patterns(
-                    self.validate_author_type_patterns_, value):
-                warnings_.warn('Value "%s" does not match xsd pattern restrictions: %s' % (value.encode('utf-8'), self.validate_author_type_patterns_, ))
-    validate_author_type_patterns_ = [["^[A-Za-z '\\-]+ [A-Z\\-]+$"]]
+        pass
     def hasContent_(self):
         if (
             self.author
