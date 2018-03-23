@@ -973,6 +973,18 @@ class CifEMDBTranslator(object):
             """
             return bool(cif_bool_value in ['1', 'YES'])
 
+        def is_float(some_text):
+            """
+            Return true if the string can be converted into a float
+            :param some_text:
+            :return: true if float, false if not
+            """
+            try:
+                float(some_text)
+                return True
+            except ValueError:
+                return False
+
         def get_cif_item(cif_key, cif_category):
             """
             Helper function that returns the full key given
@@ -6117,7 +6129,7 @@ class CifEMDBTranslator(object):
                                     """
                                     eng_flt_low = get_cif_value('energyfilter_lower', const.EMD_SPECIALIST_OPTICS, sp_op_in)
                                     if eng_flt_low is not None:
-                                        if isinstance(eng_flt_low, str):
+                                        if is_float(eng_flt_low):
                                             # should be a float
                                             self.logger.critical('')
                                             self.logger.critical(const.REQUIRED_ALERT+'The value for lower energy threshold should not be: %s' % eng_flt_low)
@@ -6132,7 +6144,7 @@ class CifEMDBTranslator(object):
                                     """
                                     eng_flt_uppr = get_cif_value('energyfilter_upper', const.EMD_SPECIALIST_OPTICS, sp_op_in)
                                     if eng_flt_uppr is not None:
-                                        if isinstance(eng_flt_uppr, str):
+                                        if is_float(eng_flt_uppr):
                                             # should be a float
                                             self.logger.critical('')
                                             self.logger.critical(const.REQUIRED_ALERT+'The value for upper energy threshold should not be: %s' % eng_flt_uppr)
