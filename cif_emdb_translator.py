@@ -588,10 +588,10 @@ class CifEMDBTranslator(object):
             '_citation.database_id_Medline':'<xs:element name="external_references" maxOccurs="unbounded" minOccurs="0">',
             '_citation.journal_id_ASTM':'<xs:element name="external_references" maxOccurs="unbounded" minOccurs="0">',
             '_emd_supramolecule.entity_id_list':'<xs:element name="macromolecule_list" minOccurs="0">',
-            '_emd_recombinant_expression.ncbi_tax_id':'<xs:attribute name="database" use="required">',
+            '_emd_recombinant_expression.ncbi_tax_id':'<xs:attribute name="database">',
             '_emd_recombinant_expression.organism':'<xs:element name="recombinant_organism" type="organism_type">',
             '_emd_molecular_mass.value':'<xs:complexType name="molecular_weight_type">',
-            '_emd_natural_source.ncbi_tax_id':'<xs:attribute name="database" use="required">',
+            '_emd_natural_source.ncbi_tax_id':'<xs:attribute name="database">',
             '_emd_natural_source.organism':'<xs:element name="organism" type="organism_type">',
             '_pdbx_database_status.pdbx_annotator':'<xs:element name="annotator" minOccurs="0">',
             '_pdbx_database_PDB_obs_spr.date':'<xs:element name="date" type="xs:date"/>',
@@ -616,16 +616,16 @@ class CifEMDBTranslator(object):
             '_pdbx_contact_author.phone':'<xs:element name="telephone" type="telephone_number_type">',
             '_pdbx_contact_author.fax':'<xs:element name="fax" type="telephone_number_type">',
             '_emd_author_list.':'<xs:element name="authors_list">',
-            '_emd_virus_natural_host.ncbi_tax_id':'<xs:attribute name="database" use="required">',
+            '_emd_virus_natural_host.ncbi_tax_id':'<xs:attribute name="database">',
             '_emd_virus_natural_host.organism':'<xs:element name="organism" type="organism_type">',
             '_emd_virus_natural_host.strain':'<xs:element name="strain" type="xs:token" minOccurs="0"/>',
             '_emd_virus_shell.diameter':'<xs:element name="diameter" minOccurs="0">',
-            '_entity_src_nat.pdbx_ncbi_taxonomy_id':'<xs:attribute name="database" use="required">',
-            '_entity_src_gen.pdbx_gene_src_ncbi_taxonomy_id':'<xs:attribute name="database" use="required">',
-            '_pdbx_entity_src_syn.ncbi_taxonomy_id':'<xs:attribute name="database" use="required">',
+            '_entity_src_nat.pdbx_ncbi_taxonomy_id':'<xs:attribute name="database">',
+            '_entity_src_gen.pdbx_gene_src_ncbi_taxonomy_id':'<xs:attribute name="database">',
+            '_pdbx_entity_src_syn.ncbi_taxonomy_id':'<xs:attribute name="database">',
             '_entity_poly.pdbx_seq_one_letter_code':'<xs:element name="string" type="xs:token" minOccurs="0">',
             '_struct_ref.db_name':'<xs:element name="external_references" maxOccurs="unbounded" minOccurs="0">',
-            '_entity_src_gen.pdbx_host_org_ncbi_taxonomy_id':'<xs:attribute name="database" use="required">',
+            '_entity_src_gen.pdbx_host_org_ncbi_taxonomy_id':'<xs:attribute name="database">',
             '_entity_src_gen.pdbx_host_org_scientific_name':'<xs:element name="organism" type="organism_type">',
             '_emd_specimen.concentration':'<xs:element name="concentration" minOccurs="0">',
             '_emd_grid_pretreatment.pretreat_time':'<xs:element name="time" minOccurs="0">',
@@ -2757,7 +2757,7 @@ class CifEMDBTranslator(object):
                 """
                 def set_attr_database(src, cif_category, src_in):
                     """
-                    XSD: <xs:attribute name="database" use="required">; <xs:enumeration value="NCBI"/>
+                    XSD: <xs:attribute name="database">; <xs:enumeration value="NCBI"/>
                     CIF: _entity_src_nat.pdbx_ncbi_taxonomy_id
                     CIF: _entity_src_gen.pdbx_gene_src_ncbi_taxonomy_id
                     CIF: _pdbx_entity_src_syn.ncbi_taxonomy_id
@@ -3044,7 +3044,7 @@ class CifEMDBTranslator(object):
                 """
                 def set_attr_database(r_exp):
                     """
-                    XSD: <xs:attribute name="database" use="required"> has
+                    XSD: <xs:attribute name="database"> has
                     the value of "NCBI"
                     CIF: _emd_recombinant_expression.ncbi_tax_id
                     """
@@ -3583,7 +3583,7 @@ class CifEMDBTranslator(object):
                                 """
                                 def set_attr_database(nat_host, nat_host_in):
                                     """
-                                    XSD: <xs:attribute name="database" use="required">
+                                    XSD: <xs:attribute name="database">
                                     CIF: _emd_virus_natural_host.ncbi_tax_id 7460
                                     """
                                     set_cif_value(nat_host.set_database, 'ncbi_tax_id', const.EMD_VIRUS_NATURAL_HOST, cif_list=nat_host_in, cif_value='NCBI')
