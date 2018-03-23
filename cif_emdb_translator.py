@@ -6115,16 +6115,30 @@ class CifEMDBTranslator(object):
                                     XSD: <xs:element name="lower_energy_threshold" minOccurs="0">
                                     CIF: _emd_specialist_optics.energyfilter_lower 0
                                     """
-                                    set_cif_value(eng_flt.set_lower_energy_threshold, 'energyfilter_lower', const.EMD_SPECIALIST_OPTICS, cif_list=sp_op_in,
-                                                  constructor=emdb.lower_energy_thresholdType, fmt=float, units=const.U_EV)
+                                    eng_flt_low = get_cif_value('energyfilter_lower', const.EMD_SPECIALIST_OPTICS, sp_op_in)
+                                    if eng_flt_low is not None:
+                                        if isinstance(eng_flt_low, str):
+                                            # should be a float
+                                            self.logger.critical('')
+                                            self.logger.critical(const.REQUIRED_ALERT+'The value for lower energy threshold should not be: %s' % eng_flt_low)
+                                        else:
+                                            set_cif_value(eng_flt.set_lower_energy_threshold, 'energyfilter_lower', const.EMD_SPECIALIST_OPTICS, cif_list=sp_op_in,
+                                                          constructor=emdb.lower_energy_thresholdType, fmt=float, units=const.U_EV)
 
                                 def set_el_upper_energy_threshold(eng_flt, sp_op_in):
                                     """
                                     XSD: <xs:element name="upper_energy_threshold" minOccurs="0">
                                     CIF: _emd_specialist_optics.energyfilter_upper  15
                                     """
-                                    set_cif_value(eng_flt.set_upper_energy_threshold, 'energyfilter_upper', const.EMD_SPECIALIST_OPTICS, cif_list=sp_op_in,
-                                                  constructor=emdb.upper_energy_thresholdType, fmt=float, units=const.U_EV)
+                                    eng_flt_uppr = get_cif_value('energyfilter_upper', const.EMD_SPECIALIST_OPTICS, sp_op_in)
+                                    if eng_flt_uppr is not None:
+                                        if isinstance(eng_flt_uppr, str):
+                                            # should be a float
+                                            self.logger.critical('')
+                                            self.logger.critical(const.REQUIRED_ALERT+'The value for upper energy threshold should not be: %s' % eng_flt_uppr)
+                                        else:
+                                            set_cif_value(eng_flt.set_upper_energy_threshold, 'energyfilter_upper', const.EMD_SPECIALIST_OPTICS, cif_list=sp_op_in,
+                                                          constructor=emdb.upper_energy_thresholdType, fmt=float, units=const.U_EV)
 
                                 # element 1
                                 set_el_name(eng_flt, sp_op_in)
