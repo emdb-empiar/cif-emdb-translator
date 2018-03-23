@@ -6132,7 +6132,7 @@ class CifEMDBTranslator(object):
                                     """
                                     eng_flt_uppr = get_cif_value('energyfilter_upper', const.EMD_SPECIALIST_OPTICS, sp_op_in)
                                     if eng_flt_uppr is not None:
-                                        if eng_flt_uppri.lstrip('-').lstrip('+').isdigit():
+                                        if eng_flt_uppr.lstrip('-').lstrip('+').isdigit():
                                             set_cif_value(eng_flt.set_upper_energy_threshold, 'energyfilter_upper', const.EMD_SPECIALIST_OPTICS, cif_list=sp_op_in,
                                                           constructor=emdb.upper_energy_thresholdType, fmt=float, units=const.U_EV)
                                         else:
