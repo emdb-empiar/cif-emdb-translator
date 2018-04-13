@@ -52,17 +52,19 @@ class TestTranslator(unittest.TestCase):
     pdbeInputCifDir = 'data/cif'
     rcsbInputCifDir = 'data/rcsb_cifs'
     outputXmlDir = 'data/test/xml_v3_out'
+    testInputCifDir = 'test/cif'
     
     schema = "emdb.xsd"
     
-    process_rcsb = True
+    process_rcsb = False
     process_pdbe = True
   
     def test_cif2xml(self):
         
         # create the translator object
         translator = CifEMDBTranslator()
-        translator.set_show_log_id(True)
+        translator.set_console_logging(True, True, True, True)
+        # translator.set_show_log_id(True)
         # Reads mmcif_pdbx_v5_next.dic that contains information
         # about how the em categories map to the emd categories
         translator.read_emd_map_v2_cif_file()
@@ -97,14 +99,14 @@ class TestTranslator(unittest.TestCase):
                         j = j + 1
                         #print depID
                         #if depID == 'D_1200000799' or depID == 'D_1200005141':
-                        #if id == "EMD-8183":
+                        #if id == "EMD-8055":
                         print id
                         try:
                             fileType, f, copyStatic = PDBprocessedWhere(id).Extension()
                             if f:
                                 print i
                                 i = i + 1
-                                 #Check if the cif file is in the _emd space
+                                #Check if the cif file is in the _emd space
                                 if not self.isCifInEMDSpace(f):
                                     conv_f = os.path.join(self.pdbeInputCifDir, id + '.cif')
                                     print conv_f
@@ -115,11 +117,55 @@ class TestTranslator(unittest.TestCase):
                                 if os.path.exists(conv_f) and os.path.isfile(conv_f):
                                     of = os.path.join(self.outputXmlDir, id + '.xml')
                                     print of
+                                    print "conv_f %s" % conv_f
                                     translator.translate_and_validate(conv_f, of, self.schema)
+                                    a_log = translator.current_entry_log
+                                    log_id = a_log.id
+                                    print "log id %s" % log_id
+                                    if translator.is_translation_log_empty:
+                                        print "AFTER: log is empty"
+                                    else:
+                                        print "AFTER: There are errors"
+                                    # print "ERRORS"
+                                    # for err in a_log.errors:
+                                    #     # print "cif_item %s" % err.cif_item
+                                    #     # print "setter_func %s" % err.setter_func
+                                    #     # print "schema %s" % err.schema_entity
+                                    #     # print "em %s" % err.em_for_emd
+                                    #     # print "fmt_cif_value %s" % err.fmt_cif_value
+                                    #     # print "parent el req %s" % err.parent_el_req
+                                    #     # print "soft name %s" % err.soft_name
+                                    #     print "%s" % err.log_text
+                                    #     print
+                                    # # print "INFOS"
+                                    # # for inf in a_log.infos:
+                                    # #     print "%s" % inf.log_text
+                                    # #     print
+                                    # # print "WARNINGS"
+                                    # # for warn in a_log.warnings:
+                                    # #     # print "cif_item %s" % warn.cif_item
+                                    # #     # print "setter_func %s" % warn.setter_func
+                                    # #     # print "schema %s" % warn.schema_entity
+                                    # #     # print "em %s" % warn.em_for_emd
+                                    # #     # print "fmt_cif_value %s" % warn.fmt_cif_value
+                                    # #     # print "parent el req %s" % warn.parent_el_req
+                                    # #     # print "soft name %s" % warn.soft_name
+                                    # #     print "%s" % warn.log_text
+                                    # #     print
                                 else:
-                                    print 'The file ' + conv_f + 'cannot be converted into the _emd space and therefore, cannot be translated'  
+                                    print 'The file ' + conv_f + 'cannot be converted into the _emd space and therefore, cannot be translated'
                         except IOError as exp:
                             print exp
+                if translator.is_translation_log_empty:
+                    print 'NO ERRORS FOUND'
+                else:
+                    for entry_log in translator.translation_log.logs:
+                        print entry_log.id
+                        if entry_log.is_error_log_empty:
+                            print "NO EERORS FOUND FOR THIS ENTRY"
+                        else:
+                            for err in entry_log.errors:
+                                print err.log_text
             except IOError as exp:
                         print exp
         

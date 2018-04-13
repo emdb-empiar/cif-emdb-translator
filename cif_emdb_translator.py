@@ -40,6 +40,7 @@ import emdb
 
 class CifEMDBTranslator(object):
     """Class for translating files from/to cif from EMDB XML 3.0"""
+    translation_log = None  # type: TranslationLog
 
     class Constants(object):
         """
@@ -247,15 +248,15 @@ class CifEMDBTranslator(object):
                              'TISSUE': 'tissue',
                              'CELL': 'cell'}
         MAP_DATA_TYPE_CIF2XML = {'Image stored as signed byte':
-                                 'IMAGE STORED AS SIGNED BYTE',
+                                     'IMAGE STORED AS SIGNED BYTE',
                                  'Image stored as signed integer (2 bytes)':
-                                 'IMAGE STORED AS SIGNED INTEGER (2 BYTES)',
+                                     'IMAGE STORED AS SIGNED INTEGER (2 BYTES)',
                                  'Image stored as floating point number (4 bytes)':
-                                 'IMAGE STORED AS FLOATING POINT NUMBER (4 BYTES)'}
+                                     'IMAGE STORED AS FLOATING POINT NUMBER (4 BYTES)'}
 
-        INFO_LOG = 'INFO_cifEMDBTranslation.log'
-        WARN_LOG = 'WARN_cifEMDBTranslation.log'
-        ERR_LOG = 'ERROR_cifEMDBTranslation.log'
+        INFO_LOG_FILE_NAME = 'INFO_cifEMDBTranslation.log'
+        WARN_LOG_FILE_NAME = 'WARN_cifEMDBTranslation.log'
+        ERR_LOG_FILE_NAME = 'ERROR_cifEMDBTranslation.log'
 
         NYI = 'NOT YET IMPLEMENTED'
         REQUIRED_ALERT = 'PROBLEM: '
@@ -326,413 +327,572 @@ class CifEMDBTranslator(object):
             'Transmembrane Protein Center (TMPC)'}
 
         MMCIF_TO_XSD = {
-            '_emd_admin.current_status':'<xs:element name="code" type="code_type">',
-            '_emd.admin last_update':'<xs:element name="date" minOccurs="0">',
-            '_pdbx_database_status.process_site':'<xs:element name="processing_site" minOccurs="0">',
-            '_emd_admin.deposition_site':'<xs:element name="deposition">',
-            '_emd_admin.deposition_date':'<xs:element name="deposition" type="xs:date">',
-            '_emd_admin.header_release_date':'<xs:element name="header_release" type="xs:date" minOccurs="0">',
-            '_emd_admin.map_release_date':'<xs:element name="map_release" type="xs:date" minOccurs="0">',
-            '_emd_admin.obsoleted_date':'<xs:element name="obsolete" type="xs:date" minOccurs="0">',
-            '_emd_admin.last_update':'<xs:element name="update" type="xs:date">',
-            '_struct.title':'<xs:element name="title" type="xs:token">',
-            '_emd_admin.title':'<xs:element name="title" type="xs:token">',
-            '_emd_admin.details':'<xs:element name="details" type="xs:token" minOccurs="0">',
-            '_citation.title':'<xs:element name="title" type="xs:token"/>',
-            '_citation.journal_full':'<xs:element name="journal" type="xs:token" minOccurs="0"/>',
-            '_citation.journal_abbrev':'<xs:element name="journal_abbreviation" type="xs:token">',
-            '_citation.country':'<xs:element name="country" type="xs:token"  minOccurs="0"/>',
-            '_citation.journal_issue':'<xs:element name="issue" type="xs:positiveInteger" minOccurs="0"/>',
-            '_citation.journal_volume':'<xs:element name="volume" type="xs:string" nillable="true" minOccurs="0"/>',
-            '_citation.page_first':'<xs:element name="first_page" type="page_type" nillable="false" minOccurs="0"/>',
-            '_citation.page_last':'<xs:element name="last_page" type="page_type"  minOccurs="0"/>',
-            '_citation.year':'<xs:element name="year" minOccurs="0">',
-            '_citation.language':'<xs:element name="language" type="xs:language" minOccurs="0"/>',
-            '_citation.details':'<xs:element name="details" type="xs:string" minOccurs="0"/>',
-            '_citation.book_title':'<xs:element name="title" type="xs:token"/>',
-            '_citation.book_publisher':'<xs:element name="publisher" type="xs:token" minOccurs="0"/>',
-            '_emd_crossreference.access_code':'<xs:element name="emdb_id" type="emdb_id_type"/>',
-            '_pdbx_database_related.db_id':'<xs:element name="emdb_id" type="emdb_id_type"/>',
-            '_emd_crossreference.relationship':'<xs:element name="relationship" minOccurs="0">',
-            '_pdbx_database_related.content_type':'<xs:element name="relationship" minOccurs="0">',
-            '_pdbx_database_related.details':'<xs:element name="details" minOccurs="0" type="xs:string"/>',
-            '_emd_crossreference_auxiliary.link_type':'<xs:element name="type">',
-            '_emd_crossreference_auxiliary.link':'<xs:element name="link">',
-            '_emd_supramolecule.chimera':'<xs:attribute fixed="true" name="chimera" type="xs:boolean"/>',
-            '_emd_natural_source.organ':'<xs:element name="organ" type="xs:token" minOccurs="0"/>',
-            '_emd_natural_source.tissue':'<xs:element name="tissue" type="xs:token" minOccurs="0">',
-            '_emd_recombinant_expression.strain':'<xs:element name="recombinant_strain" type="xs:token" minOccurs="0"/>',
-            '_emd_recombinant_expression.cell':'<xs:element name="recombinant_cell" type="xs:token" minOccurs="0">',
-            '_emd_recombinant_expression.plasmid':'<xs:element name="recombinant_plasmid" type="xs:token" minOccurs="0"/>',
-            '_emd_natural_source.cell':'<xs:element name="cell" type="xs:token" minOccurs="0">',
-            '_emd_natural_source.organelle':'<xs:element name="organelle" type="xs:token" minOccurs="0">',
-            '_emd_natural_source.cellular_location':'<xs:element name="cellular_location" type="xs:token" minOccurs="0">',
-            '_emd_virus.empty':'<xs:element name="virus_empty" type="xs:boolean"/>',
-            '_emd_virus.enveloped':'<xs:element name="virus_enveloped" type="xs:boolean"/>',
-            '_emd_virus.isolate':'<xs:element name="virus_isolate">',
-            '_emd_virus.category':'<xs:element name="virus_type">',
-            '_emd_virus_shell.triangulation':'<xs:element name="triangulation" type="xs:positiveInteger" minOccurs="0">',
-            '_emd_virus_shell.name':'<xs:element name="name" type="xs:token" nillable="false" minOccurs="0"/>',
-            '_emd_virus_shell.id':'<xs:attribute name="id" type="xs:positiveInteger"/>',
-            '_emd_natural_source.strain':'<xs:element name="sci_species_strain" type="xs:string" maxOccurs="1" minOccurs="0">',
-            '_emd_supramolecule.id':'<xs:attribute name="id" type="xs:positiveInteger" use="required"/>',
-            '_emd_supramolecule.name':'<xs:element name="name" type="sci_name_type">',
-            '_emd_supramolecule.category_go':'<xs:element name="category" minOccurs="0">',
-            '_emd_supramolecule.parent_id':'<xs:element name="parent" type="xs:nonNegativeInteger">',
-            '_emd_supramolecule.details':'<xs:element name="details" type="xs:string" minOccurs="0"/>',
-            '_entity.id':'<xs:attribute name="id" type="xs:positiveInteger" use="required">',
-            '_entity.pdbx_number_of_molecules':'<xs:element name="number_of_copies" type="pos_int_or_string_type" minOccurs="0"/>',
-            '_entity.details':'<xs:element name="details" type="xs:string" minOccurs="0"/>',
-            '_entity.pdbx_description':'<xs:element name="name" type="sci_name_type">',
-            '_entity_src_nat.pdbx_organ':'<xs:element name="organ" type="xs:token" minOccurs="0"/>',
-            '_entity_src_gen.pdbx_gene_src_organ':'<xs:element name="organ" type="xs:token" minOccurs="0"/>',
-            '_entity_src_nat.tissue':'<xs:element name="tissue" type="xs:token" minOccurs="0">',
-            '_entity_src_gen.gene_src_tissue':'<xs:element name="tissue" type="xs:token" minOccurs="0">',
-            '_entity_src_nat.pdbx_cell':'<xs:element name="cell" type="xs:token" minOccurs="0">',
-            '_entity_src_gen.pdbx_gene_src_cell':'<xs:element name="cell" type="xs:token" minOccurs="0">',
-            '_entity_src_nat.pdbx_organelle':'<xs:element name="organelle" type="xs:token" minOccurs="0">',
-            '_entity_src_gen.pdbx_gene_src_organelle':'<xs:element name="organelle" type="xs:token" minOccurs="0">',
-            '_entity_src_nat.pdbx_cellular_location':'<xs:element name="cellular_location" type="xs:token" minOccurs="0">',
-            '_entity_src_gen.pdbx_gene_src_cellular_location':'<xs:element name="cellular_location" type="xs:token" minOccurs="0">',
-            '_entity.pdbx_ec':'<xs:element name="ec_number" maxOccurs="unbounded" minOccurs="0">',
-            '_entity_src_gen.plasmid_name':'<xs:element name="plasmid" type="xs:token"  minOccurs="0"/>',
-            '_entity_src_gen.pdbx_gene_src_cell_line':'<xs:element name="cell" type="xs:token" minOccurs="0">',
-            '_pdbx_entity_nonpoly.comp_id':'<xs:element name="formula" minOccurs="0">',
-            '_emd_structure_determination.id':'<xs:attribute name="id" type="xs:positiveInteger" use="required">',
-            '_emd_specimen.id':'<xs:attribute name="id" type="xs:positiveInteger" use="required">',
-            '_emd_buffer.ph':'<xs:element name="ph">',
-            '_emd_buffer.details':'<xs:element name="details" type="xs:string" minOccurs="0">',
-            '_emd_buffer_component.concentration':'<xs:element name="concentration" minOccurs="0">',
-            '_emd_buffer_component.concentration_units':'<xs:element name="concentration" minOccurs="0">',
-            '_emd_buffer_component.formula':'<xs:element name="formula" minOccurs="0">',
-            '_emd_buffer_component.name':'<xs:element name="name" type="xs:token" minOccurs="0">',
-            '_emd_staining.type':'<xs:element name="type">',
-            '_emd_staining.material':'<xs:element name="material" type="xs:token">',
-            '_emd_staining.details':'<xs:element name="details" type="xs:string" minOccurs="0">',
-            '_emd_embedding.material':'<xs:element name="material" type="xs:token">',
-            '_emd_embedding.details':'<xs:element name="details" type="xs:string" minOccurs="0">',
-            '_emd_shadowing.material':'<xs:element name="material" type="xs:token">',
-            '_emd_shadowing.angle':'<xs:element name="angle">',
-            '_emd_shadowing.thickness':'<xs:element name="thickness">',
-            '_emd_shadowing.details':'<xs:element name="details" type="xs:string" minOccurs="0">',
-            '_emd_grid.model':'<xs:element name="model" type="xs:token" minOccurs="0">',
-            '_emd_grid.material':'<xs:element name="material" minOccurs="0">',
-            '_emd_grid.mesh':'<xs:element name="mesh" type="xs:positiveInteger" minOccurs="0">',
-            '_emd_support_film.id':'<xs:attribute name="id" type="xs:positiveInteger" use="required"/>',
-            '_emd_support_film.material':'<xs:element name="film_material" type="xs:token" minOccurs="0">',
-            '_emd_support_film.topology':'<xs:element name="film_topology" minOccurs="0">',
-            '_emd_grid_pretreatment.type':'<xs:element name="type" type="xs:token"/>',
-            '_emd_grid.details':'<xs:element name="details" type="xs:string" minOccurs="0">',
-            '_emd_specimen_vitrification.cryogen_name':'<xs:element name="cryogen_name">',
-            '_emd_vitrification.instrument':'<xs:element name="instrument" minOccurs="0">',
-            '_emd_vitrification.details':'<xs:element name="details" type="xs:string" minOccurs="0">',
-            '_emd_specimen.details':'<xs:element name="details" type="xs:string" minOccurs="0">',
-            '_emd_fiducial_markers.manufacturer':'<xs:element name="manufacturer" type="xs:token" minOccurs="0">',
-            '_emd_fiducial_markers.diameter':'<xs:element name="diameter" type="fiducial_marker_diameter_type"/>',
-            '_emd_high_pressure_freezing.instrument':'<xs:element name="instrument">',
-            '_emd_high_pressure_freezing.details':'<xs:element name="details" type="xs:string" minOccurs="0"/>',
-            '_emd_tomography_preparation.cryo_protectant':'<xs:element name="cryo_protectant" type="xs:token" minOccurs="0">',
-            '_emd_sectioning_ultramicrotomy.instrument':'<xs:element name="instrument" type="xs:token">',
-            '_emd_sectioning_ultramicrotomy.temperature':'<xs:element name="temperature" type="temperature_type"/>',
-            '_emd_sectioning_ultramicrotomy.final_thickness':'<xs:element name="final_thickness" type="ultramicrotomy_final_thickness_type"/>',
-            '_emd_sectioning_ultramicrotomy.details':'<xs:element name="details" type="xs:string" minOccurs="0"/>',
-            '_emd_sectioning_focused_ion_beam.instrument':'<xs:element name="instrument">',
-            '_emd_sectioning_focused_ion_beam.ion':'<xs:element name="ion">',
-            '_emd_sectioning_focused_ion_beam.voltage':'<xs:element name="voltage" type="fib_voltage_type"/>',
-            '_emd_sectioning_focused_ion_beam.current':'<xs:element name="current" type="fib_current_type"/>',
-            '_emd_sectioning_focused_ion_beam.dose_rate':'<xs:element name="dose_rate" type="fib_dose_rate_type"/>',
-            '_emd_sectioning_focused_ion_beam.duration':'<xs:element name="duration" type="fib_duration_type"/>',
-            '_emd_sectioning_focused_ion_beam.temperature':'<xs:element name="temperature" type="temperature_type"/>',
-            '_emd_sectioning_focused_ion_beam.initial_thickness':'<xs:element name="initial_thickness" type="fib_initial_thickness_type">',
-            '_emd_sectioning_focused_ion_beam.final_thickness':'<xs:element name="final_thickness" type="fib_final_thickness_type"/>',
-            '_emd_sectioning_focused_ion_beam.details':'<xs:element name="details" type="xs:string" minOccurs="0"/>',
-            '_emd_crystal_formation.lipid_protein_ratio':'<xs:element name="lipid_protein_ratio" type="xs:float" minOccurs="0"/>',
-            '_emd_crystal_formation.lipid_mixture':'<xs:element name="lipid_mixture" type="xs:token" minOccurs="0"/>',
-            '_emd_crystal_formation.instrument':'<xs:element name="instrument" minOccurs="0">',
-            '_emd_crystal_formation.atmosphere':'<xs:element name="atmosphere" type="xs:token" minOccurs="0"/>',
-            '_emd_crystal_formation.temperature':'<xs:element name="temperature" type="crystal_formation_temperature_type" minOccurs="0"/>',
-            '_emd_crystal_formation.details':'<xs:element name="details" type="xs:string" minOccurs="0">',
-            '_emd_fsc_curve.file':'<xs:element name="file">',
-            '_emd_fsc_curve.details':'<xs:element name="details" type="xs:string" minOccurs="0"/>',
-            '_emd_grid_pretreatment.atmosphere':'<xs:element name="atmosphere" minOccurs="0">',
-            '_emd_modelling_initial_model':'<xs:element name="access_code">',
-            '_emd_modelling_initial_model.pdb_chain_id':'<xs:element name="id" type="chain_pdb_id" minOccurs="0" maxOccurs="unbounded"/>',
-            '_emd_modelling_initial_model.pdb_chain_residue_range':'<xs:element name="residue_range" maxOccurs="unbounded" minOccurs="0">',
-            '_emd_modelling_initial_model.details':'<xs:element name="details" type="xs:string" minOccurs="0"/>',
-            '_emd_modelling.refinement_protocol':'<xs:element name="refinement_protocol" minOccurs="0">',
-            '_emd_software.name':'<xs:element name="name" type="xs:token"/>',
-            '_emd_software.version':'<xs:element name="version" type="xs:token" minOccurs="0"/>',
-            '_emd_software.details':'<xs:element name="processing_details" type="xs:string" minOccurs="0"/>',
-            '_emd_microscopy.id':'<xs:attribute name="id" type="xs:positiveInteger" use="required">',
-            '_emd_microscopy.microscope':'<xs:element name="microscope">',
-            '_emd_microscopy.illumination_mode':'<xs:element name="illumination_mode">',
-            '_emd_microscopy.imaging_mode':'<xs:element name="imaging_mode">',
-            '_emd_microscopy.electron_source':'<xs:element name="electron_source">',
-            '_emd_microscopy.nominal_magnification':'<xs:element name="nominal_magnification" type="allowed_magnification" minOccurs="0">',
-            '_emd_microscopy.calibrated_magnification':'<xs:element name="calibrated_magnification" type="allowed_magnification" minOccurs="0">',
-            '_emd_microscopy.specimen_holder_model':'<xs:element name="specimen_holder_model" minOccurs="0">',
-            '_emd_microscopy.cooling_holder_cryogen':'<xs:element name="cooling_holder_cryogen" minOccurs="0">',
-            '_emd_specialist_optics.phase_plate':'<xs:element name="phase_plate" type="xs:token" minOccurs="0"/>',
-            '_emd_specialist_optics.sph_aberration_corrector':'xs:element name="sph_aberration_corrector" type="xs:token" minOccurs="0"/>',
-            '_emd_specialist_optics.chr_aberration_corrector':'<xs:element name="chr_aberration_corrector" type="xs:token" minOccurs="0"/>',
-            '_emd_specialist_optics.energyfilter_name':'<xs:element name="name" type="xs:token" minOccurs="0">',
-            '_emd_microscopy.details':'<xs:element name="details" type="xs:string" minOccurs="0">',
-            '_emd_modelling.details':'<xs:element name="details" type="xs:string" minOccurs="0"/>',
-            '_emd_modelling.target_criteria':'<xs:element name="target_criteria" type="xs:token" minOccurs="0">',
-            '_emd_modelling.ref_space':'<xs:element name="refinement_space" type="xs:token" minOccurs="0">',
-            '_emd_modelling.overall_b_value':'<xs:element name="overall_bvalue" type="xs:float" minOccurs="0">',
-            '_emd_map.format':'<xs:attribute name="format" fixed="CCP4" use="required"/>',
-            '_emd_map.size_kb':'<xs:attribute name="size_kbytes" type="xs:positiveInteger" use="required"/>',
-            '_emd_map.data_type':'<xs:element name="data_type" type="map_data_type"/>',
-            '_emd_map.label':'<xs:element name="label" type="xs:token"/>',
-            '_emd_map.annotation_details':'<xs:element name="annotation_details" type="xs:string" minOccurs="0"/>',
-            '_emd_map.contour_level':'<xs:element name="level" type="xs:float" minOccurs="0">',
-            '_emd_map.contour_level_source':'<xs:element name="source" minOccurs="0">',
-            '_emd_image_recording.id':'<xs:attribute name="id" type="xs:positiveInteger"/>',
-            '_emd_image_recording.detector_mode':'<xs:element name="detector_mode" minOccurs="0">',
-            '_emd_image_recording.number_grids_imaged':'<xs:element name="number_grids_imaged" type="xs:positiveInteger" minOccurs="0"/>',
-            '_emd_image_recording.details':'<xs:element name="details" type="xs:string" minOccurs="0"/>',
-            '_emd_image_recording.number_diffraction_images':'<xs:element name="number_diffraction_images" type="xs:positiveInteger" minOccurs="0"/>',
-            '_emd_image_recording.number_real_images':'<xs:element name="number_real_images" type="xs:positiveInteger" minOccurs="0"/>',
-            '_emd_microscopy_tomography.axis1_min_angle':'<xs:element name="min_angle" minOccurs="0">',
-            '_emd_microscopy_tomography.axis2_min_angle':'<xs:element name="min_angle" minOccurs="0">',
-            '_emd_microscopy_tomography.axis1_max_angle':'<xs:element name="max_angle" minOccurs="0">',
-            '_emd_microscopy_tomography.axis2_max_angle':'<xs:element name="max_angle" minOccurs="0">',
-            '_emd_microscopy_tomography.axis1_angle_increment':'<xs:element name="angle_increment" minOccurs="0">',
-            '_emd_microscopy_tomography.axis2_angle_increment':'<xs:element name="angle_increment" minOccurs="0">',
-            '_emd_microscopy_crystallography.camera_length':'<xs:element name="camera_length">',
-            '_emd_image_processing.details':'<xs:element name="details" type="xs:token" minOccurs="0"/>',
-            '_emd_image_processing.emd_image_recording_id':'<xs:element name="image_recording_id" type="xs:positiveInteger"/>',
-            '_emd_image_processing.id':'<xs:attribute name="id" type="xs:positiveInteger" use="required"/>',
-            '_emd_particle_selection.reference_model':'<xs:element name="reference_model" type="xs:token" minOccurs="0">',
-            '_emd_particle_selection.method':'<xs:element name="method" type="xs:string" minOccurs="0">',
-            '_emd_particle_selection.details':'<xs:element name="details" type="xs:string" minOccurs="0"/>',
-            '_emd_final_reconstruction.number_images_used':'<xs:element name="number_images_used" type="xs:positiveInteger" minOccurs="0">',
-            '_emd_final_reconstruction.number_classes_used':'<xs:element name="number_classes_used" type="xs:positiveInteger" minOccurs="0"/>',
-            '_emd_symmetry_point.group':'<xs:element name="point_group">',
-            '_emd_helical_parameters.delta_z':'<xs:element name="delta_z">',
-            '_emd_helical_parameters.axial_symmetry':'<xs:element name="axial_symmetry">',
-            '_emd_final_reconstruction.algorithm':'<xs:element name="algorithm" type="reconstruction_algorithm_type" minOccurs="0">',
-            '_emd_final_reconstruction.resolution_method':'<xs:element name="resolution_method" minOccurs="0">',
-            '_emd_final_reconstruction.details':'<xs:element name="details" type="xs:string" minOccurs="0"/>',
-            '_emd_ctf_correction.phase_reversal_anisotropic':'<xs:element name="anisotropic" type="xs:boolean" minOccurs="0"/>',
-            '_emd_ctf_correction.phase_reversal_correction_space':'<xs:element name="correction_space" type="correction_space_type"  minOccurs="0"/>',
-            '_emd_ctf_correction.amplitude_correction_factor':'<xs:element name="factor" type="xs:float" minOccurs="0">',
-            '_emd_ctf_correction.amplitude_correction_space':'<xs:element name="correction_space" type="correction_space_type" minOccurs="0"/>',
-            '_emd_ctf_correction.correction_operation':'<xs:element name="correction_operation" minOccurs="0">',
-            '_emd_ctf_correction.details':'<xs:element name="details" type="xs:string" minOccurs="0"/>',
-            '_emd_volume_selection.number_tomograms':'<xs:element name="number_tomograms" type="xs:positiveInteger"/>',
-            '_emd_volume_selection.number_volumes_extracted':'<xs:element name="number_subtomograms" type="xs:positiveInteger"/>',
-            '_emd_volume_selection.reference_model':'<xs:element name="reference_model" type="xs:token" minOccurs="0">',
-            '_emd_volume_selection.method':'<xs:element name="method" type="xs:string" minOccurs="0">',
-            '_emd_volume_selection.details':'<xs:element name="details" type="xs:string" minOccurs="0"/>',
-            '_emd_final_classification.average_number_images_per_class':'<xs:element name="average_number_members_per_class" minOccurs="0">',
-            '_emd_final_classification.details':'<xs:element name="details" type="xs:string" minOccurs="0"/>',
-            '_emd_particle_selection.number_particles_selected':'<xs:element name="number_selected" type="xs:positiveInteger" minOccurs="0"/>',
-            '_emd_startup_model.type':'<xs:attribute name="type_of_model" type="xs:token"/>',
-            '_emd_startup_model.random_conical_tilt_number_images':'<xs:element name="number_images" type="xs:positiveInteger" minOccurs="0"/>',
-            '_emd_startup_model.details':'<xs:element name="details" type="xs:string" minOccurs="0"/>',
-            '_emd_startup_model.orthogonal_tilt_number_images':'<xs:element name="number_images" type="xs:positiveInteger" minOccurs="0"/>',
-            '_emd_startup_model.emdb_id':'<xs:element name="emdb_id" type="emdb_id_type" minOccurs="0"/>',
-            '_emd_startup_model.pdb_id':'<xs:element name="pdb_id" type="pdb_code_type"/>',
-            '_emd_startup_model.insilico_model':'<xs:element name="insilico_model" type="xs:token" minOccurs="0"/>',
-            '_emd_two_d_crystal_parameters.a':'<xs:element name="a" type="cell_type">',
-            '_emd_three_d_crystal_parameters.a':'<xs:element name="a" type="cell_type">',
-            '_emd_two_d_crystal_parameters.b':'<xs:element name="b" type="cell_type">',
-            '_emd_three_d_crystal_parameters.b':'<xs:element name="b" type="cell_type">',
-            '_emd_two_d_crystal_parameters.c':'<xs:element name="c" type="cell_type">',
-            '_emd_three_d_crystal_parameters.c':'<xs:element name="c" type="cell_type">',
-            '_emd_two_d_crystal_parameters.c_sampling_length':'<xs:element name="c_sampling_length" type="cell_type">',
-            '_emd_three_d_crystal_parameters.c_sampling_length':'<xs:element name="c_sampling_length" type="cell_type">',
-            '_emd_three_d_crystal_parameters.gamma':'<xs:element name="gamma" type="cell_angle_type">',
-            '_emd_two_d_crystal_parameters.gamma':'<xs:element name="gamma" type="cell_angle_type">',
-            '_emd_three_d_crystal_parameters.alpha':'<xs:element name="alpha" type="cell_angle_type">',
-            '_emd_two_d_crystal_parameters.alpha':'<xs:element name="alpha" type="cell_angle_type">',
-            '_emd_three_d_crystal_parameters.beta':'<xs:element name="beta" type="cell_angle_type">',
-            '_emd_two_d_crystal_parameters.beta':'<xs:element name="beta" type="cell_angle_type">',
-            '_emd_three_d_crystal_parameters.space_group':'<xs:element name="space_group" type="xs:token">',
-            '_emd_two_d_crystal_parameters.plane_group':'<xs:element name="space_group" type="xs:token">',
-            '_emd_angle_assignment.type':'<xs:element name="type">',
-            '_emd_angle_assignment.projection_matching_number_reference_projections':'<xs:element name="number_reference_projections" type="xs:positiveInteger"/>',
-            '_emd_angle_assignment.projection_matching_merit_function':'<xs:element name="merit_function" type="xs:token"/>',
-            '_emd_angle_assignment.details':'<xs:element name="details" type="xs:string" minOccurs="0"/>',
-            '_emd_crystallography_stats.number_intensities_measured':'<xs:element name="number_intensities_measured" type="xs:positiveInteger"/>',
-            '_emd_crystallography_stats.number_structure_factors':'<xs:element name="number_structure_factors" type="xs:positiveInteger"/>',
-            '_emd_crystallography_stats.fourier_space_coverage':'<xs:element name="fourier_space_coverage" type="xs:float">',
-            '_emd_crystallography_stats.r_sym':'<xs:element name="r_sym" type="xs:float"/>',
-            '_emd_crystallography_stats.r_merge':'<xs:element name="r_merge" type="xs:float"/>',
-            '_emd_crystallography_stats.overall_phase_error':'<xs:element name="overall_phase_error" type="xs:float"/>',
-            '_emd_crystallography_stats.overall_phase_residual':'<xs:element name="overall_phase_residual" type="xs:float"/>',
-            '_emd_crystallography_stats.phase_error_rejection_criteria':'<xs:element name="phase_error_rejection_criteria" type="xs:float"/>',
-            '_emd_crystallography_stats.high_resolution':'<xs:element name="high_resolution">',
-            '_emd_crystallography_shell.id':'<xs:attribute name="id" type="xs:positiveInteger"/>',
-            '_emd_crystallography_shell.high_resolution':'<xs:element name="high_resolution">',
-            '_emd_crystallography_shell.low_resolution':'<xs:element name="low_resolution">',
-            '_emd_crystallography_shell.number_structure_factors':'<xs:element name="number_structure_factors" type="xs:positiveInteger"/>',
-            '_emd_crystallography_shell.phase_residual':'<xs:element name="phase_residual" type="xs:float"/>',
-            '_emd_crystallography_shell.fourier_space_coverage':'<xs:element name="fourier_space_coverage" type="xs:float">',
-            '_emd_crystallography_shell.multiplicity':'<xs:element name="multiplicity" type="xs:float"/>',
-            '_emd_crystallography_stats.details':'<xs:element name="details" type="xs:string" minOccurs="0"/>',
-            '_emd_image_digitization.scanner':'<xs:element name="scanner" minOccurs="0">',
-            '_emd_image_digitization.used_frames_per_image':'<xs:element name="frames_per_image" type="xs:positiveInteger" minOccurs="0">',
-            '_emd_structure_determination.aggregation_state':'<xs:element name="aggregation_state">',
-            '_database_2.database_code':'<xs:attribute name="emdb_id" type="emdb_id_type" use="required">',
-            '_citation.unpublished_flag':'<xs:attribute name="published" type="xs:boolean" use="required"/>',
-            '_emd_crossreference.details':'<xs:element name="details" type="xs:string" minOccurs="0"/>',
-            '_citation.pdbx_database_id_PubMed':'<xs:element name="external_references" maxOccurs="unbounded" minOccurs="0">',
-            '_citation.pdbx_database_id_DOI':'<xs:element name="external_references" maxOccurs="unbounded" minOccurs="0">',
-            '_citation.book_id_ISBN':'<xs:element name="external_references" maxOccurs="unbounded" minOccurs="0">',
-            '_citation.journal_id_ISSN':'<xs:element name="external_references" maxOccurs="unbounded" minOccurs="0">',
-            '_citation.abstract_id_CAS':'<xs:element name="external_references" maxOccurs="unbounded" minOccurs="0">',
-            '_citation.journal_id_CSD':'<xs:element name="external_references" maxOccurs="unbounded" minOccurs="0">',
-            '_citation.database_id_Medline':'<xs:element name="external_references" maxOccurs="unbounded" minOccurs="0">',
-            '_citation.journal_id_ASTM':'<xs:element name="external_references" maxOccurs="unbounded" minOccurs="0">',
-            '_emd_supramolecule.entity_id_list':'<xs:element name="macromolecule_list" minOccurs="0">',
-            '_emd_recombinant_expression.ncbi_tax_id':'<xs:attribute name="database">',
-            '_emd_recombinant_expression.organism':'<xs:element name="recombinant_organism" type="organism_type">',
-            '_emd_molecular_mass.value':'<xs:complexType name="molecular_weight_type">',
-            '_emd_natural_source.ncbi_tax_id':'<xs:attribute name="database">',
-            '_emd_natural_source.organism':'<xs:element name="organism" type="organism_type">',
-            '_pdbx_database_status.pdbx_annotator':'<xs:element name="annotator" minOccurs="0">',
-            '_pdbx_database_PDB_obs_spr.date':'<xs:element name="date" type="xs:date"/>',
-            '_pdbx_database_PDB_obs_spr.replace_pdb_id':'<xs:element name="entry" type="emdb_id_type"/>',
-            '_pdbx_database_PDB_obs_spr.details':'<xs:element name="details" type="xs:string" minOccurs="0"/>',
-            '_pdbx_database_PDB_obs_spr.pdb_id':'<xs:element name="entry" type="emdb_id_type"/>',
-            '_pdbx_audit_support.funding_organization':'<xs:element name="funding_body" type="xs:token"/>',
-            '_pdbx_audit_support.grant_number':'<xs:element name="code" type="xs:token"/>',
-            '_pdbx_audit_support.country':'<xs:element name="country" type="xs:token"/>',
-            '_pdbx_contact_author.role':'<xs:element name="role">',
-            '_pdbx_contact_author.name_salutation':'<xs:element name="title">',
-            '_pdbx_contact_author.name_first':'<xs:element name="first_name" type="xs:token">',
-            '_pdbx_contact_author.name_mi':'<xs:element name="middle_name">',
-            '_pdbx_contact_author.name_last':'<xs:element name="last_name" type="xs:token">',
-            '_pdbx_contact_author.organization_type':'<xs:element name="organization">',
-            '_pdbx_contact_author.address_1':'<xs:element name="street" type="xs:string">',
-            '_pdbx_contact_author.city':'<xs:element name="town_or_city" type="xs:token">',
-            '_pdbx_contact_author.state_province':'<xs:element name="state_or_province" type="xs:token">',
-            '_pdbx_contact_author.country':'<xs:element name="country" type="xs:token">',
-            '_pdbx_contact_author.postal_code':'<xs:element name="post_or_zip_code" type="xs:token">',
-            '_pdbx_contact_author.email':'<xs:element name="email">',
-            '_pdbx_contact_author.phone':'<xs:element name="telephone" type="telephone_number_type">',
-            '_pdbx_contact_author.fax':'<xs:element name="fax" type="telephone_number_type">',
-            '_emd_author_list.':'<xs:element name="authors_list">',
-            '_emd_virus_natural_host.ncbi_tax_id':'<xs:attribute name="database">',
-            '_emd_virus_natural_host.organism':'<xs:element name="organism" type="organism_type">',
-            '_emd_virus_natural_host.strain':'<xs:element name="strain" type="xs:token" minOccurs="0"/>',
-            '_emd_virus_shell.diameter':'<xs:element name="diameter" minOccurs="0">',
-            '_entity_src_nat.pdbx_ncbi_taxonomy_id':'<xs:attribute name="database">',
-            '_entity_src_gen.pdbx_gene_src_ncbi_taxonomy_id':'<xs:attribute name="database">',
-            '_pdbx_entity_src_syn.ncbi_taxonomy_id':'<xs:attribute name="database">',
-            '_entity_poly.pdbx_seq_one_letter_code':'<xs:element name="string" type="xs:token" minOccurs="0">',
-            '_struct_ref.db_name':'<xs:element name="external_references" maxOccurs="unbounded" minOccurs="0">',
-            '_entity_src_gen.pdbx_host_org_ncbi_taxonomy_id':'<xs:attribute name="database">',
-            '_entity_src_gen.pdbx_host_org_scientific_name':'<xs:element name="organism" type="organism_type">',
-            '_emd_specimen.concentration':'<xs:element name="concentration" minOccurs="0">',
-            '_emd_grid_pretreatment.pretreat_time':'<xs:element name="time" minOccurs="0">',
-            '_emd_vitrification.chamber_humidity':'<xs:element name="chamber_humidity" minOccurs="0">',
-            '_emd_vitrification.chamber_temperature':'<xs:element name="chamber_temperature" minOccurs="0">',
-            '_emd_crystal_formation.time':'<xs:complexType name="crystal_formation_time_type">',
-            '_emd_crystal_formation.time_unit':'<xs:complexType name="crystal_formation_time_type">',
-            '_emd_microscopy.acceleration_voltage':'<xs:element name="acceleration_voltage">',
-            '_emd_microscopy.c2_aperture_diameter':'<xs:element name="c2_aperture_diameter" minOccurs="0">',
-            '_emd_microscopy.nominal_cs':'<xs:element name="nominal_cs" minOccurs="0">',
-            '_emd_microscopy.nominal_defocus_min':'<xs:element name="nominal_defocus_min" minOccurs="0">',
-            '_emd_microscopy.calibrated_defocus_min':'<xs:element name="calibrated_defocus_min" minOccurs="0">',
-            '_emd_microscopy.nominal_defocus_max':'<xs:element name="nominal_defocus_max" minOccurs="0">',
-            '_emd_microscopy.calibrated_defocus_max':'<xs:element name="calibrated_defocus_max" minOccurs="0">',
-            '_emd_microscopy.temperature_max':'<xs:element name="temperature" minOccurs="0">',
-            '_emd_microscopy.temperature_min':'<xs:element name="temperature" minOccurs="0">',
-            '_emd_specialist_optics.energyfilter_lower':'<xs:element name="lower_energy_threshold" minOccurs="0">',
-            '_emd_vitrification.cryogen_name':'<xs:element name="cryogen_name">',
-            '_emd_specialist_optics.energyfilter_upper':'<xs:element name="upper_energy_threshold" minOccurs="0">',
-            '_entity.formula_weight':'<xs:element name="experimental" minOccurs="0">',
-            '_emd_grid_pretreatment.pressure':'<xs:element name="pressure" minOccurs="0">',
-            '_entity_src_nat.common_name':'<xs:element name="organism" type="organism_type">',
-            '_entity_src_nat.pdbx_organism_scientific':'<xs:element name="organism" type="organism_type">',
-            '_entity_src_gen.pdbx_gene_src_scientific_name':'<xs:element name="organism" type="organism_type">',
-            '_pdbx_entity_src_syn.organism_scientific':'<xs:element name="organism" type="organism_type">',
-            '_entity_src_nat.strain':'<xs:element name="strain" type="xs:token" minOccurs="0"/>',
-            '_entity_src_gen.gene_src_strain':'<xs:element name="strain" type="xs:token" minOccurs="0"/>',
-            '_pdbx_entity_src_syn.strain':'<xs:element name="strain" type="xs:token" minOccurs="0"/>',
-            '_emd_microscopy_tomography.dual_tilt_axis_rotation':'<xs:element name="axis_rotation" fixed="90" minOccurs="0">',
-            '_emd_image_recording.film_or_detector_model':'<xs:element name="film_or_detector_model">',
-            '_emd_image_digitization.sampling_interval':'<xs:element name="sampling_interval" minOccurs="0">',
-            '_emd_image_recording.average_exposure_time':'<xs:element name="average_exposure_time" minOccurs="0">',
-            '_emd_image_recording.average_electron_dose_per_image':'<xs:element name="average_electron_dose_per_image" minOccurs="0">',
-            '_emd_final_classification.number_classes':'<xs:element name="number_classes" type="xs:positiveInteger" minOccurs="0">',
-            '_emd_startup_model.orthogonal_tilt_angle1':'<xs:element name="tilt_angle1" minOccurs="0">',
-            '_emd_startup_model.orthogonal_tilt_angle2':'<xs:element name="tilt_angle2"  minOccurs="0">',
-            '_emd_helical_parameters.delta_phi':'<xs:element name="delta_phi">',
-            '_emd_final_reconstruction.resolution':'<xs:element name="resolution" minOccurs="0">',
-            '_emd_angle_assignment.projection_matching_angular_sampling':'<xs:element name="angular_sampling" minOccurs="0">',
-            '_emd_map.symmetry_space_group':'<xs:complexType name="applied_symmetry_type">',
-            '_emd_map.dimensions_col':'<xs:element name="col" type="xs:positiveInteger"/>',
-            '_emd_map.dimensions_row':'<xs:element name="row" type="xs:positiveInteger"/>',
-            '_emd_map.dimensions_sec':'<xs:element name="sec" type="xs:positiveInteger"/>',
-            '_emd_map.origin_col':'<xs:element name="col" type="xs:integer"/>',
-            '_emd_map.origin_row':'<xs:element name="row" type="xs:integer"/>',
-            '_emd_map.origin_sec':'<xs:element name="sec" type="xs:integer"/>',
-            '_emd_map.spacing_x':'<xs:element name="x" type="xs:positiveInteger"/>',
-            '_emd_map.spacing_y':'<xs:element name="y" type="xs:nonNegativeInteger"/>',
-            '_emd_map.spacing_z':'<xs:element name="z" type="xs:nonNegativeInteger"/>',
-            '_emd_map.cell_a':'<xs:element name="a" type="cell_type"/>',
-            '_emd_map.cell_b':'<xs:element name="b" type="cell_type"/>',
-            '_emd_map.cell_c':'<xs:element name="c" type="cell_type"/>',
-            '_emd_map.cell_alpha':'<xs:element name="alpha" type="cell_angle_type"/>',
-            '_emd_map.cell_beta':'<xs:element name="beta" type="cell_angle_type"/>',
-            '_emd_map.cell_gamma':'<xs:element name="gamma" type="cell_angle_type"/>',
-            '_emd_map.file':'<xs:element name="file">',
-            '_emd_map.axis_order_fast':'<xs:element name="fast">',
-            '_emd_map.axis_order_medium':'<xs:element name="medium">',
-            '_emd_map.axis_order_slow':'<xs:element name="slow">',
-            '_emd_map.statistics_minimum':'<xs:element name="minimum" type="xs:float"/>',
-            '_emd_map.statistics_maximum':'<xs:element name="maximum" type="xs:float"/>',
-            '_emd_map.statistics_average':'<xs:element name="average" type="xs:float"/>',
-            '_emd_map.statistics_std':'<xs:element name="std" type="xs:float"/>',
-            '_emd_map.pixel_spacing_x':'<xs:element name="x" type="pixel_spacing_type"/>',
-            '_emd_map.pixel_spacing_y':'<xs:element name="y" type="pixel_spacing_type"/>',
-            '_emd_map.pixel_spacing_z':'<xs:element name="z" type="pixel_spacing_type"/>',
-            '_emd_modelling_initial_model.pdb_id':'<xs:element name="access_code">',
-            '_emd_support_film.thickness':'<xs:element name="film_thickness" minOccurs="0">',
-            '_emd_startup_model.random_conical_tilt_angle':'<xs:element name="tilt_angle" minOccurs="0">',
-            '_exptl.method':'<xs:element name="method">',
-            '_emd_structure_determination.method':'<xs:element name="method">'
+            '_emd_admin.current_status': '<xs:element name="code" type="code_type">',
+            '_emd.admin last_update': '<xs:element name="date" minOccurs="0">',
+            '_pdbx_database_status.process_site': '<xs:element name="processing_site" minOccurs="0">',
+            '_emd_admin.deposition_site': '<xs:element name="deposition">',
+            '_emd_admin.deposition_date': '<xs:element name="deposition" type="xs:date">',
+            '_emd_admin.header_release_date': '<xs:element name="header_release" type="xs:date" minOccurs="0">',
+            '_emd_admin.map_release_date': '<xs:element name="map_release" type="xs:date" minOccurs="0">',
+            '_emd_admin.obsoleted_date': '<xs:element name="obsolete" type="xs:date" minOccurs="0">',
+            '_emd_admin.last_update': '<xs:element name="update" type="xs:date">',
+            '_struct.title': '<xs:element name="title" type="xs:token">',
+            '_emd_admin.title': '<xs:element name="title" type="xs:token">',
+            '_emd_admin.details': '<xs:element name="details" type="xs:token" minOccurs="0">',
+            '_citation.title': '<xs:element name="title" type="xs:token"/>',
+            '_citation.journal_full': '<xs:element name="journal" type="xs:token" minOccurs="0"/>',
+            '_citation.journal_abbrev': '<xs:element name="journal_abbreviation" type="xs:token">',
+            '_citation.country': '<xs:element name="country" type="xs:token"  minOccurs="0"/>',
+            '_citation.journal_issue': '<xs:element name="issue" type="xs:positiveInteger" minOccurs="0"/>',
+            '_citation.journal_volume': '<xs:element name="volume" type="xs:string" nillable="true" minOccurs="0"/>',
+            '_citation.page_first': '<xs:element name="first_page" type="page_type" nillable="false" minOccurs="0"/>',
+            '_citation.page_last': '<xs:element name="last_page" type="page_type"  minOccurs="0"/>',
+            '_citation.year': '<xs:element name="year" minOccurs="0">',
+            '_citation.language': '<xs:element name="language" type="xs:language" minOccurs="0"/>',
+            '_citation.details': '<xs:element name="details" type="xs:string" minOccurs="0"/>',
+            '_citation.book_title': '<xs:element name="title" type="xs:token"/>',
+            '_citation.book_publisher': '<xs:element name="publisher" type="xs:token" minOccurs="0"/>',
+            '_emd_crossreference.access_code': '<xs:element name="emdb_id" type="emdb_id_type"/>',
+            '_pdbx_database_related.db_id': '<xs:element name="emdb_id" type="emdb_id_type"/>',
+            '_emd_crossreference.relationship': '<xs:element name="relationship" minOccurs="0">',
+            '_pdbx_database_related.content_type': '<xs:element name="relationship" minOccurs="0">',
+            '_pdbx_database_related.details': '<xs:element name="details" minOccurs="0" type="xs:string"/>',
+            '_emd_crossreference_auxiliary.link_type': '<xs:element name="type">',
+            '_emd_crossreference_auxiliary.link': '<xs:element name="link">',
+            '_emd_supramolecule.chimera': '<xs:attribute fixed="true" name="chimera" type="xs:boolean"/>',
+            '_emd_natural_source.organ': '<xs:element name="organ" type="xs:token" minOccurs="0"/>',
+            '_emd_natural_source.tissue': '<xs:element name="tissue" type="xs:token" minOccurs="0">',
+            '_emd_recombinant_expression.strain': '<xs:element name="recombinant_strain" type="xs:token" minOccurs="0"/>',
+            '_emd_recombinant_expression.cell': '<xs:element name="recombinant_cell" type="xs:token" minOccurs="0">',
+            '_emd_recombinant_expression.plasmid': '<xs:element name="recombinant_plasmid" type="xs:token" minOccurs="0"/>',
+            '_emd_natural_source.cell': '<xs:element name="cell" type="xs:token" minOccurs="0">',
+            '_emd_natural_source.organelle': '<xs:element name="organelle" type="xs:token" minOccurs="0">',
+            '_emd_natural_source.cellular_location': '<xs:element name="cellular_location" type="xs:token" minOccurs="0">',
+            '_emd_virus.empty': '<xs:element name="virus_empty" type="xs:boolean"/>',
+            '_emd_virus.enveloped': '<xs:element name="virus_enveloped" type="xs:boolean"/>',
+            '_emd_virus.isolate': '<xs:element name="virus_isolate">',
+            '_emd_virus.category': '<xs:element name="virus_type">',
+            '_emd_virus_shell.triangulation': '<xs:element name="triangulation" type="xs:positiveInteger" minOccurs="0">',
+            '_emd_virus_shell.name': '<xs:element name="name" type="xs:token" nillable="false" minOccurs="0"/>',
+            '_emd_virus_shell.id': '<xs:attribute name="id" type="xs:positiveInteger"/>',
+            '_emd_natural_source.strain': '<xs:element name="sci_species_strain" type="xs:string" maxOccurs="1" minOccurs="0">',
+            '_emd_supramolecule.id': '<xs:attribute name="id" type="xs:positiveInteger" use="required"/>',
+            '_emd_supramolecule.name': '<xs:element name="name" type="sci_name_type">',
+            '_emd_supramolecule.category_go': '<xs:element name="category" minOccurs="0">',
+            '_emd_supramolecule.parent_id': '<xs:element name="parent" type="xs:nonNegativeInteger">',
+            '_emd_supramolecule.details': '<xs:element name="details" type="xs:string" minOccurs="0"/>',
+            '_entity.id': '<xs:attribute name="id" type="xs:positiveInteger" use="required">',
+            '_entity.pdbx_number_of_molecules': '<xs:element name="number_of_copies" type="pos_int_or_string_type" minOccurs="0"/>',
+            '_entity.details': '<xs:element name="details" type="xs:string" minOccurs="0"/>',
+            '_entity.pdbx_description': '<xs:element name="name" type="sci_name_type">',
+            '_entity_src_nat.pdbx_organ': '<xs:element name="organ" type="xs:token" minOccurs="0"/>',
+            '_entity_src_gen.pdbx_gene_src_organ': '<xs:element name="organ" type="xs:token" minOccurs="0"/>',
+            '_entity_src_nat.tissue': '<xs:element name="tissue" type="xs:token" minOccurs="0">',
+            '_entity_src_gen.gene_src_tissue': '<xs:element name="tissue" type="xs:token" minOccurs="0">',
+            '_entity_src_nat.pdbx_cell': '<xs:element name="cell" type="xs:token" minOccurs="0">',
+            '_entity_src_gen.pdbx_gene_src_cell': '<xs:element name="cell" type="xs:token" minOccurs="0">',
+            '_entity_src_nat.pdbx_organelle': '<xs:element name="organelle" type="xs:token" minOccurs="0">',
+            '_entity_src_gen.pdbx_gene_src_organelle': '<xs:element name="organelle" type="xs:token" minOccurs="0">',
+            '_entity_src_nat.pdbx_cellular_location': '<xs:element name="cellular_location" type="xs:token" minOccurs="0">',
+            '_entity_src_gen.pdbx_gene_src_cellular_location': '<xs:element name="cellular_location" type="xs:token" minOccurs="0">',
+            '_entity.pdbx_ec': '<xs:element name="ec_number" maxOccurs="unbounded" minOccurs="0">',
+            '_entity_src_gen.plasmid_name': '<xs:element name="plasmid" type="xs:token"  minOccurs="0"/>',
+            '_entity_src_gen.pdbx_gene_src_cell_line': '<xs:element name="cell" type="xs:token" minOccurs="0">',
+            '_pdbx_entity_nonpoly.comp_id': '<xs:element name="formula" minOccurs="0">',
+            '_emd_structure_determination.id': '<xs:attribute name="id" type="xs:positiveInteger" use="required">',
+            '_emd_specimen.id': '<xs:attribute name="id" type="xs:positiveInteger" use="required">',
+            '_emd_buffer.ph': '<xs:element name="ph">',
+            '_emd_buffer.details': '<xs:element name="details" type="xs:string" minOccurs="0">',
+            '_emd_buffer_component.concentration': '<xs:element name="concentration" minOccurs="0">',
+            '_emd_buffer_component.concentration_units': '<xs:element name="concentration" minOccurs="0">',
+            '_emd_buffer_component.formula': '<xs:element name="formula" minOccurs="0">',
+            '_emd_buffer_component.name': '<xs:element name="name" type="xs:token" minOccurs="0">',
+            '_emd_staining.type': '<xs:element name="type">',
+            '_emd_staining.material': '<xs:element name="material" type="xs:token">',
+            '_emd_staining.details': '<xs:element name="details" type="xs:string" minOccurs="0">',
+            '_emd_embedding.material': '<xs:element name="material" type="xs:token">',
+            '_emd_embedding.details': '<xs:element name="details" type="xs:string" minOccurs="0">',
+            '_emd_shadowing.material': '<xs:element name="material" type="xs:token">',
+            '_emd_shadowing.angle': '<xs:element name="angle">',
+            '_emd_shadowing.thickness': '<xs:element name="thickness">',
+            '_emd_shadowing.details': '<xs:element name="details" type="xs:string" minOccurs="0">',
+            '_emd_grid.model': '<xs:element name="model" type="xs:token" minOccurs="0">',
+            '_emd_grid.material': '<xs:element name="material" minOccurs="0">',
+            '_emd_grid.mesh': '<xs:element name="mesh" type="xs:positiveInteger" minOccurs="0">',
+            '_emd_support_film.id': '<xs:attribute name="id" type="xs:positiveInteger" use="required"/>',
+            '_emd_support_film.material': '<xs:element name="film_material" type="xs:token" minOccurs="0">',
+            '_emd_support_film.topology': '<xs:element name="film_topology" minOccurs="0">',
+            '_emd_grid_pretreatment.type': '<xs:element name="type" type="xs:token"/>',
+            '_emd_grid.details': '<xs:element name="details" type="xs:string" minOccurs="0">',
+            '_emd_specimen_vitrification.cryogen_name': '<xs:element name="cryogen_name">',
+            '_emd_vitrification.instrument': '<xs:element name="instrument" minOccurs="0">',
+            '_emd_vitrification.details': '<xs:element name="details" type="xs:string" minOccurs="0">',
+            '_emd_specimen.details': '<xs:element name="details" type="xs:string" minOccurs="0">',
+            '_emd_fiducial_markers.manufacturer': '<xs:element name="manufacturer" type="xs:token" minOccurs="0">',
+            '_emd_fiducial_markers.diameter': '<xs:element name="diameter" type="fiducial_marker_diameter_type"/>',
+            '_emd_high_pressure_freezing.instrument': '<xs:element name="instrument">',
+            '_emd_high_pressure_freezing.details': '<xs:element name="details" type="xs:string" minOccurs="0"/>',
+            '_emd_tomography_preparation.cryo_protectant': '<xs:element name="cryo_protectant" type="xs:token" minOccurs="0">',
+            '_emd_sectioning_ultramicrotomy.instrument': '<xs:element name="instrument" type="xs:token">',
+            '_emd_sectioning_ultramicrotomy.temperature': '<xs:element name="temperature" type="temperature_type"/>',
+            '_emd_sectioning_ultramicrotomy.final_thickness': '<xs:element name="final_thickness" type="ultramicrotomy_final_thickness_type"/>',
+            '_emd_sectioning_ultramicrotomy.details': '<xs:element name="details" type="xs:string" minOccurs="0"/>',
+            '_emd_sectioning_focused_ion_beam.instrument': '<xs:element name="instrument">',
+            '_emd_sectioning_focused_ion_beam.ion': '<xs:element name="ion">',
+            '_emd_sectioning_focused_ion_beam.voltage': '<xs:element name="voltage" type="fib_voltage_type"/>',
+            '_emd_sectioning_focused_ion_beam.current': '<xs:element name="current" type="fib_current_type"/>',
+            '_emd_sectioning_focused_ion_beam.dose_rate': '<xs:element name="dose_rate" type="fib_dose_rate_type"/>',
+            '_emd_sectioning_focused_ion_beam.duration': '<xs:element name="duration" type="fib_duration_type"/>',
+            '_emd_sectioning_focused_ion_beam.temperature': '<xs:element name="temperature" type="temperature_type"/>',
+            '_emd_sectioning_focused_ion_beam.initial_thickness': '<xs:element name="initial_thickness" type="fib_initial_thickness_type">',
+            '_emd_sectioning_focused_ion_beam.final_thickness': '<xs:element name="final_thickness" type="fib_final_thickness_type"/>',
+            '_emd_sectioning_focused_ion_beam.details': '<xs:element name="details" type="xs:string" minOccurs="0"/>',
+            '_emd_crystal_formation.lipid_protein_ratio': '<xs:element name="lipid_protein_ratio" type="xs:float" minOccurs="0"/>',
+            '_emd_crystal_formation.lipid_mixture': '<xs:element name="lipid_mixture" type="xs:token" minOccurs="0"/>',
+            '_emd_crystal_formation.instrument': '<xs:element name="instrument" minOccurs="0">',
+            '_emd_crystal_formation.atmosphere': '<xs:element name="atmosphere" type="xs:token" minOccurs="0"/>',
+            '_emd_crystal_formation.temperature': '<xs:element name="temperature" type="crystal_formation_temperature_type" minOccurs="0"/>',
+            '_emd_crystal_formation.details': '<xs:element name="details" type="xs:string" minOccurs="0">',
+            '_emd_fsc_curve.file': '<xs:element name="file">',
+            '_emd_fsc_curve.details': '<xs:element name="details" type="xs:string" minOccurs="0"/>',
+            '_emd_grid_pretreatment.atmosphere': '<xs:element name="atmosphere" minOccurs="0">',
+            '_emd_modelling_initial_model': '<xs:element name="access_code">',
+            '_emd_modelling_initial_model.pdb_chain_id': '<xs:element name="id" type="chain_pdb_id" minOccurs="0" maxOccurs="unbounded"/>',
+            '_emd_modelling_initial_model.pdb_chain_residue_range': '<xs:element name="residue_range" maxOccurs="unbounded" minOccurs="0">',
+            '_emd_modelling_initial_model.details': '<xs:element name="details" type="xs:string" minOccurs="0"/>',
+            '_emd_modelling.refinement_protocol': '<xs:element name="refinement_protocol" minOccurs="0">',
+            '_emd_software.name': '<xs:element name="name" type="xs:token"/>',
+            '_emd_software.version': '<xs:element name="version" type="xs:token" minOccurs="0"/>',
+            '_emd_software.details': '<xs:element name="processing_details" type="xs:string" minOccurs="0"/>',
+            '_emd_microscopy.id': '<xs:attribute name="id" type="xs:positiveInteger" use="required">',
+            '_emd_microscopy.microscope': '<xs:element name="microscope">',
+            '_emd_microscopy.illumination_mode': '<xs:element name="illumination_mode">',
+            '_emd_microscopy.imaging_mode': '<xs:element name="imaging_mode">',
+            '_emd_microscopy.electron_source': '<xs:element name="electron_source">',
+            '_emd_microscopy.nominal_magnification': '<xs:element name="nominal_magnification" type="allowed_magnification" minOccurs="0">',
+            '_emd_microscopy.calibrated_magnification': '<xs:element name="calibrated_magnification" type="allowed_magnification" minOccurs="0">',
+            '_emd_microscopy.specimen_holder_model': '<xs:element name="specimen_holder_model" minOccurs="0">',
+            '_emd_microscopy.cooling_holder_cryogen': '<xs:element name="cooling_holder_cryogen" minOccurs="0">',
+            '_emd_specialist_optics.phase_plate': '<xs:element name="phase_plate" type="xs:token" minOccurs="0"/>',
+            '_emd_specialist_optics.sph_aberration_corrector': 'xs:element name="sph_aberration_corrector" type="xs:token" minOccurs="0"/>',
+            '_emd_specialist_optics.chr_aberration_corrector': '<xs:element name="chr_aberration_corrector" type="xs:token" minOccurs="0"/>',
+            '_emd_specialist_optics.energyfilter_name': '<xs:element name="name" type="xs:token" minOccurs="0">',
+            '_emd_microscopy.details': '<xs:element name="details" type="xs:string" minOccurs="0">',
+            '_emd_modelling.details': '<xs:element name="details" type="xs:string" minOccurs="0"/>',
+            '_emd_modelling.target_criteria': '<xs:element name="target_criteria" type="xs:token" minOccurs="0">',
+            '_emd_modelling.ref_space': '<xs:element name="refinement_space" type="xs:token" minOccurs="0">',
+            '_emd_modelling.overall_b_value': '<xs:element name="overall_bvalue" type="xs:float" minOccurs="0">',
+            '_emd_map.format': '<xs:attribute name="format" fixed="CCP4" use="required"/>',
+            '_emd_map.size_kb': '<xs:attribute name="size_kbytes" type="xs:positiveInteger" use="required"/>',
+            '_emd_map.data_type': '<xs:element name="data_type" type="map_data_type"/>',
+            '_emd_map.label': '<xs:element name="label" type="xs:token"/>',
+            '_emd_map.annotation_details': '<xs:element name="annotation_details" type="xs:string" minOccurs="0"/>',
+            '_emd_map.contour_level': '<xs:element name="level" type="xs:float" minOccurs="0">',
+            '_emd_map.contour_level_source': '<xs:element name="source" minOccurs="0">',
+            '_emd_image_recording.id': '<xs:attribute name="id" type="xs:positiveInteger"/>',
+            '_emd_image_recording.detector_mode': '<xs:element name="detector_mode" minOccurs="0">',
+            '_emd_image_recording.number_grids_imaged': '<xs:element name="number_grids_imaged" type="xs:positiveInteger" minOccurs="0"/>',
+            '_emd_image_recording.details': '<xs:element name="details" type="xs:string" minOccurs="0"/>',
+            '_emd_image_recording.number_diffraction_images': '<xs:element name="number_diffraction_images" type="xs:positiveInteger" minOccurs="0"/>',
+            '_emd_image_recording.number_real_images': '<xs:element name="number_real_images" type="xs:positiveInteger" minOccurs="0"/>',
+            '_emd_microscopy_tomography.axis1_min_angle': '<xs:element name="min_angle" minOccurs="0">',
+            '_emd_microscopy_tomography.axis2_min_angle': '<xs:element name="min_angle" minOccurs="0">',
+            '_emd_microscopy_tomography.axis1_max_angle': '<xs:element name="max_angle" minOccurs="0">',
+            '_emd_microscopy_tomography.axis2_max_angle': '<xs:element name="max_angle" minOccurs="0">',
+            '_emd_microscopy_tomography.axis1_angle_increment': '<xs:element name="angle_increment" minOccurs="0">',
+            '_emd_microscopy_tomography.axis2_angle_increment': '<xs:element name="angle_increment" minOccurs="0">',
+            '_emd_microscopy_crystallography.camera_length': '<xs:element name="camera_length">',
+            '_emd_image_processing.details': '<xs:element name="details" type="xs:token" minOccurs="0"/>',
+            '_emd_image_processing.emd_image_recording_id': '<xs:element name="image_recording_id" type="xs:positiveInteger"/>',
+            '_emd_image_processing.id': '<xs:attribute name="id" type="xs:positiveInteger" use="required"/>',
+            '_emd_particle_selection.reference_model': '<xs:element name="reference_model" type="xs:token" minOccurs="0">',
+            '_emd_particle_selection.method': '<xs:element name="method" type="xs:string" minOccurs="0">',
+            '_emd_particle_selection.details': '<xs:element name="details" type="xs:string" minOccurs="0"/>',
+            '_emd_final_reconstruction.number_images_used': '<xs:element name="number_images_used" type="xs:positiveInteger" minOccurs="0">',
+            '_emd_final_reconstruction.number_classes_used': '<xs:element name="number_classes_used" type="xs:positiveInteger" minOccurs="0"/>',
+            '_emd_symmetry_point.group': '<xs:element name="point_group">',
+            '_emd_helical_parameters.delta_z': '<xs:element name="delta_z">',
+            '_emd_helical_parameters.axial_symmetry': '<xs:element name="axial_symmetry">',
+            '_emd_final_reconstruction.algorithm': '<xs:element name="algorithm" type="reconstruction_algorithm_type" minOccurs="0">',
+            '_emd_final_reconstruction.resolution_method': '<xs:element name="resolution_method" minOccurs="0">',
+            '_emd_final_reconstruction.details': '<xs:element name="details" type="xs:string" minOccurs="0"/>',
+            '_emd_ctf_correction.phase_reversal_anisotropic': '<xs:element name="anisotropic" type="xs:boolean" minOccurs="0"/>',
+            '_emd_ctf_correction.phase_reversal_correction_space': '<xs:element name="correction_space" type="correction_space_type"  minOccurs="0"/>',
+            '_emd_ctf_correction.amplitude_correction_factor': '<xs:element name="factor" type="xs:float" minOccurs="0">',
+            '_emd_ctf_correction.amplitude_correction_space': '<xs:element name="correction_space" type="correction_space_type" minOccurs="0"/>',
+            '_emd_ctf_correction.correction_operation': '<xs:element name="correction_operation" minOccurs="0">',
+            '_emd_ctf_correction.details': '<xs:element name="details" type="xs:string" minOccurs="0"/>',
+            '_emd_volume_selection.number_tomograms': '<xs:element name="number_tomograms" type="xs:positiveInteger"/>',
+            '_emd_volume_selection.number_volumes_extracted': '<xs:element name="number_subtomograms" type="xs:positiveInteger"/>',
+            '_emd_volume_selection.reference_model': '<xs:element name="reference_model" type="xs:token" minOccurs="0">',
+            '_emd_volume_selection.method': '<xs:element name="method" type="xs:string" minOccurs="0">',
+            '_emd_volume_selection.details': '<xs:element name="details" type="xs:string" minOccurs="0"/>',
+            '_emd_final_classification.average_number_images_per_class': '<xs:element name="average_number_members_per_class" minOccurs="0">',
+            '_emd_final_classification.details': '<xs:element name="details" type="xs:string" minOccurs="0"/>',
+            '_emd_particle_selection.number_particles_selected': '<xs:element name="number_selected" type="xs:positiveInteger" minOccurs="0"/>',
+            '_emd_startup_model.type': '<xs:attribute name="type_of_model" type="xs:token"/>',
+            '_emd_startup_model.random_conical_tilt_number_images': '<xs:element name="number_images" type="xs:positiveInteger" minOccurs="0"/>',
+            '_emd_startup_model.details': '<xs:element name="details" type="xs:string" minOccurs="0"/>',
+            '_emd_startup_model.orthogonal_tilt_number_images': '<xs:element name="number_images" type="xs:positiveInteger" minOccurs="0"/>',
+            '_emd_startup_model.emdb_id': '<xs:element name="emdb_id" type="emdb_id_type" minOccurs="0"/>',
+            '_emd_startup_model.pdb_id': '<xs:element name="pdb_id" type="pdb_code_type"/>',
+            '_emd_startup_model.insilico_model': '<xs:element name="insilico_model" type="xs:token" minOccurs="0"/>',
+            '_emd_two_d_crystal_parameters.a': '<xs:element name="a" type="cell_type">',
+            '_emd_three_d_crystal_parameters.a': '<xs:element name="a" type="cell_type">',
+            '_emd_two_d_crystal_parameters.b': '<xs:element name="b" type="cell_type">',
+            '_emd_three_d_crystal_parameters.b': '<xs:element name="b" type="cell_type">',
+            '_emd_two_d_crystal_parameters.c': '<xs:element name="c" type="cell_type">',
+            '_emd_three_d_crystal_parameters.c': '<xs:element name="c" type="cell_type">',
+            '_emd_two_d_crystal_parameters.c_sampling_length': '<xs:element name="c_sampling_length" type="cell_type">',
+            '_emd_three_d_crystal_parameters.c_sampling_length': '<xs:element name="c_sampling_length" type="cell_type">',
+            '_emd_three_d_crystal_parameters.gamma': '<xs:element name="gamma" type="cell_angle_type">',
+            '_emd_two_d_crystal_parameters.gamma': '<xs:element name="gamma" type="cell_angle_type">',
+            '_emd_three_d_crystal_parameters.alpha': '<xs:element name="alpha" type="cell_angle_type">',
+            '_emd_two_d_crystal_parameters.alpha': '<xs:element name="alpha" type="cell_angle_type">',
+            '_emd_three_d_crystal_parameters.beta': '<xs:element name="beta" type="cell_angle_type">',
+            '_emd_two_d_crystal_parameters.beta': '<xs:element name="beta" type="cell_angle_type">',
+            '_emd_three_d_crystal_parameters.space_group': '<xs:element name="space_group" type="xs:token">',
+            '_emd_two_d_crystal_parameters.plane_group': '<xs:element name="space_group" type="xs:token">',
+            '_emd_angle_assignment.type': '<xs:element name="type">',
+            '_emd_angle_assignment.projection_matching_number_reference_projections': '<xs:element name="number_reference_projections" type="xs:positiveInteger"/>',
+            '_emd_angle_assignment.projection_matching_merit_function': '<xs:element name="merit_function" type="xs:token"/>',
+            '_emd_angle_assignment.details': '<xs:element name="details" type="xs:string" minOccurs="0"/>',
+            '_emd_crystallography_stats.number_intensities_measured': '<xs:element name="number_intensities_measured" type="xs:positiveInteger"/>',
+            '_emd_crystallography_stats.number_structure_factors': '<xs:element name="number_structure_factors" type="xs:positiveInteger"/>',
+            '_emd_crystallography_stats.fourier_space_coverage': '<xs:element name="fourier_space_coverage" type="xs:float">',
+            '_emd_crystallography_stats.r_sym': '<xs:element name="r_sym" type="xs:float"/>',
+            '_emd_crystallography_stats.r_merge': '<xs:element name="r_merge" type="xs:float"/>',
+            '_emd_crystallography_stats.overall_phase_error': '<xs:element name="overall_phase_error" type="xs:float"/>',
+            '_emd_crystallography_stats.overall_phase_residual': '<xs:element name="overall_phase_residual" type="xs:float"/>',
+            '_emd_crystallography_stats.phase_error_rejection_criteria': '<xs:element name="phase_error_rejection_criteria" type="xs:float"/>',
+            '_emd_crystallography_stats.high_resolution': '<xs:element name="high_resolution">',
+            '_emd_crystallography_shell.id': '<xs:attribute name="id" type="xs:positiveInteger"/>',
+            '_emd_crystallography_shell.high_resolution': '<xs:element name="high_resolution">',
+            '_emd_crystallography_shell.low_resolution': '<xs:element name="low_resolution">',
+            '_emd_crystallography_shell.number_structure_factors': '<xs:element name="number_structure_factors" type="xs:positiveInteger"/>',
+            '_emd_crystallography_shell.phase_residual': '<xs:element name="phase_residual" type="xs:float"/>',
+            '_emd_crystallography_shell.fourier_space_coverage': '<xs:element name="fourier_space_coverage" type="xs:float">',
+            '_emd_crystallography_shell.multiplicity': '<xs:element name="multiplicity" type="xs:float"/>',
+            '_emd_crystallography_stats.details': '<xs:element name="details" type="xs:string" minOccurs="0"/>',
+            '_emd_image_digitization.scanner': '<xs:element name="scanner" minOccurs="0">',
+            '_emd_image_digitization.used_frames_per_image': '<xs:element name="frames_per_image" type="xs:positiveInteger" minOccurs="0">',
+            '_emd_structure_determination.aggregation_state': '<xs:element name="aggregation_state">',
+            '_database_2.database_code': '<xs:attribute name="emdb_id" type="emdb_id_type" use="required">',
+            '_citation.unpublished_flag': '<xs:attribute name="published" type="xs:boolean" use="required"/>',
+            '_emd_crossreference.details': '<xs:element name="details" type="xs:string" minOccurs="0"/>',
+            '_citation.pdbx_database_id_PubMed': '<xs:element name="external_references" maxOccurs="unbounded" minOccurs="0">',
+            '_citation.pdbx_database_id_DOI': '<xs:element name="external_references" maxOccurs="unbounded" minOccurs="0">',
+            '_citation.book_id_ISBN': '<xs:element name="external_references" maxOccurs="unbounded" minOccurs="0">',
+            '_citation.journal_id_ISSN': '<xs:element name="external_references" maxOccurs="unbounded" minOccurs="0">',
+            '_citation.abstract_id_CAS': '<xs:element name="external_references" maxOccurs="unbounded" minOccurs="0">',
+            '_citation.journal_id_CSD': '<xs:element name="external_references" maxOccurs="unbounded" minOccurs="0">',
+            '_citation.database_id_Medline': '<xs:element name="external_references" maxOccurs="unbounded" minOccurs="0">',
+            '_citation.journal_id_ASTM': '<xs:element name="external_references" maxOccurs="unbounded" minOccurs="0">',
+            '_emd_supramolecule.entity_id_list': '<xs:element name="macromolecule_list" minOccurs="0">',
+            '_emd_recombinant_expression.ncbi_tax_id': '<xs:attribute name="database">',
+            '_emd_recombinant_expression.organism': '<xs:element name="recombinant_organism" type="organism_type">',
+            '_emd_molecular_mass.value': '<xs:complexType name="molecular_weight_type">',
+            '_emd_natural_source.ncbi_tax_id': '<xs:attribute name="database">',
+            '_emd_natural_source.organism': '<xs:element name="organism" type="organism_type">',
+            '_pdbx_database_status.pdbx_annotator': '<xs:element name="annotator" minOccurs="0">',
+            '_pdbx_database_PDB_obs_spr.date': '<xs:element name="date" type="xs:date"/>',
+            '_pdbx_database_PDB_obs_spr.replace_pdb_id': '<xs:element name="entry" type="emdb_id_type"/>',
+            '_pdbx_database_PDB_obs_spr.details': '<xs:element name="details" type="xs:string" minOccurs="0"/>',
+            '_pdbx_database_PDB_obs_spr.pdb_id': '<xs:element name="entry" type="emdb_id_type"/>',
+            '_pdbx_audit_support.funding_organization': '<xs:element name="funding_body" type="xs:token"/>',
+            '_pdbx_audit_support.grant_number': '<xs:element name="code" type="xs:token"/>',
+            '_pdbx_audit_support.country': '<xs:element name="country" type="xs:token"/>',
+            '_pdbx_contact_author.role': '<xs:element name="role">',
+            '_pdbx_contact_author.name_salutation': '<xs:element name="title">',
+            '_pdbx_contact_author.name_first': '<xs:element name="first_name" type="xs:token">',
+            '_pdbx_contact_author.name_mi': '<xs:element name="middle_name">',
+            '_pdbx_contact_author.name_last': '<xs:element name="last_name" type="xs:token">',
+            '_pdbx_contact_author.organization_type': '<xs:element name="organization">',
+            '_pdbx_contact_author.address_1': '<xs:element name="street" type="xs:string">',
+            '_pdbx_contact_author.city': '<xs:element name="town_or_city" type="xs:token">',
+            '_pdbx_contact_author.state_province': '<xs:element name="state_or_province" type="xs:token">',
+            '_pdbx_contact_author.country': '<xs:element name="country" type="xs:token">',
+            '_pdbx_contact_author.postal_code': '<xs:element name="post_or_zip_code" type="xs:token">',
+            '_pdbx_contact_author.email': '<xs:element name="email">',
+            '_pdbx_contact_author.phone': '<xs:element name="telephone" type="telephone_number_type">',
+            '_pdbx_contact_author.fax': '<xs:element name="fax" type="telephone_number_type">',
+            '_emd_author_list.': '<xs:element name="authors_list">',
+            '_emd_virus_natural_host.ncbi_tax_id': '<xs:attribute name="database">',
+            '_emd_virus_natural_host.organism': '<xs:element name="organism" type="organism_type">',
+            '_emd_virus_natural_host.strain': '<xs:element name="strain" type="xs:token" minOccurs="0"/>',
+            '_emd_virus_shell.diameter': '<xs:element name="diameter" minOccurs="0">',
+            '_entity_src_nat.pdbx_ncbi_taxonomy_id': '<xs:attribute name="database">',
+            '_entity_src_gen.pdbx_gene_src_ncbi_taxonomy_id': '<xs:attribute name="database">',
+            '_pdbx_entity_src_syn.ncbi_taxonomy_id': '<xs:attribute name="database">',
+            '_entity_poly.pdbx_seq_one_letter_code': '<xs:element name="string" type="xs:token" minOccurs="0">',
+            '_struct_ref.db_name': '<xs:element name="external_references" maxOccurs="unbounded" minOccurs="0">',
+            '_entity_src_gen.pdbx_host_org_ncbi_taxonomy_id': '<xs:attribute name="database">',
+            '_entity_src_gen.pdbx_host_org_scientific_name': '<xs:element name="organism" type="organism_type">',
+            '_emd_specimen.concentration': '<xs:element name="concentration" minOccurs="0">',
+            '_emd_grid_pretreatment.pretreat_time': '<xs:element name="time" minOccurs="0">',
+            '_emd_vitrification.chamber_humidity': '<xs:element name="chamber_humidity" minOccurs="0">',
+            '_emd_vitrification.chamber_temperature': '<xs:element name="chamber_temperature" minOccurs="0">',
+            '_emd_crystal_formation.time': '<xs:complexType name="crystal_formation_time_type">',
+            '_emd_crystal_formation.time_unit': '<xs:complexType name="crystal_formation_time_type">',
+            '_emd_microscopy.acceleration_voltage': '<xs:element name="acceleration_voltage">',
+            '_emd_microscopy.c2_aperture_diameter': '<xs:element name="c2_aperture_diameter" minOccurs="0">',
+            '_emd_microscopy.nominal_cs': '<xs:element name="nominal_cs" minOccurs="0">',
+            '_emd_microscopy.nominal_defocus_min': '<xs:element name="nominal_defocus_min" minOccurs="0">',
+            '_emd_microscopy.calibrated_defocus_min': '<xs:element name="calibrated_defocus_min" minOccurs="0">',
+            '_emd_microscopy.nominal_defocus_max': '<xs:element name="nominal_defocus_max" minOccurs="0">',
+            '_emd_microscopy.calibrated_defocus_max': '<xs:element name="calibrated_defocus_max" minOccurs="0">',
+            '_emd_microscopy.temperature_max': '<xs:element name="temperature" minOccurs="0">',
+            '_emd_microscopy.temperature_min': '<xs:element name="temperature" minOccurs="0">',
+            '_emd_specialist_optics.energyfilter_lower': '<xs:element name="lower_energy_threshold" minOccurs="0">',
+            '_emd_vitrification.cryogen_name': '<xs:element name="cryogen_name">',
+            '_emd_specialist_optics.energyfilter_upper': '<xs:element name="upper_energy_threshold" minOccurs="0">',
+            '_entity.formula_weight': '<xs:element name="experimental" minOccurs="0">',
+            '_emd_grid_pretreatment.pressure': '<xs:element name="pressure" minOccurs="0">',
+            '_entity_src_nat.common_name': '<xs:element name="organism" type="organism_type">',
+            '_entity_src_nat.pdbx_organism_scientific': '<xs:element name="organism" type="organism_type">',
+            '_entity_src_gen.pdbx_gene_src_scientific_name': '<xs:element name="organism" type="organism_type">',
+            '_pdbx_entity_src_syn.organism_scientific': '<xs:element name="organism" type="organism_type">',
+            '_entity_src_nat.strain': '<xs:element name="strain" type="xs:token" minOccurs="0"/>',
+            '_entity_src_gen.gene_src_strain': '<xs:element name="strain" type="xs:token" minOccurs="0"/>',
+            '_pdbx_entity_src_syn.strain': '<xs:element name="strain" type="xs:token" minOccurs="0"/>',
+            '_emd_microscopy_tomography.dual_tilt_axis_rotation': '<xs:element name="axis_rotation" fixed="90" minOccurs="0">',
+            '_emd_image_recording.film_or_detector_model': '<xs:element name="film_or_detector_model">',
+            '_emd_image_digitization.sampling_interval': '<xs:element name="sampling_interval" minOccurs="0">',
+            '_emd_image_recording.average_exposure_time': '<xs:element name="average_exposure_time" minOccurs="0">',
+            '_emd_image_recording.average_electron_dose_per_image': '<xs:element name="average_electron_dose_per_image" minOccurs="0">',
+            '_emd_final_classification.number_classes': '<xs:element name="number_classes" type="xs:positiveInteger" minOccurs="0">',
+            '_emd_startup_model.orthogonal_tilt_angle1': '<xs:element name="tilt_angle1" minOccurs="0">',
+            '_emd_startup_model.orthogonal_tilt_angle2': '<xs:element name="tilt_angle2"  minOccurs="0">',
+            '_emd_helical_parameters.delta_phi': '<xs:element name="delta_phi">',
+            '_emd_final_reconstruction.resolution': '<xs:element name="resolution" minOccurs="0">',
+            '_emd_angle_assignment.projection_matching_angular_sampling': '<xs:element name="angular_sampling" minOccurs="0">',
+            '_emd_map.symmetry_space_group': '<xs:complexType name="applied_symmetry_type">',
+            '_emd_map.dimensions_col': '<xs:element name="col" type="xs:positiveInteger"/>',
+            '_emd_map.dimensions_row': '<xs:element name="row" type="xs:positiveInteger"/>',
+            '_emd_map.dimensions_sec': '<xs:element name="sec" type="xs:positiveInteger"/>',
+            '_emd_map.origin_col': '<xs:element name="col" type="xs:integer"/>',
+            '_emd_map.origin_row': '<xs:element name="row" type="xs:integer"/>',
+            '_emd_map.origin_sec': '<xs:element name="sec" type="xs:integer"/>',
+            '_emd_map.spacing_x': '<xs:element name="x" type="xs:positiveInteger"/>',
+            '_emd_map.spacing_y': '<xs:element name="y" type="xs:nonNegativeInteger"/>',
+            '_emd_map.spacing_z': '<xs:element name="z" type="xs:nonNegativeInteger"/>',
+            '_emd_map.cell_a': '<xs:element name="a" type="cell_type"/>',
+            '_emd_map.cell_b': '<xs:element name="b" type="cell_type"/>',
+            '_emd_map.cell_c': '<xs:element name="c" type="cell_type"/>',
+            '_emd_map.cell_alpha': '<xs:element name="alpha" type="cell_angle_type"/>',
+            '_emd_map.cell_beta': '<xs:element name="beta" type="cell_angle_type"/>',
+            '_emd_map.cell_gamma': '<xs:element name="gamma" type="cell_angle_type"/>',
+            '_emd_map.file': '<xs:element name="file">',
+            '_emd_map.axis_order_fast': '<xs:element name="fast">',
+            '_emd_map.axis_order_medium': '<xs:element name="medium">',
+            '_emd_map.axis_order_slow': '<xs:element name="slow">',
+            '_emd_map.statistics_minimum': '<xs:element name="minimum" type="xs:float"/>',
+            '_emd_map.statistics_maximum': '<xs:element name="maximum" type="xs:float"/>',
+            '_emd_map.statistics_average': '<xs:element name="average" type="xs:float"/>',
+            '_emd_map.statistics_std': '<xs:element name="std" type="xs:float"/>',
+            '_emd_map.pixel_spacing_x': '<xs:element name="x" type="pixel_spacing_type"/>',
+            '_emd_map.pixel_spacing_y': '<xs:element name="y" type="pixel_spacing_type"/>',
+            '_emd_map.pixel_spacing_z': '<xs:element name="z" type="pixel_spacing_type"/>',
+            '_emd_modelling_initial_model.pdb_id': '<xs:element name="access_code">',
+            '_emd_support_film.thickness': '<xs:element name="film_thickness" minOccurs="0">',
+            '_emd_startup_model.random_conical_tilt_angle': '<xs:element name="tilt_angle" minOccurs="0">',
+            '_exptl.method': '<xs:element name="method">',
+            '_emd_structure_determination.method': '<xs:element name="method">'
         }
+
+    class ALog(object):
+        """Class containing one log information"""
+
+        def __init__(self, cif_item=None, setter_func=None, xsd=None, em_for_emd=None, fmt_cif_value=None,
+                     parent_el_req=None, soft_name=None, log_text=None):
+            self.cif_item = cif_item
+            self.setter_func = setter_func
+            self.schema_entity = xsd
+            self.em_for_emd = em_for_emd
+            self.fmt_cif_value = fmt_cif_value
+            self.parent_el_req = parent_el_req
+            self.soft_name = soft_name
+            self.log_text = log_text
+
+        def create_std_info_log_text(self, title_str):
+            info1 = title_str + 'The value (%s) is given to (%s)' % (self.fmt_cif_value, self.setter_func)
+            info2 = 'The value came from (%s) in cif.' % self.cif_item
+            info3 = 'The value will be written for schema component (%s)' % self.schema_entity
+            info4 = None
+            if self.parent_el_req:
+                info4 = 'The parent element IS required'
+            info5 = None
+            if self.em_for_emd is not None:
+                info5 = 'The _em category for the above category is (%s)' % self.em_for_emd
+            info6 = None
+            if self.soft_name is not None:
+                info6 = 'Software name is (%s)' % self.soft_name
+
+            self.log_text = '. '.join(filter(None, (info1, info2, info3, info4, info5, info6))) + '.'
+
+        def create_problematic_log_texts(self, title_str, direct_text=None):
+            if direct_text is None:
+                problem1 = title_str + 'Function (%s) failure' % self.setter_func
+                problem2 = 'The value for cif category (%s) not given' % self.cif_item
+                problem3 = 'The value is for schema component (%s)' % self.schema_entity
+                problem4 = None
+                if self.parent_el_req:
+                    problem4 = 'The parent element IS required'
+                problem5 = None
+                if self.em_for_emd is not None:
+                    problem5 = 'The _em category for the above category is (%s)' % self.em_for_emd
+                problem6 = None
+                if self.soft_name is not None:
+                    problem6 = 'Software name is (%s)' % self.soft_name
+
+                self.log_text = '. '.join(filter(None, (problem1, problem2, problem3, problem4, problem5, problem6))) + '.'
+            else:
+                self.log_text = title_str + direct_text
+
+    class EntryLog(object):
+        """Class containing translation log for an entry"""
+        _info_title = 'INFO: '
+        _warn_title = 'POTENTIAL PROBLEM: '
+        _error_title = 'PROBLEM: '
+        _change_title = 'CHANGE MADE: '
+        _not_changed_for_now_title = 'NOT CHANGED FOR NOW: '
+        _validation_title = 'VALIDATION ERROR: '
+
+        def __init__(self, entry_ID):
+            self.ID = entry_ID
+            # logs lists
+            self.error_logs = []
+            self.warn_logs = []
+            self.info_logs = []
+
+        @property
+        def is_error_log_empty(self):
+            if len(self.error_logs) == 0:
+                return True
+            return False
+
+        @property
+        def id(self):
+            return self.ID
+
+        @property
+        def errors(self):
+            return self.error_logs
+
+        @property
+        def warnings(self):
+            return self.warn_logs
+
+        @property
+        def infos(self):
+            return self.info_logs
+
+        @property
+        def info_title(self):
+            return self._info_title
+
+        @property
+        def warn_title(self):
+            return self._warn_title
+
+        @property
+        def error_title(self):
+            return self._error_title
+
+        @property
+        def change_title(self):
+            return self._change_title
+
+        @property
+        def not_changed_for_now_title(self):
+            return self._not_changed_for_now_title
+
+        @property
+        def validation_title(self):
+            return self._validation_title
+
+
+
+        def add_info(self, cif_item, setter_func, xsd, em_for_emd, fmt_cif_value=None, parent_el_req=None,
+                     soft_name=None):
+            info = CifEMDBTranslator.ALog(cif_item, setter_func, xsd, em_for_emd, fmt_cif_value, parent_el_req, soft_name)
+            info.create_std_info_log_text(self._info_title)
+            self.info_logs.append(info)
+
+        def add_warn(self, cif_item, setter_func, xsd, em_for_emd, fmt_cif_value=None, parent_el_req=None,
+                     soft_name=None):
+            warn = CifEMDBTranslator.ALog(cif_item, setter_func, xsd, em_for_emd, fmt_cif_value, parent_el_req, soft_name)
+            warn.create_problematic_log_texts(self._warn_title)
+            self.warn_logs.append(warn)
+
+        def add_err(self, cif_item, setter_func, xsd, em_for_emd, fmt_cif_value=None, parent_el_req=None,
+                    soft_name=None):
+            err = CifEMDBTranslator.ALog(cif_item, setter_func, xsd, em_for_emd, fmt_cif_value, parent_el_req, soft_name)
+            err.create_problematic_log_texts(self._error_title)
+            self.error_logs.append(err)
+
+    class TranslationLog(object):
+        """Container class for translation logs"""
+
+        def __init__(self):
+            self.entry_logs = []
+
+        @property
+        def logs(self):
+            return self.entry_logs
 
     def __init__(self, info_log=None, warn_log=None, error_log=None):
         self.cif_file_name = None
-        self.cif_file_read = False # flag set once the cif file is read
+        self.cif_file_read = False  # flag set once the cif file is read
         self.cif = None  # cif dictionary
         self.xml_out = None  # xml object representing conversion from cif
         self.map_cif_dict = {}
         self.emdb_id_u = None
         self.__show_private = False
         self.__show_log_id = False
-        self.info_log = self.Constants.INFO_LOG
-        self.warn_log = self.Constants.WARN_LOG
-        self.error_log = self.Constants.ERR_LOG
-        self.initialise_logging(info_log, warn_log, error_log)
+        self.info_log_file_name = self.Constants.INFO_LOG_FILE_NAME
+        self.warn_log_file_name = self.Constants.WARN_LOG_FILE_NAME
+        self.error_log_file_name = self.Constants.ERR_LOG_FILE_NAME
+        self.logger = None
+        self.parent_logger_level = None
+        self.translation_log = self.TranslationLog()
+        self.entry_in_translation_log = None
+
+    @property
+    def is_translation_log_empty(self):
+        logs = self.translation_log.logs
+        if len(logs) == 0:
+            return True
+        else:
+            for a_log in logs:
+                if not a_log.is_error_log_empty:
+                    return False
+            return True
+
+    @property
+    def current_entry_log(self):
+        return self.entry_in_translation_log
+
+    @property
+    def get_translation_log(self):
+        return self.translation_log
 
     def get_show_log_id(self):
         return self.__show_log_id
 
-
     def set_show_log_id(self, value):
         self.__show_log_id = value
-
 
     def del_show_log_id(self):
         del self.__show_log_id
 
     _show_log_id = property(get_show_log_id, set_show_log_id, del_show_log_id, "_show_log_id's docstring")
-        
+
     def get_show_private(self):
         return self.__show_private
 
-
     def set_show_private(self, value):
         self.__show_private = value
-
 
     def del_show_private(self):
         del self.__show_private
@@ -748,9 +908,26 @@ class CifEMDBTranslator(object):
         else:
             logging.getLogger().setLevel(logging.INFO)
 
-    def initialise_logging(self, info_log=None, warn_log=None, error_log=None):
+    def write_logger_log(self, write_error_log=None, write_warn_log=None, write_info_log=None):
         """
-        Sets the logging when the translator is constructed
+
+        :param write_error_log: A flag - if true the error log is written out
+        :param write_warn_log: A flag - if true the warning log is written out
+        :param write_info_log: A flag - if true the info log is written out
+        """
+        if write_error_log:
+            # write the error log buffer to self.error_log_file_name
+            pass
+        if write_warn_log:
+            # write the warning log buffer to self.warn_log_file_name
+            pass
+        if write_info_log:
+            # write the info log buffer to self.info_log_file_name
+            pass
+
+    def initialise_logging(self, log_info=None, info_log_file_name=None, log_warn=None, warn_log_file_name=None, log_error=None, error_log_file_name=None):
+        """
+        Sets the console logging
 
         Firstly, the level of the parent logger is set. This value is used in
         the __del__ function in order to roll back the value. The parent logging level
@@ -762,73 +939,121 @@ class CifEMDBTranslator(object):
         3. ERROR+
         These files can be disabled on the command line.
         """
-        if info_log is not None:
-            if not os.path.exists(os.path.dirname(info_log)):
-                os.makedirs(os.path.dirname(info_log))
-            self.info_log = info_log
-        if warn_log is not None:
-            if not os.path.exists(os.path.dirname(warn_log)):
-                os.makedirs(os.path.dirname(warn_log))
-            self.warn_log = warn_log
-        if error_log is not None:
-            if not os.path.exists(os.path.dirname(error_log)):
-                os.makedirs(os.path.dirname(error_log))
-            self.error_log = error_log
-        
+        if log_info is not None:
+            if info_log_file_name is None:
+                info_log_file_name = os.path.join(__file__, self.info_log_file_name)
+            else:
+                self.info_log_file_name = info_log_file_name
+            print 'info_log_file_name %s' % __file__ + info_log_file_name
+            if not os.path.exists(os.path.dirname(info_log_file_name)):
+                os.makedirs(os.path.dirname(info_log_file_name))
+
+        if log_warn is not None:
+            if warn_log_file_name is None:
+                warn_log_file_name = os.path.join(__file__, self.warn_log_file_name)
+            else:
+                self.warn_log = warn_log_file_name
+            if not os.path.exists(os.path.dirname(warn_log_file_name)):
+                os.makedirs(os.path.dirname(warn_log_file_name))
+
+        if log_error is not None:
+            if error_log_file_name is None:
+                error_log_file_name = os.path.join(__file__, self.error_log_file_name)
+            else:
+                self.error_log = error_log_file_name
+            if not os.path.exists(os.path.dirname(error_log_file_name)):
+                os.makedirs(os.path.dirname(error_log_file_name))
+
         # note the logging level of the parent logger
         self.parent_logger_level = logging.getLogger().getEffectiveLevel()
 
         # keep only critical information for the translator
         logging.getLogger().setLevel(60)
-        # the formatting in the logging files is simple - just the message
-        format_str = '%(message)s'
-
         self.logger = logging.getLogger(__name__)
         self.logger.setLevel(logging.INFO)
 
-        info_file_hdl = logging.FileHandler(self.info_log, mode='w')
-        warn_file_hdl = logging.FileHandler(self.warn_log, mode='w')
-        error_file_hdl = logging.FileHandler(self.error_log, mode='w')
+        self.set_file_loggers(log_info, log_warn, log_error)
 
-        info_file_hdl.setLevel(logging.INFO)
-        warn_file_hdl.setLevel(logging.WARNING)
-        error_file_hdl.setLevel(logging.ERROR)
-
-        info_file_hdl.setFormatter(logging.Formatter(format_str))
-        warn_file_hdl.setFormatter(logging.Formatter(format_str))
-        error_file_hdl.setFormatter(logging.Formatter(format_str))
-
-        self.logger.addHandler(info_file_hdl)
-        self.logger.addHandler(warn_file_hdl)
-        self.logger.addHandler(error_file_hdl)
-
+        # prevent logging from being sent to the upper logger and console
         self.logger.propagate = False
 
-    def turn_on_console_logging(self):
+    def set_console_logging(self, log_console, log_info=None, log_warn=None, log_error=None, info_log_file_name=None, warn_log_file_name=None, error_log_file_name=None):
         """
         This method switches on any console logging
         """
-        logging.getLogger().setLevel(60)
-        self.logger.propagate = True
+        if log_console:
+            self.initialise_logging(log_info, info_log_file_name, log_warn, warn_log_file_name, log_error, error_log_file_name)
+        else:
+            self.set_file_loggers(False, False, False)
 
-    def turn_off_file_loggers(self, info_off, warn_off, err_off):
+    def set_file_loggers(self, log_info, log_warn, log_err):
         """
         This function stops logging into log files depending on flags passed on
 
         Parameters:
-        @params info_off: if True INFO_LOG is not recorded
-        @params warn_off: if True WARN_LOG is not recorded
-        @params err_off: if True ERR_LOG is not recorded
+        @params log_info: if True info log is recorded
+        @params log_warn: if True warning log is recorded
+        @params log_err: if True error log is recorded
         """
-        if self.logger.handlers != []:
-            for log_hdl in self.logger.handlers[:]:
-                if isinstance(log_hdl, logging.FileHandler):
-                    if log_hdl.baseFilename.find(self.Constants.INFO_LOG) != -1 and info_off:
-                        self.logger.removeHandler(log_hdl)
-                    elif log_hdl.baseFilename.find(self.Constants.WARN_LOG) != -1 and warn_off:
-                        self.logger.removeHandler(log_hdl)
-                    elif log_hdl.baseFilename.find(self.Constants.ERR_LOG) != -1 and err_off:
-                        self.logger.removeHandler(log_hdl)
+        if self.logger is not None:
+            # for log_hdl in self.logger.handlers[:]:
+            #     if isinstance(log_hdl, logging.FileHandler):
+            # the formatting in the logging files is simple - just the message
+            format_str = '%(message)s'
+            if log_info:
+                info_file_hdl = logging.FileHandler(self.info_log_file_name, mode='w')
+                info_file_hdl.setLevel(logging.INFO)
+                info_file_hdl.setFormatter(logging.Formatter(format_str))
+                self.logger.addHandler(info_file_hdl)
+            else:
+                info_log_hdl = self.get_logger_handle(self.info_log_file_name)
+                if info_log_hdl is not None:
+                    self.logger.removeHandler(info_log_hdl)
+            if log_warn:
+                warn_file_hdl = logging.FileHandler(self.warn_log_file_name, mode='w')
+                warn_file_hdl.setLevel(logging.WARNING)
+                warn_file_hdl.setFormatter(logging.Formatter(format_str))
+                self.logger.addHandler(warn_file_hdl)
+            else:
+                warn_log_hdl = self.get_logger_handle(self.warn_log_file_name)
+                if warn_log_hdl is not None:
+                    self.logger.removeHandler(warn_log_hdl)
+            if log_err:
+                error_file_hdl = logging.FileHandler(self.error_log_file_name, mode='w')
+                error_file_hdl.setLevel(logging.ERROR)
+                error_file_hdl.setFormatter(logging.Formatter(format_str))
+                self.logger.addHandler(error_file_hdl)
+            else:
+                err_log_hdl = self.get_logger_handle(self.error_log_file_name)
+                if err_log_hdl is not None:
+                    self.logger.removeHandler(err_log_hdl)
+
+    def get_logger_handle(self, log_filename):
+        """Returns the log handle for a log file name"""
+        ret_log_hdl = None
+        for log_hdl in self.logger.handlers[:]:
+            if isinstance(log_hdl, logging.FileHandler):
+                if log_hdl.baseFilename.find(log_filename) != -1:
+                    ret_log_hdl = log_hdl
+        return ret_log_hdl
+
+    def get_log_func(self, log_func_str):
+        """Helper function: returns non string log function"""
+        log_func = None
+        if log_func_str == 'self.logger.info':
+            log_func = self.logger.info
+        if log_func_str == 'self.logger.warning':
+            log_func = self.logger.warning
+        if log_func_str == 'self.logger.error':
+            log_func = self.logger.error
+        return log_func
+
+    def log_formatted(self, log_func_str, txt):
+        if self.logger is not None:
+            log_func = self.get_log_func(log_func_str)
+            if log_func is not None:
+                log_func(txt)
+                log_func('')
 
     def read_emd_map_v2_cif_file(self):
         """
@@ -850,7 +1075,7 @@ class CifEMDBTranslator(object):
                 emd_cat = dc_obj.getValueOrDefault(attributeName='item_name_dst', defaultValue='', rowIndex=row)
                 if emd_cat != '':
                     em_cat = dc_obj.getValueOrDefault(attributeName='item_name_src', defaultValue='', rowIndex=row)
-                    self.map_cif_dict.update({emd_cat:em_cat})
+                    self.map_cif_dict.update({emd_cat: em_cat})
 
     def read_cif_in_file(self, cif_file_name):
         """
@@ -936,7 +1161,7 @@ class CifEMDBTranslator(object):
                                                               const.PDBX_CONTACT_AUTHOR,
                                                               const.STRUCT,
                                                               const.PDBX_ENTITY_SRC_SYN]
-                                        )
+                                         )
         if self.cif is not None or self.cif == {}:
             self.cif_file_read = True
 
@@ -950,7 +1175,9 @@ class CifEMDBTranslator(object):
         """
         # self.xml_out is the xml object representing conversion from cif
         if self.xml_out is None or self.xml_out.hasContent_() is False:
-            self.logger.error(self.Constants.REQUIRED_ALERT+'No content in xml_out to write out. No file will be written out.')
+            txt = 'There is no content to write out. No output file will be written.'
+            self.current_entry_log.error_logs.append(self.ALog(log_text=self.current_entry_log.error_title + txt))
+            self.log_formatted('self.logger.error', self.Constants.REQUIRED_ALERT + txt)
             return
         # xml_out_file is the actual xml file that will be written into and saved
         xml_out_file = open(xml_out_file_name, 'w') if xml_out_file_name else sys.stdout
@@ -1022,7 +1249,9 @@ class CifEMDBTranslator(object):
             if cif_item in const.MMCIF_TO_XSD:
                 xsd = const.MMCIF_TO_XSD[cif_item]
             else:
-                self.logger.error('CIF item (%s) not found in the MMCIF_TO_XSD dictionary', cif_item)
+                txt = 'CIF item (%s) not found in the MMCIF_TO_XSD dictionary.' % cif_item
+                self.current_entry_log.error_logs.append(self.ALog(log_text=self.current_entry_log.error_title + txt))
+                self.log_formatted('self.logger.error', const.REQUIRED_ALERT + txt)
             return xsd
 
         def get_em_from_emd(emd_cif_item):
@@ -1041,8 +1270,9 @@ class CifEMDBTranslator(object):
                 else:
                     return em_cif_item
             else:
-               self.logger.warning('Mapping from _emd to _em space does not exist for %s.', emd_cif_item)
-               self.logger.warning('')
+                txt = 'Mapping from _emd to _em space does not exist for (%s).' % emd_cif_item
+                self.current_entry_log.warn_logs.append(self.ALog(log_text=self.current_entry_log.warn_title + txt))
+                self.log_formatted('self.logger.warning', const.NOT_REQUIRED_ALERT + txt)
 
         def is_cif_item_required(cif_item):
             """
@@ -1064,48 +1294,46 @@ class CifEMDBTranslator(object):
             """
             Helper function. Writes a line of stars and date. Looks nice.
             """
-            if self.__show_log_id:
-                log_func('*'*120)
-            # log_func(datetime.datetime.now().strftime("%H:%M:%S -- %Y-%m-%d"))
+            if self.logger is not None:
+                if log_func is not None and self.__show_log_id:
+                    log_func('*' * 120)
 
-        def log_as(log_func, cif_item, setter_func, xsd, em_for_emd, alert, fmt_cif_value=None, parent_el_req=None, soft_name=None):
+        def log_as(log_func_str, cif_item, setter_func, xsd, em_for_emd, alert, fmt_cif_value=None, parent_el_req=None, soft_name=None):
             """
             Formats the logging messages and uses the logging level
             """
-            log_func('')
-
-            spacing = ' '*len(alert)
-            cif_item_txt = ''
-            xsd_txt = ''
-            parent_txt = ''
-            em_for_emd_txt = 'The _em category for the above category is (%s)'
-            if alert == const.INFO_ALERT:
-                if fmt_cif_value is not None:
-                    log_func(alert+'The value (%s) is given to (%s)', fmt_cif_value, setter_func.__name__)
-                cif_item_txt = 'The value came from (%s) in cif.'
-                xsd_txt = 'The value will be written for schema component (%s).'
-            else:
-#                 if alert == const.NOT_REQUIRED_ALERT:
-#                     pass
-#                 elif alert == const.REQUIRED_ALERT:
-#                     pass
-                log_func(alert+'Function (%s) failure', setter_func.__name__)
-                cif_item_txt = 'The value for cif category (%s) not given'
-                xsd_txt = 'The value is for schema component (%s).'
-                if parent_el_req:
-                    parent_txt = 'The parent element IS required'
-                else:
-                    parent_txt = 'The parent element IS NOT required. This trumps the above requirement.'
-            if cif_item is not None:
-                log_func(spacing+cif_item_txt, cif_item)
-            if xsd is not None:
-                log_func(spacing+xsd_txt, xsd)
-            if parent_el_req is not None:
-                log_func(spacing+parent_txt)
-            if em_for_emd is not None:
-                log_func(spacing+em_for_emd_txt, em_for_emd)
-            if soft_name is not None:
-                log_func(spacing+'Software name is (%s)', soft_name)
+            if self.logger is not None:
+                log_func = self.get_log_func(log_func_str)
+                if log_func is not None:
+                    log_func('')
+                    spacing = ' ' * len(alert)
+                    cif_item_txt = ''
+                    xsd_txt = ''
+                    parent_txt = ''
+                    em_for_emd_txt = 'The _em category for the above category is (%s).'
+                    if alert == const.INFO_ALERT:
+                        if fmt_cif_value is not None:
+                            log_func(alert + 'The value (%s) is given to (%s)', fmt_cif_value, setter_func.__name__)
+                        cif_item_txt = 'The value came from (%s) in cif.'
+                        xsd_txt = 'The value will be written for schema component (%s).'
+                    else:
+                        log_func(alert + 'Function (%s) failure', setter_func.__name__)
+                        cif_item_txt = 'The value for cif category (%s) not given.'
+                        xsd_txt = 'The value is for schema component (%s).'
+                        if parent_el_req:
+                            parent_txt = 'The parent element IS required.'
+                        else:
+                            parent_txt = 'The parent element IS NOT required. This trumps the above requirement.'
+                    if cif_item is not None:
+                        log_func(spacing + cif_item_txt, cif_item)
+                    if xsd is not None:
+                        log_func(spacing + xsd_txt, xsd)
+                    if parent_el_req is not None:
+                        log_func(spacing + parent_txt)
+                    if em_for_emd is not None:
+                        log_func(spacing + em_for_emd_txt, em_for_emd)
+                    if soft_name is not None:
+                        log_func(spacing + 'Software name is (%s)', soft_name)
 
         def log(cif_item, setter_func, fmt_cif_value=None, parent_el_req=None, soft_name=None):
             """
@@ -1131,15 +1359,18 @@ class CifEMDBTranslator(object):
 
             if fmt_cif_value is not None:
                 # this is an info
-                log_as(self.logger.info, cif_item, setter_func, xsd, em_for_emd, const.INFO_ALERT, fmt_cif_value, soft_name=soft_name)
+                self.entry_in_translation_log.add_info(cif_item, setter_func.__name__, xsd, em_for_emd, fmt_cif_value, soft_name=soft_name)
+                log_as('self.logger.info', cif_item, setter_func, xsd, em_for_emd, const.INFO_ALERT, fmt_cif_value, soft_name=soft_name)
             else:
                 # this is either a warning or an error
                 if req:
+                    self.entry_in_translation_log.add_err(cif_item, setter_func.__name__, xsd, em_for_emd, parent_el_req=parent_el_req, soft_name=soft_name)
                     # This is an error
-                    log_as(self.logger.error, cif_item, setter_func, xsd, em_for_emd, const.REQUIRED_ALERT, parent_el_req=parent_el_req, soft_name=soft_name)
+                    log_as('self.logger.error', cif_item, setter_func, xsd, em_for_emd, const.REQUIRED_ALERT, parent_el_req=parent_el_req, soft_name=soft_name)
                 else:
                     # This is a warning since not required
-                    log_as(self.logger.warning, cif_item, setter_func, xsd, em_for_emd, const.NOT_REQUIRED_ALERT, parent_el_req=parent_el_req, soft_name=soft_name)
+                    self.entry_in_translation_log.add_warn(cif_item, setter_func.__name__, xsd, em_for_emd, parent_el_req=parent_el_req, soft_name=soft_name)
+                    log_as('self.logger.warning', cif_item, setter_func, xsd, em_for_emd, const.NOT_REQUIRED_ALERT, parent_el_req=parent_el_req, soft_name=soft_name)
 
         def set_cif_value(setter_func, *cif_key_cat, **addons):
             """
@@ -1234,10 +1465,10 @@ class CifEMDBTranslator(object):
                         try:
                             fmt_cif_value = datetime.datetime.strptime(cif_value, '%Y-%m-%d').date()
                         except Exception as exp:
-                            self.logger.error(const.REQUIRED_ALERT + str(exp))
-                            self.logger.error(const.CHANGE_MADE+'Date set to "%s" for %s instead of "%s"', fmt_cif_value, '_'+cif_cat+'.'+cif_key, cif_value)
-                            self.logger.error('')
-                        
+                            sub_txt = const.CHANGE_MADE + 'Date set to (%s) for (%s) instead of (%s).' % (fmt_cif_value, '_' + cif_cat + '.' + cif_key, cif_value)
+                            txt = str(exp) + ' ' + sub_txt
+                            self.current_entry_log.error_logs.append(self.ALog(log_text=self.current_entry_log.error_title + txt))
+                            self.log_formatted('self.logger.error', const.REQUIRED_ALERT + txt)
                     elif isinstance(fmt, dict):
                         fmt_cif_value = fmt[cif_value]
                     else:
@@ -1328,17 +1559,20 @@ class CifEMDBTranslator(object):
             XSD: <xs:complexType name="software_list_type"> is
             .. a sequence of 1 element
             """
+
             def set_software_type(software_category, soft, soft_in):
                 """
                 XSD: <xs:element name="software" type="software_type" maxOccurs="unbounded" minOccurs="0"/> has
                 .. 3 elements
                 """
+
                 def set_el_name(soft, soft_in):
                     """
                     XSD: <xs:element name="name" type="xs:token"/>
                     CIF: _emd_software.name
                     """
-                    set_cif_value(soft.set_name, 'name', const.EMD_SOFTWARE, cif_list=soft_in, soft_name=software_category, parent_el_req=False)
+                    set_cif_value(soft.set_name, 'name', const.EMD_SOFTWARE, cif_list=soft_in,
+                                  soft_name=software_category, parent_el_req=False)
 
                 def set_el_version(soft, soft_in):
                     """
@@ -1402,13 +1636,13 @@ class CifEMDBTranslator(object):
             if auth_in not in const.CENTER_NAMES_USED_FOR_AUTHORS:
                 auth_match = re.match(const.CIF_AUTHOR_RE, auth_in)
                 if auth_match is not None and not auth_in.isspace():
-                        match_groups = auth_match.groups()
-                        auth_out = '%s %s' % (match_groups[0], match_groups[1].replace('.', ''))
+                    match_groups = auth_match.groups()
+                    auth_out = '%s %s' % (match_groups[0], match_groups[1].replace('.', ''))
                 else:
-                    self.logger.error(const.REQUIRED_ALERT+'Author name: %s is not in a required CIF format!', auth_in)
-                    self.logger.error('')
                     auth_out = ''
-
+                    txt = 'Author name: (%s) is not in a required CIF format.' % auth_in
+                    self.current_entry_log.error_logs.append(self.ALog(log_text=self.current_entry_log.error_title + txt))
+                    self.log_formatted('self.logger.error', const.REQUIRED_ALERT + txt)
             return auth_out
 
         def set_admin_type(admin):
@@ -1416,11 +1650,13 @@ class CifEMDBTranslator(object):
             XSD: <xs:complexType name="admin_type"> is
             ..a sequence of 13 elements
             """
+
             def set_version_type(admin_status):
                 """
                 XSD: <xs:complexType name="version_type"> is
                 ..a sequence of 5 elements
                 """
+
                 def set_el_date(admin_status):
                     """
                     XSD: <xs:element name="date" minOccurs="0">
@@ -1442,7 +1678,8 @@ class CifEMDBTranslator(object):
                     NOT YET IMPLEMENTED
                     Values to expect: PDBe, PDBj, RCSB
                     """
-                    set_cif_value(admin_status.set_processing_site, 'process_site', const.PDBX_DATABASE_STATUS, fmt=const.PROC_SITE_CIF2XML)
+                    set_cif_value(admin_status.set_processing_site, 'process_site', const.PDBX_DATABASE_STATUS,
+                                  fmt=const.PROC_SITE_CIF2XML)
 
                 def set_el_annotator(admin_status):
                     """
@@ -1491,24 +1728,28 @@ class CifEMDBTranslator(object):
                 Deposition and processing sites
                 XSD: <xs:element name="sites">
                 """
+
                 def set_sites_type(dep_proc_sites):
                     """
                     XSD: <xs:element name="sites"> has
                     .. 2 elements
                     """
+
                     def set_el_deposition(dep_proc_sites):
                         """
                         XSD: <xs:element name="deposition">
                         CIF: _emd_admin.deposition_site PDBE
                         """
-                        set_cif_value(dep_proc_sites.set_deposition, 'deposition_site', const.EMD_ADMIN, fmt=const.PROC_SITE_CIF2XML)
+                        set_cif_value(dep_proc_sites.set_deposition, 'deposition_site', const.EMD_ADMIN,
+                                      fmt=const.PROC_SITE_CIF2XML)
 
                     def set_el_last_processing(dep_proc_sites):
                         """
                         XSD: <xs:element name="last_processing">
                         CIF: _pdbx_database_status.process_site PDBE
                         """
-                        set_cif_value(dep_proc_sites.set_last_processing, 'process_site', const.PDBX_DATABASE_STATUS, fmt=const.PROC_SITE_CIF2XML)
+                        set_cif_value(dep_proc_sites.set_last_processing, 'process_site', const.PDBX_DATABASE_STATUS,
+                                      fmt=const.PROC_SITE_CIF2XML)
 
                     # element 1
                     set_el_deposition(dep_proc_sites)
@@ -1523,11 +1764,13 @@ class CifEMDBTranslator(object):
                 """
                 XSD: <xs:element name="key_dates">
                 """
+
                 def set_key_dates_type(key_dates):
                     """
                     XSD: <xs:element name="key_dates"> is a
                     ..sequence of 5 elements
                     """
+
                     def set_el_deposition(key_dates):
                         """
                         XSD: <xs:element name="deposition" type="xs:date">
@@ -1586,16 +1829,19 @@ class CifEMDBTranslator(object):
                 .. 1 element <xs:element name="entry" type="supersedes_type" maxOccurs="unbounded">
                 CIF: _pdbx_database_PDB_obs_spr
                 """
+
                 def set_obsolete_list_type(obs_list, obs_spr_in):
                     """
                     XSD: <xs:element name="obsolete_list" minOccurs="0"> has
                     .. 1 element of supersedes_type
                     """
+
                     def set_supersedes_type(obs, obs_in):
                         """
                         XSD: <xs:complexType name="supersedes_type"> has
                         .. 3 elements
                         """
+
                         def set_el_date(obs, obs_in):
                             """
                             XSD: <xs:element name="date" type="xs:date"/>
@@ -1643,16 +1889,19 @@ class CifEMDBTranslator(object):
                 .. 1 element <xs:element name="entry" type="supersedes_type" maxOccurs="unbounded">
                 CIF: _pdbx_database_PDB_obs_spr NOT YET IMPLEMENTED
                 """
+
                 def set_supersed_by_list_type(supersed_list, obs_spr_in):
                     """
                     XSD: <xs:element name="superseded_by_list" minOccurs="0"> has
                     .. 1 element of supersedes_type
                     """
+
                     def set_supersedes_type(spr, spr_in):
                         """
                         XSD: <xs:complexType name="supersedes_type"> has
                         .. 3 elements
                         """
+
                         def set_el_date(spr, spr_in):
                             """
                             XSD: <xs:element name="date" type="xs:date"/>
@@ -1698,36 +1947,42 @@ class CifEMDBTranslator(object):
                 XSD: <xs:element name="grant_support" minOccurs="0">
                 CIF: _pdbx_audit_support
                 """
+
                 def set_grant_support_type(grant_support, aud_sup_in):
                     """
                     XSD: <xs:element name="grant_support" minOccurs="0"> has
                     .. 1 element of grant_reference_type
                     """
+
                     def set_grant_reference_type(grant_ref, aud_sup):
                         """
                         XSD: <xs:complexType name="grant_reference_type"> has
                         .. 3 elements
                         """
+
                         def set_el_funding_body(grant_ref, aud_sup, parent_req=False):
                             """
                             XSD: <xs:element name="funding_body" type="xs:token"/>
                             CIF: _pdbx_audit_support.funding_organization
                             """
-                            set_cif_value(grant_ref.set_funding_body, 'funding_organization', const.PDBX_AUDIT_SUPPORT, cif_list=aud_sup, parent_el_req=parent_req)
+                            set_cif_value(grant_ref.set_funding_body, 'funding_organization', const.PDBX_AUDIT_SUPPORT,
+                                          cif_list=aud_sup, parent_el_req=parent_req)
 
                         def set_el_code(grant_ref, aud_sup, parent_req=False):
                             """
                             XSD: <xs:element name="code" type="xs:token"/>
                             CIF: _pdbx_audit_support.grant_number
                             """
-                            set_cif_value(grant_ref.set_code, 'grant_number', const.PDBX_AUDIT_SUPPORT, cif_list=aud_sup, parent_el_req=parent_req)
+                            set_cif_value(grant_ref.set_code, 'grant_number', const.PDBX_AUDIT_SUPPORT,
+                                          cif_list=aud_sup, parent_el_req=parent_req)
 
                         def set_el_country(grant_ref, aud_sup, parent_req=False):
                             """
                             XSD: <xs:element name="country" type="xs:token"/>
                             CIF: _pdbx_audit_support.country
                             """
-                            set_cif_value(grant_ref.set_country, 'country', const.PDBX_AUDIT_SUPPORT, cif_list=aud_sup, parent_el_req=parent_req)
+                            set_cif_value(grant_ref.set_country, 'country', const.PDBX_AUDIT_SUPPORT, cif_list=aud_sup,
+                                          parent_el_req=parent_req)
 
                         # element 1
                         set_el_funding_body(grant_ref, aud_sup, parent_req=False)
@@ -1752,12 +2007,14 @@ class CifEMDBTranslator(object):
                 XSD: <xs:element name="contact_author" maxOccurs="unbounded" minOccurs="0">
                 CIF: _pdbx_contact_author
                 """
+
                 def set_contact_author_type(cont_author, contact_auth_in):
                     """
                     <xs:element name="contact_author" maxOccurs="unbounded" minOccurs="0"> has
                     .. a base of contact_details_type and
                     .. 1 attribute
                     """
+
                     def set_contact_details_type(cont_author, contact_auth_in, parent_req):
                         """
                         XSD: <xs:complexType name="contact_details_type"> has
@@ -1765,48 +2022,56 @@ class CifEMDBTranslator(object):
                         @param parent_req: the requirement for the elements depend on
                                 the parent element requirement
                         """
+
                         def set_el_role(cont_author, contact_auth_in, parent_req):
                             """
                             XSD: <xs:element name="role">
                             CIF: _pdbx_contact_author.role
                             """
-                            set_cif_value(cont_author.set_role, 'role', const.PDBX_CONTACT_AUTHOR, cif_list=contact_auth_in, fmt=str.upper, parent_el_req=parent_req)
+                            set_cif_value(cont_author.set_role, 'role', const.PDBX_CONTACT_AUTHOR,
+                                          cif_list=contact_auth_in, fmt=str.upper, parent_el_req=parent_req)
 
                         def set_el_title(cont_author, contact_auth_in, parent_req):
                             """
                             XSD: <xs:element name="title">
                             CIF: _pdbx_contact_author.name_salutation
                             """
-                            set_cif_value(cont_author.set_title, 'name_salutation', const.PDBX_CONTACT_AUTHOR, cif_list=contact_auth_in, fmt=str.upper, parent_el_req=parent_req)
+                            set_cif_value(cont_author.set_title, 'name_salutation', const.PDBX_CONTACT_AUTHOR,
+                                          cif_list=contact_auth_in, fmt=str.upper, parent_el_req=parent_req)
 
                         def set_el_first_name(cont_author, contact_auth_in, parent_req):
                             """
                             XSD: <xs:element name="first_name" type="xs:token">
                             CIF: _pdbx_contact_author.name_first
                             """
-                            set_cif_value(cont_author.set_first_name, 'name_first', const.PDBX_CONTACT_AUTHOR, cif_list=contact_auth_in, parent_el_req=parent_req)
+                            set_cif_value(cont_author.set_first_name, 'name_first', const.PDBX_CONTACT_AUTHOR,
+                                          cif_list=contact_auth_in, parent_el_req=parent_req)
 
                         def set_el_middle_name(cont_author, contact_auth_in, parent_req):
                             """
                             XSD: <xs:element name="middle_name">
                             CIF: _pdbx_contact_author.name_mi
                             """
-                            set_cif_value(cont_author.set_middle_name, 'name_mi', const.PDBX_CONTACT_AUTHOR, cif_list=contact_auth_in, fmt=str.upper, parent_el_req=parent_req)
+                            set_cif_value(cont_author.set_middle_name, 'name_mi', const.PDBX_CONTACT_AUTHOR,
+                                          cif_list=contact_auth_in, fmt=str.upper, parent_el_req=parent_req)
 
                         def set_el_last_name(cont_author, contact_auth_in, parent_req):
                             """
                             XSD: <xs:element name="last_name" type="xs:token">
                             CIF: _pdbx_contact_author.name_last
                             """
-                            set_cif_value(cont_author.set_last_name, 'name_last', const.PDBX_CONTACT_AUTHOR, cif_list=contact_auth_in, parent_el_req=parent_req)
+                            set_cif_value(cont_author.set_last_name, 'name_last', const.PDBX_CONTACT_AUTHOR,
+                                          cif_list=contact_auth_in, parent_el_req=parent_req)
 
                         def set_el_organization(cont_author, contact_auth_in, parent_req):
                             """
                             XSD: <xs:element name="organization">
                             CIF: _pdbx_contact_author.organization_type
                             """
-                            set_cif_value(cont_author.set_organization, 'organization_type', const.PDBX_CONTACT_AUTHOR, cif_list=contact_auth_in,
-                                          constructor=emdb.organizationType, type='', fmt=str.upper, parent_el_req=parent_req)
+                            set_cif_value(cont_author.set_organization, 'organization_type', const.PDBX_CONTACT_AUTHOR,
+                                          cif_list=contact_auth_in,
+                                          constructor=emdb.organizationType, type='', fmt=str.upper,
+                                          parent_el_req=parent_req)
 
                         def set_el_street(cont_author, contact_auth_in, parent_req):
                             """
@@ -1821,56 +2086,64 @@ class CifEMDBTranslator(object):
                             full_address = None
                             if address_1 is not None and address_2 is not None and address_3 is not None:
                                 full_address = ', '.join(filter(None, (address_1, address_2, address_3)))
-                            set_cif_value(cont_author.set_street, 'address_1', const.PDBX_CONTACT_AUTHOR, cif_list=contact_auth_in, cif_value=full_address, parent_el_req=parent_req)
+                            set_cif_value(cont_author.set_street, 'address_1', const.PDBX_CONTACT_AUTHOR,
+                                          cif_list=contact_auth_in, cif_value=full_address, parent_el_req=parent_req)
 
                         def set_el_town_or_city(cont_author, contact_auth_in, parent_req):
                             """
                             XSD: <xs:element name="town_or_city" type="xs:token">
                             CIF: _pdbx_contact_author.city
                             """
-                            set_cif_value(cont_author.set_town_or_city, 'city', const.PDBX_CONTACT_AUTHOR, cif_list=contact_auth_in, parent_el_req=parent_req)
+                            set_cif_value(cont_author.set_town_or_city, 'city', const.PDBX_CONTACT_AUTHOR,
+                                          cif_list=contact_auth_in, parent_el_req=parent_req)
 
                         def set_el_state_or_province(cont_author, contact_auth_in, parent_req):
                             """
                             XSD: <xs:element name="state_or_province" type="xs:token">
                             CIF: _pdbx_contact_author.state_province
                             """
-                            set_cif_value(cont_author.set_state_or_province, 'state_province', const.PDBX_CONTACT_AUTHOR, cif_list=contact_auth_in, parent_el_req=parent_req)
+                            set_cif_value(cont_author.set_state_or_province, 'state_province',
+                                          const.PDBX_CONTACT_AUTHOR, cif_list=contact_auth_in, parent_el_req=parent_req)
 
                         def set_el_country(cont_author, contact_auth_in, parent_req):
                             """
                             XSD: <xs:element name="country" type="xs:token">
                             CIF: _pdbx_contact_author.country
                             """
-                            set_cif_value(cont_author.set_country, 'country', const.PDBX_CONTACT_AUTHOR, cif_list=contact_auth_in, parent_el_req=parent_req)
+                            set_cif_value(cont_author.set_country, 'country', const.PDBX_CONTACT_AUTHOR,
+                                          cif_list=contact_auth_in, parent_el_req=parent_req)
 
                         def set_el_post_or_zip_code(cont_author, contact_auth_in, parent_req):
                             """
                             XSD: <xs:element name="post_or_zip_code" type="xs:token">
                             CIF: _pdbx_contact_author.postal_code
                             """
-                            set_cif_value(cont_author.set_country, 'postal_code', const.PDBX_CONTACT_AUTHOR, cif_list=contact_auth_in, parent_el_req=parent_req)
+                            set_cif_value(cont_author.set_country, 'postal_code', const.PDBX_CONTACT_AUTHOR,
+                                          cif_list=contact_auth_in, parent_el_req=parent_req)
 
                         def set_el_email(cont_author, contact_auth_in, parent_req):
                             """
                             XSD: <xs:element name="email">
                             CIF: _pdbx_contact_author.email
                             """
-                            set_cif_value(cont_author.set_email, 'email', const.PDBX_CONTACT_AUTHOR, cif_list=contact_auth_in, parent_el_req=parent_req)
+                            set_cif_value(cont_author.set_email, 'email', const.PDBX_CONTACT_AUTHOR,
+                                          cif_list=contact_auth_in, parent_el_req=parent_req)
 
                         def set_el_telephone(cont_author, contact_auth_in, parent_req):
                             """
                             XSD: <xs:element name="telephone" type="telephone_number_type">
                             CIF: _pdbx_contact_author.phone
                             """
-                            set_cif_value(cont_author.set_telephone, 'phone', const.PDBX_CONTACT_AUTHOR, cif_list=contact_auth_in, parent_el_req=parent_req)
+                            set_cif_value(cont_author.set_telephone, 'phone', const.PDBX_CONTACT_AUTHOR,
+                                          cif_list=contact_auth_in, parent_el_req=parent_req)
 
                         def set_el_fax(cont_author, contact_auth_in, parent_req):
                             """
                             XSD: <xs:element name="fax" type="telephone_number_type">
                             CIF: _pdbx_contact_author.fax
                             """
-                            set_cif_value(cont_author.set_fax, 'fax', const.PDBX_CONTACT_AUTHOR, cif_list=contact_auth_in, parent_el_req=parent_req)
+                            set_cif_value(cont_author.set_fax, 'fax', const.PDBX_CONTACT_AUTHOR,
+                                          cif_list=contact_auth_in, parent_el_req=parent_req)
 
                         # element 1
                         set_el_role(cont_author, contact_auth_in, parent_req)
@@ -1939,14 +2212,16 @@ class CifEMDBTranslator(object):
                 Helper function for determining author_list
                 """
                 for index in range(len(cif_in)):
-                    cif_index_list = cif_in.get(str(index+1))
+                    cif_index_list = cif_in.get(str(index + 1))
                     cif_author = get_cif_value(cif_key, cif_category, cif_index_list)
                     if cif_author is not None:
                         fmt_author = format_author(cif_author)
                         if fmt_author != '':
                             author_list.add_author(fmt_author)
                         else:
-                            self.logger.warning('Author %s at index %s is not added to the list of authors as the format is wrong', cif_author, index+1)
+                            txt = 'Author (%s) at index (%s) is not added to the list of authors as the format is wrong.' % (cif_author, index + 1)
+                            self.current_entry_log.warn_logs.append(self.ALog(log_text=self.current_entry_log.warn_title + txt))
+                            self.log_formatted('self.logger.warning', const.NOT_REQUIRED_ALERT + txt)
 
             def set_el_authors_list(admin):
                 """
@@ -1975,18 +2250,18 @@ class CifEMDBTranslator(object):
                     if audit_author_in != {}:
                         set_author_list(audit_author_in, const.AUDIT_AUTHOR, 'name', author_list)
                     else:
-                        self.logger.critical('')
-                        self.logger.critical(const.REQUIRED_ALERT+'Author list cannot be produced as the CIF category ( _%s ) is missing while _emd_depui.same_authors_as_pdb is YES',
-                                             const.AUDIT_AUTHOR)
-                else: #same_as_pdb == 'NO' or None
+                        txt = 'Author list cannot be produced as the CIF category ( _%s ) is missing while (_emd_depui.same_authors_as_pdb) is (YES).' % const.AUDIT_AUTHOR
+                        self.current_entry_log.error_logs.append(self.ALog(log_text=self.current_entry_log.error_title + txt))
+                        self.log_formatted('self.logger.critical', const.REQUIRED_ALERT + txt)
+                else:  # same_as_pdb == 'NO' or None
                     # CIF: _emd_author_list
                     audit_author_list_in = make_dict(const.EMD_AUTHOR_LIST, 'ordinal', 2)
                     if audit_author_list_in != {}:
                         set_author_list(audit_author_list_in, const.EMD_AUTHOR_LIST, 'author', author_list)
                     else:
-                        self.logger.critical('')
-                        self.logger.critical(const.REQUIRED_ALERT+'Author list cannot be produced as the CIF category ( _%s ) is missing while _emd_depui.same_authors_as_pdb is either NO or missing',
-                                             const.EMD_AUTHOR_LIST)
+                        txt = 'Author list cannot be produced as the CIF category ( _%s ) is missing while the value for (_emd_depui.same_authors_as_pdb) is either (NO) or not given.' % const.EMD_AUTHOR_LIST
+                        self.current_entry_log.error_logs.append(self.ALog(log_text=self.current_entry_log.error_title + txt))
+                        self.log_formatted('self.logger.critical', const.REQUIRED_ALERT + txt)
                 if author_list is not None:
                     admin.set_authors_list(author_list)
 
@@ -2028,8 +2303,9 @@ class CifEMDBTranslator(object):
             aud_sup_in = make_dict(const.PDBX_AUDIT_SUPPORT, 'ordinal')
             set_el_grant_support(admin, aud_sup_in)
             # element 8
-            contact_auth_in = make_dict(const.PDBX_CONTACT_AUTHOR, 'id')
-            set_el_contact_author(admin, contact_auth_in)
+            if self.__show_private:
+                contact_auth_in = make_dict(const.PDBX_CONTACT_AUTHOR, 'id')
+                set_el_contact_author(admin, contact_auth_in)
             # element 9
             set_el_title(admin)
             # element 10
@@ -2047,10 +2323,12 @@ class CifEMDBTranslator(object):
             ...a sequence of 4 elements
             elements 2 and 3 require CIF value for _emd_crossreference.db_name
             """
+
             def set_el_citation_list(cross_references):
                 """
                 XSD: <xs:element name="citation_list">
                 """
+
                 def set_citation_list_type(citation_list):
                     """
                     XSD: <xs:element name="citation_list"> has 2 elements:
@@ -2063,6 +2341,7 @@ class CifEMDBTranslator(object):
                             - for the secondary citations can be anything.
                               However, they are usually numbered
                     """
+
                     def set_el_external_references(pub, cite_in, cite_ref_type_list):
                         """
                         XSD: <xs:element name="external_references" maxOccurs="unbounded" minOccurs="0">
@@ -2082,9 +2361,7 @@ class CifEMDBTranslator(object):
                             if cite_ref_value is not None:
                                 ext_ref = emdb.external_referencesType()
                                 ext_ref.set_type(cite_ref_type[1])
-                                log(cite_ref_item,
-                                    ext_ref.set_type,
-                                    cite_ref_type[1])
+                                log(cite_ref_item, ext_ref.set_type, cite_ref_type[1])
                                 if cite_ref_type[1] == 'DOI':  # 'doi':
                                     cite_ref_value = 'doi:%s' % cite_ref_value
                                 ext_ref.set_valueOf_(cite_ref_value)
@@ -2114,8 +2391,9 @@ class CifEMDBTranslator(object):
                             for auth_id in auth_dict:
                                 auth_dict[auth_id].sort(key=lambda item: int(item[1]))
                         else:
-                            self.logger.critical('')
-                            self.logger.critical(const.REQUIRED_ALERT+'CIF category %s missing', const.CITATION_AUTHOR)
+                            txt = 'CIF category (%s) missing.' % const.CITATION_AUTHOR
+                            self.current_entry_log.error_logs.append(self.ALog(log_text=self.current_entry_log.error_title + txt))
+                            self.log_formatted('self.logger.critical', const.REQUIRED_ALERT + txt)
 
                     def set_el_author(pub, cite_id_in, auth_dict):
                         """
@@ -2129,7 +2407,9 @@ class CifEMDBTranslator(object):
                                     if author.hasContent_():
                                         pub.add_author(author)
                             else:
-                                self.logger.error(const.REQUIRED_ALERT+'No authors for citation id (%s) found. At least one is required', cite_id_in)
+                                txt = 'No authors for citation id (%s) found. At least one is required.' % cite_id_in
+                                self.current_entry_log.error_logs.append(self.ALog(log_text=self.current_entry_log.error_title + txt))
+                                self.log_formatted('self.logger.error', const.REQUIRED_ALERT + txt)
 
                     def set_journal_citation(jrnl, cite_in, cite_id_in, auth_dict, cite_ref_type_list, jrnl_abbrev_in):
                         """
@@ -2137,6 +2417,7 @@ class CifEMDBTranslator(object):
                         .. 1 attribute and
                         .. a sequence of 13 elements.
                         """
+
                         def set_att_published(jrnl, jrnl_abbrev_in):
                             """
                             <xs:attribute name="published" type="xs:boolean" use="required"/>
@@ -2171,7 +2452,8 @@ class CifEMDBTranslator(object):
                             CIF: _citation.journal_abbrev 'To Be Published'
                             _citation.journal_abbrev is not required in mmCIF dict!!! It is in XSD
                             """
-                            set_cif_value(jrnl.set_journal_abbreviation, 'journal_abbrev', const.CITATION, cif_list=cite_in)
+                            set_cif_value(jrnl.set_journal_abbreviation, 'journal_abbrev', const.CITATION,
+                                          cif_list=cite_in)
 
                         def set_el_country(jrnl, cite_in):
                             """
@@ -2266,6 +2548,7 @@ class CifEMDBTranslator(object):
                         ..1 attribute and
                         ..a sequence of 14 elements
                         """
+
                         def set_attr_published(non_jrnl, cite_in):
                             """
                             XSD: <xs:attribute name="published" type="xs:boolean" use="required"/>
@@ -2339,14 +2622,16 @@ class CifEMDBTranslator(object):
                                 if country is not None:
                                     location = country
 
-                            set_cif_value(non_jrnl.set_publisher_location, 'country', const.CITATION, cif_value=location)
+                            set_cif_value(non_jrnl.set_publisher_location, 'country', const.CITATION,
+                                          cif_value=location)
 
                         def set_el_first_page(non_jrnl, cite_in):
                             """
                             XSD: <xs:element name="first_page" type="page_type" minOccurs="0"/>
                             CIF: _citation.page_first ?
                             """
-                            set_cif_value(non_jrnl.set_first_page, 'page_first', const.CITATION, cif_list=cite_in, fmt=const.CITATION)
+                            set_cif_value(non_jrnl.set_first_page, 'page_first', const.CITATION, cif_list=cite_in,
+                                          fmt=const.CITATION)
 
                         def set_el_last_page(non_jrnl, cite_in):
                             """
@@ -2443,20 +2728,26 @@ class CifEMDBTranslator(object):
                                 jrnl_abbrev_in = get_cif_value('journal_abbrev', const.CITATION, cite_in)
                                 if jrnl_abbrev_in is not None:
                                     jrnl = emdb.journal_citation()
-                                    set_journal_citation(jrnl, cite_in, cite_id_in, auth_dict, cite_ref_type_list, jrnl_abbrev_in)
+                                    set_journal_citation(jrnl, cite_in, cite_id_in, auth_dict, cite_ref_type_list,
+                                                         jrnl_abbrev_in)
                                     citation.set_citation_type(jrnl)
                                 else:
                                     non_jrnl = emdb.non_journal_citation()
-                                    set_non_journal_citation(non_jrnl, cite_in, cite_id_in, auth_dict, cite_ref_type_list)
+                                    set_non_journal_citation(non_jrnl, cite_in, cite_id_in, auth_dict,
+                                                             cite_ref_type_list)
                                     citation.set_citation_type(non_jrnl)
                             else:
-                                self.logger.error(const.NOT_REQUIRED_ALERT+'Citations cannot be set. _citation_author.citation_id should be either primary or a number but are not.')
+                                txt = 'Citations cannot be set. The value for (_citation_author.citation_id) should be either (primary) or a number.'
+                                self.current_entry_log.error_logs.append(self.ALog(log_text=self.current_entry_log.error_title + txt))
+                                self.log_formatted('self.logger.error', const.REQUIRED_ALERT + txt)
                         if not any_primary_citations:
-                            self.logger.critical('')
-                            self.logger.critical(const.REQUIRED_ALERT+'No primary citations given')
+                            txt = 'No primary citations given.'
+                            self.current_entry_log.error_logs.append(self.ALog(log_text=self.current_entry_log.error_title + txt))
+                            self.log_formatted('self.logger.critical', const.REQUIRED_ALERT + txt)
                     else:
-                        self.logger.critical('')
-                        self.logger.critical(const.REQUIRED_ALERT+'CIF category %s missing', const.CITATION)
+                        txt = 'CIF category (%s) missing.' % const.CITATION
+                        self.current_entry_log.error_logs.append(self.ALog(log_text=self.current_entry_log.error_title + txt))
+                        self.log_formatted('self.logger.critical', const.REQUIRED_ALERT + txt)
 
                 citation_list = emdb.citation_listType()
                 set_citation_list_type(citation_list)
@@ -2468,6 +2759,7 @@ class CifEMDBTranslator(object):
                     type="emdb_cross_reference_list_type"
                     minOccurs="0">
                 """
+
                 def set_emdb_cross_ref_list_type(emdb_ref_list, x_ref_dict_in):
                     """
                     XSD: <xs:element name="emdb_list" type="emdb_cross_reference_list_type" minOccurs="0">
@@ -2481,6 +2773,7 @@ class CifEMDBTranslator(object):
                     CIF:     EMDB . EMD-4134 'other EM volume'
                     CIF: _pdbx_database_related
                     """
+
                     def set_ref_el_emdb_id(emdb_ref, emdb_ref_in):
                         """
                         XSD: <xs:element name="emdb_id" type="emdb_id_type"/>
@@ -2490,13 +2783,14 @@ class CifEMDBTranslator(object):
                         if acc_code is not None:
                             acc_code = acc_code.strip()
                             acc_code_match = re.match(const.CIF_EMD_ID_RE, acc_code)
-                            if acc_code_match is not None: # a match
+                            if acc_code_match is not None:  # a match
                                 set_cif_value(emdb_ref.set_emdb_id, 'access_code', const.EMD_CROSSREFERENCE, cif_list=emdb_ref_in)
                             else:
                                 # acc_code is not in a format of EMD-xxxx
                                 corrected = False
-                                self.logger.warning('')
-                                self.logger.warning('WARNING: _emd_crossreference.access_code is %s and is in a wrong format. If a new value is given the message follows.', db_id)
+                                txt = 'The value for (_emd_crossreference.access_code) is (%s) and it is in a wrong format. If a new value is given the message follows.' % acc_code
+                                self.current_entry_log.warn_logs.append(self.ALog(log_text=self.current_entry_log.warn_title + txt))
+                                self.log_formatted('self.logger.warning', const.NOT_REQUIRED_ALERT + txt)
                                 if len(acc_code) == 4 and acc_code.isdigit():
                                     # acc_code is a 4-digit number - add EMD- to it
                                     correct_acc_code = 'EMD-' + acc_code
@@ -2507,11 +2801,13 @@ class CifEMDBTranslator(object):
                                     corrected = True
                                 if corrected:
                                     set_cif_value(emdb_ref.set_emdb_id, 'access_code', const.EMD_CROSSREFERENCE, cif_list=emdb_ref_in, cif_value=correct_acc_code)
-                                    self.logger.warning('')
-                                    self.logger.warning(const.CHANGE_MADE+'emdb_id is set to %s as _emd_crossreference.access_code is %s', correct_acc_code, acc_code)
+                                    txt = 'emdb_id is set to (%s) as (_emd_crossreference.access_code) is (%s).' % (correct_acc_code, acc_code)
+                                    self.current_entry_log.warn_logs.append(self.ALog(log_text=self.current_entry_log.warn_title + txt))
+                                    self.log_formatted('self.logger.warning', const.CHANGE_MADE + txt)
                         else:
-                            self.logger.error(const.REQUIRED_ALERT+'Cannot set emdb_id in cross reference list as the required value for _emd_crossreference.access_code is not given.')
-                            self.logger.error('')
+                            txt = 'Cannot set crossreference emdb_id as the required value for (_emd_crossreference.access_code) is not given.'
+                            self.current_entry_log.error_logs.append(self.ALog(log_text=self.current_entry_log.error_title + txt))
+                            self.log_formatted('self.logger.error', const.REQUIRED_ALERT + txt)
 
                     def set_ref_el_relationship(emdb_ref, emdb_ref_in):
                         """
@@ -2522,11 +2818,11 @@ class CifEMDBTranslator(object):
                         rel_item = get_cif_item('relationship', const.EMD_CROSSREFERENCE)
                         if rel_in == 'IN FRAME':
                             emdb_ref.set_relationship(emdb.relationshipType(in_frame='FULLOVERLAP'))
-                            log(rel_item, emdb_ref.set_relationship, rel_in+' '+'FULLOVERLAP')
+                            log(rel_item, emdb_ref.set_relationship, rel_in + ' ' + 'FULLOVERLAP')
                         else:
                             emdb_ref.set_relationship(emdb.relationshipType(other='unknown'))
                             if rel_in is not None:
-                                log(rel_item, emdb_ref.set_relationship, rel_in+' '+'unknown')
+                                log(rel_item, emdb_ref.set_relationship, rel_in + ' ' + 'unknown')
                             else:
                                 log(rel_item, emdb_ref.set_relationship, 'unknown')
 
@@ -2545,13 +2841,14 @@ class CifEMDBTranslator(object):
                         db_id = get_cif_value('db_id', const.PDBX_DATABASE_RELATED, rel_in)
                         if db_id is not None:
                             db_id_match = re.match(const.CIF_EMD_ID_RE, db_id)
-                            if db_id_match is not None: # a match
+                            if db_id_match is not None:  # a match
                                 set_cif_value(cross_ref.set_emdb_id, 'db_id', const.PDBX_DATABASE_RELATED, cif_list=rel_in)
                             else:
                                 # db_id is not in a format of EMD-xxxx
                                 corrected = False
-                                self.logger.warning('')
-                                self.logger.warning('WARNING: _pdbx_database_related.db_id is %s and is in a wrong format. If a new value is given the message follows.', db_id)
+                                txt = 'The value for (_pdbx_database_related.db_id) (%s) is in a wrong format. If a new value is given the message follows.' % db_id
+                                self.current_entry_log.warn_logs.append(self.ALog(log_text=self.current_entry_log.warn_title + txt))
+                                self.log_formatted('self.logger.warning', const.NOT_REQUIRED_ALERT + txt)
                                 if len(db_id) == 4 and db_id.isdigit():
                                     # db_id is a 4-digit number - add EMD- to it
                                     correct_db_id = 'EMD-' + db_id
@@ -2562,8 +2859,9 @@ class CifEMDBTranslator(object):
                                     corrected = True
                                 if corrected:
                                     set_cif_value(cross_ref.set_emdb_id, 'db_id', const.PDBX_DATABASE_RELATED, cif_list=rel_in, cif_value=correct_db_id)
-                                    self.logger.warning('')
-                                    self.logger.warning(const.CHANGE_MADE+'emdb_id is set to (%s) as _pdbx_database_related.db_id is (%s)', correct_db_id, db_id)
+                                    txt = 'emdb_id is set to (%s) as the value for (_pdbx_database_related.db_id) is given as (%s).' % (correct_db_id, db_id)
+                                    self.current_entry_log.warn_logs.append(self.ALog(log_text=self.current_entry_log.change_title + txt))
+                                    self.log_formatted('self.logger.warning', const.CHANGE_MADE + txt)
                         else:
                             set_cif_value(cross_ref.set_emdb_id, 'db_id', const.PDBX_DATABASE_RELATED, cif_list=rel_in)
 
@@ -2622,6 +2920,7 @@ class CifEMDBTranslator(object):
                 """
                 XSD: <xs:element name="pdb_list" type="pdb_cross_reference_list_type" minOccurs="0">
                 """
+
                 def set_pdb_cross_ref_list_type(pdb_ref_list, x_ref_dict_in):
                     """
                     XSD: <xs:element name="pdb_list" type="pdb_cross_reference_list_type" minOccurs="0">
@@ -2629,12 +2928,14 @@ class CifEMDBTranslator(object):
                     <xs:element name="pdb_reference" type="pdb_cross_reference_type" maxOccurs="unbounded">
                     ..is a sequence of 3 elements
                     """
+
                     def set_el_emdb_id(pdb_ref, pdb_ref_in):
                         """
                         XSD: <xs:element name="emdb_id" type="emdb_id_type"/>
                         CIF: _emd_crossreference.access_code
                         """
-                        set_cif_value(pdb_ref.set_pdb_id, 'access_code', const.EMD_CROSSREFERENCE, cif_list=pdb_ref_in, fmt=str.lower, parent_el_req=False)
+                        set_cif_value(pdb_ref.set_pdb_id, 'access_code', const.EMD_CROSSREFERENCE, cif_list=pdb_ref_in,
+                                      fmt=str.lower, parent_el_req=False)
 
                     def set_el_relationship(pdb_ref, pdb_ref_in):
                         """
@@ -2681,11 +2982,13 @@ class CifEMDBTranslator(object):
                 <xs:element name="auxiliary_link_list" minOccurs="0">
                 ..a list of one and only one element
                 """
+
                 def set_aux_link_type(aux, aux_in):
                     """
                     <xs:complexType name="auxiliary_link_type">
                     ..a sequence of 3 elements
                     """
+
                     def set_el_type(aux, aux_in):
                         """
                         XSD: <xs:element name="type">
@@ -2705,6 +3008,7 @@ class CifEMDBTranslator(object):
                         XSD: <xs:element name="details" type="xs:string" minOccurs="0"/>
                         CIF: NOT YET IMPLEMENTED
                         """
+
                     # element 1
                     set_el_type(aux, aux_in)
                     # element 2
@@ -2737,6 +3041,7 @@ class CifEMDBTranslator(object):
             Sets <xs:element name="sample" type="sample_type"> as
             ..a sequence of 3 elements
             """
+
             def set_el_name():
                 """
                 XSD: <xs:element name="name" type="xs:token">
@@ -2750,11 +3055,12 @@ class CifEMDBTranslator(object):
                 Parameters:
                 @param src: either an object for supramolecule or macromolecule
                 @param cif_category: _entity_src_nat, _entity_src_gen, _pdbx_entity_src_syn or _emd_natural_source
-                @param src_in: 
+                @param src_in:
                 XSD: <xs:complexType name="base_source_type"> has
                     .. 1 attribute and
                     .. 3 elements
                 """
+
                 def set_attr_database(src, cif_category, src_in):
                     """
                     XSD: <xs:attribute name="database">; <xs:enumeration value="NCBI"/>
@@ -2764,19 +3070,21 @@ class CifEMDBTranslator(object):
                     CIF: _emd_natural_source.ncbi_tax_id
                     """
                     tax_id_in = None
-                    a_dict = {const.ENTITY_SRC_NAT:'pdbx_ncbi_taxonomy_id',
-                              const.ENTITY_SRC_GEN:'pdbx_gene_src_ncbi_taxonomy_id',
-                              const.PDBX_ENTITY_SRC_SYN:'ncbi_taxonomy_id',
-                              const.EMD_NATURAL_SOURCE:'ncbi_tax_id'}
+                    a_dict = {const.ENTITY_SRC_NAT: 'pdbx_ncbi_taxonomy_id',
+                              const.ENTITY_SRC_GEN: 'pdbx_gene_src_ncbi_taxonomy_id',
+                              const.PDBX_ENTITY_SRC_SYN: 'ncbi_taxonomy_id',
+                              const.EMD_NATURAL_SOURCE: 'ncbi_tax_id'}
                     if cif_category is not None:
                         cif_key = a_dict.get(cif_category, None)
                         tax_id_in = get_cif_value(cif_key, cif_category, src_in)
                         if cif_key is None or cif_key.isspace():
-                            self.logger.error(const.REQUIRED_ALERT+'Cannot set database attribute as cif category %s is not one of: %s: ', (cif_category, a_dict))
+                            txt = 'Cannot set the database attribute as the cif category (%s) is not one of: (%s).' % (cif_category, a_dict)
+                            self.current_entry_log.error_logs.append(self.ALog(log_text=self.current_entry_log.error_title + txt))
+                            self.log_formatted('self.logger.error', const.REQUIRED_ALERT + txt)
                         else:
                             set_cif_value(src.set_database, cif_key, cif_category, cif_list=src_in, cif_value='NCBI')
 
-                    return tax_id_in   
+                    return tax_id_in
 
                 def set_el_organism(src, tax_id_in, cif_category, src_in):
                     """
@@ -2788,11 +3096,11 @@ class CifEMDBTranslator(object):
                     CIF: _entity_src_nat.pdbx_organism_scientific
                     CIF: _emd_natural_source.organism
                     """
-                    a_dict = {const.ENTITY_SRC_NAT:'common_name',
-                              const.ENTITY_SRC_GEN:'pdbx_gene_src_scientific_name',
-                              const.PDBX_ENTITY_SRC_SYN:'organism_scientific',
-                              const.EMD_NATURAL_SOURCE:'organism'}
-                    if cif_category is not None: 
+                    a_dict = {const.ENTITY_SRC_NAT: 'common_name',
+                              const.ENTITY_SRC_GEN: 'pdbx_gene_src_scientific_name',
+                              const.PDBX_ENTITY_SRC_SYN: 'organism_scientific',
+                              const.EMD_NATURAL_SOURCE: 'organism'}
+                    if cif_category is not None:
                         cif_key = a_dict.get(cif_category, None)
                         if cif_key is not None:
                             common_name = get_cif_value(cif_key, cif_category, cif_list=src_in)
@@ -2801,28 +3109,40 @@ class CifEMDBTranslator(object):
                                     cif_key = 'pdbx_organism_scientific'
                                     org_sci_name = get_cif_value(cif_key, cif_category, cif_list=src_in)
                                     if org_sci_name is not None and not org_sci_name.isspace():
-                                        self.logger.warning('')
-                                        self.logger.warning(const.CHANGE_MADE+'_entity_src_nat.common_name is not given so the value for _entity_src_nat.pdbx_organism_scientific %s used', org_sci_name)
+                                        txt = 'The value for (_entity_src_nat.common_name) is not given so the value for (_entity_src_nat.pdbx_organism_scientific): (%s) is used.' % org_sci_name
+                                        self.current_entry_log.warn_logs.append(self.ALog(log_text=self.current_entry_log.change_title + txt))
+                                        self.log_formatted('self.logger.warning', const.CHANGE_MADE + txt)
                                     else:
                                         org_sci_name = 'Unspecified'
                                     if tax_id_in is not None and not tax_id_in.isspace():
-                                        set_cif_value(src.set_organism, cif_key, cif_category, cif_list=src_in, constructor=emdb.organism_type, ncbi=tax_id_in, cif_value=org_sci_name, parent_el_req=False)
+                                        set_cif_value(src.set_organism, cif_key, cif_category, cif_list=src_in,
+                                                      constructor=emdb.organism_type, ncbi=tax_id_in,
+                                                      cif_value=org_sci_name, parent_el_req=False)
                                     else:
-                                        set_cif_value(src.set_organism, cif_key, cif_category, cif_list=src_in, constructor=emdb.organism_type, cif_value=org_sci_name, parent_el_req=False)
+                                        set_cif_value(src.set_organism, cif_key, cif_category, cif_list=src_in,
+                                                      constructor=emdb.organism_type, cif_value=org_sci_name,
+                                                      parent_el_req=False)
                                 else:
                                     # common_name is not None
                                     if tax_id_in is not None:
-                                        set_cif_value(src.set_organism, cif_key, cif_category, cif_list=src_in, constructor=emdb.organism_type, ncbi=tax_id_in, cif_value=common_name, parent_el_req=False)
+                                        set_cif_value(src.set_organism, cif_key, cif_category, cif_list=src_in,
+                                                      constructor=emdb.organism_type, ncbi=tax_id_in,
+                                                      cif_value=common_name, parent_el_req=False)
                                     else:
-                                        set_cif_value(src.set_organism, cif_key, cif_category, cif_list=src_in, constructor=emdb.organism_type, cif_value=common_name, parent_el_req=False)
+                                        set_cif_value(src.set_organism, cif_key, cif_category, cif_list=src_in,
+                                                      constructor=emdb.organism_type, cif_value=common_name,
+                                                      parent_el_req=False)
                             else:
                                 if tax_id_in is not None:
-                                    set_cif_value(src.set_organism, cif_key, cif_category, cif_list=src_in, constructor=emdb.organism_type, ncbi=tax_id_in, parent_el_req=False)
+                                    set_cif_value(src.set_organism, cif_key, cif_category, cif_list=src_in,
+                                                  constructor=emdb.organism_type, ncbi=tax_id_in, parent_el_req=False)
                                 else:
-                                    set_cif_value(src.set_organism, cif_key, cif_category, cif_list=src_in, constructor=emdb.organism_type, parent_el_req=False)
+                                    set_cif_value(src.set_organism, cif_key, cif_category, cif_list=src_in,
+                                                  constructor=emdb.organism_type, parent_el_req=False)
                         else:
-                            self.logger.error(const.REQUIRED_ALERT+'Cannot set the organism element as cif item %s is not one in %s', (cif_key, a_dict))
-                            self.logger.error('')
+                            txt = 'Cannot set the organism element as cif item (%s) is not of of (%s).' % (cif_key, a_dict)
+                            self.current_entry_log.error_logs.append(self.ALog(log_text=self.current_entry_log.error_title + txt))
+                            self.log_formatted('self.logger.error', const.REQUIRED_ALERT + txt)
 
                 def set_el_strain(src, cif_category, src_in):
                     """
@@ -2833,23 +3153,25 @@ class CifEMDBTranslator(object):
                     CIF: _pdbx_entity_src_syn.strain
                     CIF: _emd_natural_source.strain
                     """
-                    a_dict = {const.ENTITY_SRC_NAT:'strain',
-                              const.ENTITY_SRC_GEN:'gene_src_strain',
-                              const.PDBX_ENTITY_SRC_SYN:'strain',
-                              const.EMD_NATURAL_SOURCE:'strain'}
+                    a_dict = {const.ENTITY_SRC_NAT: 'strain',
+                              const.ENTITY_SRC_GEN: 'gene_src_strain',
+                              const.PDBX_ENTITY_SRC_SYN: 'strain',
+                              const.EMD_NATURAL_SOURCE: 'strain'}
                     if cif_category is not None:
                         cif_key = a_dict.get(cif_category, None)
                         if cif_key is not None:
                             set_cif_value(src.set_strain, cif_key, cif_category, cif_input=src_in)
                         else:
-                            self.logger.error(const.REQUIRED_ALERT+'Cannot set the strain element as cif item %s is not one in %s', (cif_key, a_dict))
-                            self.logger.error('')
+                            txt = 'Cannot set the strain element as cif item (%s) is not one in (%s).' % (cif_key, a_dict)
+                            self.current_entry_log.error_logs.append(self.ALog(log_text=self.current_entry_log.error_title + txt))
+                            self.log_formatted('self.logger.error', const.REQUIRED_ALERT + txt)
 
                 def set_el_synonym_organism():
                     """
                     XSD: <xs:element name="synonym_organism" type="xs:token" minOccurs="0">
                     Deprecated (2014-10-21)
                     """
+
                 tax_id_in = set_attr_database(src, cif_category, src_in)
                 # element 1
                 set_el_organism(src, tax_id_in, cif_category, src_in)
@@ -2861,7 +3183,7 @@ class CifEMDBTranslator(object):
             def get_rec_exp_dict_old(ent_id_in, src_dicts, is_supramolecule):
                 """
                 Helper function: It returns a dictionary needed for recombinant expression containing a cif category depending on several requirements.
-                An EM entry can be: 
+                An EM entry can be:
                 1. Model only; Has a PDB source
                 2. Map only; Has an EM source
                 3. Map and model; Has both, EM and PDB, sources
@@ -2872,17 +3194,17 @@ class CifEMDBTranslator(object):
                 3. PDB and EMDB; This is a map and model entry. The return dictionary is one of _entity_src_nat/_entity_src_gen/_entity_src_syn or _emd_recombinant_expression
 
                 SUPRAMOLECULE map and model entry: The return category is _emd_recombinant_expression
-                
+
                 MACROMOLECULE map and model entry:
                 Cif category _emd_supramolecule.source can have the following values:
                 1. NATURAL; The return dictionary has the _entity_src_nat cif category
                 2. RECOMBINANT; To find the return dictionary the following needs finding out:
-                
+
                 _emd_supramolecule.entity_id_list has a list of supramolecules ids (e.g. '1, 2, 3'). More on each entity can be found in the _entity category.
                 _entity.id corresponds to the input parameter ent_id_in. each entity has a type given in _entity.type as:
                 1. polymer
                 2. something other than polymer (such as non-polymer or water); This value should not occur for recombinant expressions.
-                
+
                 If _entity.type is 'polymer' than _entity.src_method gives the return dictionary as:
                 1. nat; The return category is _entity_src_nat
                 2. man; The return category is _entity_src_gen
@@ -2899,23 +3221,26 @@ class CifEMDBTranslator(object):
                 if 'EMDB' in db_id_dict and 'PDB' not in db_id_dict:
                     # Map only
                     if src_dicts.get('rec_exp_dict_in', None) is None:
-                        self.logger.warning(const.REQUIRED_ALERT+'_emd_recombinant_expression category missing for creating recombinant expression for the map only entry %s', ent_id_in)
-                        self.logger.warning('')
+                        txt = '(_emd_recombinant_expression) category missing for creating recombinant expression for the map only entry (%s).' % ent_id_in
+                        self.current_entry_log.warn_logs.append(self.ALog(log_text=self.current_entry_log.warn_title + txt))
+                        self.log_formatted('self.logger.warning', const.NOT_REQUIRED_ALERT + txt)
                     else:
                         return src_dicts['rec_exp_dict_in']
                 elif 'EMDB' not in db_id_dict and 'PDB' in db_id_dict:
                     # Model only; The return category is the _entity_src_gen category
                     if src_dicts.get('ent_src_gen_dict', None) is None:
-                        self.logger.warning(const.REQUIRED_ALERT+'_entity_src_gen category missing for creating recombinant expression for the model only entry %s', ent_id_in)
-                        self.logger.warning('')
+                        txt = '(_entity_src_gen category) missing for creating recombinant expression for the model only entry (%s)' % ent_id_in
+                        self.current_entry_log.warn_logs.append(self.ALog(log_text=self.current_entry_log.warn_title + txt))
+                        self.log_formatted('self.logger.warning', const.NOT_REQUIRED_ALERT + txt)
                     else:
                         return src_dicts['ent_src_gen_dict']
                 elif 'EMDB' in db_id_dict and 'PDB' in db_id_dict:
                     # Map and model
                     if is_supramolecule:
                         if src_dicts.get('rec_exp_dict_in', None) is None:
-                            self.logger.warning(const.REQUIRED_ALERT+'_emd_recombinant_expression category missing for creating recombinant expression for the map and model supramolecule entry %s', ent_id_in)
-                            self.logger.warning('')
+                            txt = '(_emd_recombinant_expression) category missing for creating recombinant expression for the map and model supramolecule entry %s.' % ent_id_in
+                            self.current_entry_log.warn_logs.append(self.ALog(log_text=self.current_entry_log.warn_title + txt))
+                            self.log_formatted('self.logger.warning', const.NOT_REQUIRED_ALERT + txt)
                         else:
                             return src_dicts['rec_exp_dict_in']
                     else:
@@ -2923,8 +3248,9 @@ class CifEMDBTranslator(object):
                         src = get_cif_value('source', const.EMD_SUPRAMOLECULE)
                         if src == 'NATURAL':
                             if src_dicts.get('ent_src_nat_dict', None) is None:
-                                self.logger.warning(const.REQUIRED_ALERT+'_entity_src_nat category missing for creating recombinant expression for the map and model entry %s where _emd_supramolecule.source is NATURAL', ent_id_in)
-                                self.logger.warning('')
+                                txt = '(_entity_src_nat) category missing for creating recombinant expression for the map and model entry %s where (_emd_supramolecule.source) is (NATURAL).' % ent_id_in
+                                self.current_entry_log.warn_logs.append(self.ALog(log_text=self.current_entry_log.warn_title + txt))
+                                self.log_formatted('self.logger.warning', const.NOT_REQUIRED_ALERT + txt)
                             else:
                                 return src_dicts['ent_src_nat_dict']
                         elif src == 'RECOMBINANT':
@@ -2932,32 +3258,38 @@ class CifEMDBTranslator(object):
                             if ent_id_in in entity_dict:
                                 ent_type = get_cif_value('type', const.ENTITY, entity_dict[ent_id_in])
                                 if ent_type == 'polymer':
-                                    ent_src_method = get_cif_value('src_method', const.ENTITY,entity_dict[ent_id_in])
+                                    ent_src_method = get_cif_value('src_method', const.ENTITY, entity_dict[ent_id_in])
                                     if ent_src_method == 'nat':
                                         if src_dicts.get('ent_src_nat_dict', None) is None:
-                                            self.logger.warning(const.REQUIRED_ALERT+'_entity_src_nat category missing for creating recombinant expression for the map and model entry %s where _emd_supramolecule.source is RECOMBINANT and polymer is nat', ent_id_in)
-                                            self.logger.warning('')
+                                            txt = '(_entity_src_nat) category missing for creating recombinant expression for the map and model entry (%s) where (_emd_supramolecule.source) is (RECOMBINANT) and polymer is (nat).' % ent_id_in
+                                            self.current_entry_log.warn_logs.append(self.ALog(log_text=self.current_entry_log.warn_title + txt))
+                                            self.log_formatted('self.logger.warning', const.NOT_REQUIRED_ALERT + txt)
                                         else:
                                             return src_dicts['ent_src_nat_dict']
                                     elif ent_src_method == 'man':
                                         if src_dicts.get('ent_src_gen_dict', None) is None:
-                                            self.logger.warning(const.REQUIRED_ALERT+'_entity_src_gen category missing for creating recombinant expression for the map and model entry %s where _emd_supramolecule.source is RECOMBINANT and polymer is man', ent_id_in)
-                                            self.logger.warning('')
+                                            txt = '(_entity_src_gen) category missing for creating recombinant expression for the map and model entry (%s) where (_emd_supramolecule.source) is (RECOMBINANT) and polymer is (man).' % ent_id_in
+                                            self.current_entry_log.warn_logs.append(self.ALog(log_text=self.current_entry_log.warn_title + txt))
+                                            self.log_formatted('self.logger.warning', const.NOT_REQUIRED_ALERT + txt)
                                         else:
                                             return src_dicts['ent_src_gen_dict']
                                     if ent_src_method == 'syn':
                                         if src_dicts.get('ent_src_syn_dict', None) is None:
-                                            self.logger.warning(const.REQUIRED_ALERT+'_entity_src_syn category missing for creating recombinant expression for the map and model entry %s where _emd_supramolecule.source is RECOMBINANT and polymer is man', ent_id_in)
-                                            self.logger.warning('')
+                                            txt = '(_entity_src_syn) category missing for creating recombinant expression for the map and model entry (%s) where (_emd_supramolecule.source) is (RECOMBINANT) and polymer is (man).' % ent_id_in
+                                            self.current_entry_log.warn_logs.append(self.ALog(log_text=self.current_entry_log.warn_title + txt))
+                                            self.log_formatted('self.logger.warning', const.NOT_REQUIRED_ALERT + txt)
                                         else:
                                             return src_dicts['ent_src_syn_dict']
                                 else:
                                     # this should not happen - write out an error
-                                    self.logger.warning('')
                                     if ent_type is not None:
-                                        self.logger.warning(const.REQUIRED_ALERT+'_entity.type is %s and not polymer', ent_type)
+                                        txt = '(_entity.type) is (%s) and not polymer.' % ent_type
+                                        self.current_entry_log.warn_logs.append(self.ALog(log_text=self.current_entry_log.warn_title + txt))
+                                        self.log_formatted('self.logger.warning', const.NOT_REQUIRED_ALERT + txt)
                                     else:
-                                        self.logger.warning(const.REQUIRED_ALERT+'_entity.type is not given')
+                                        txt = '(_entity.type) is not given.'
+                                        self.current_entry_log.warn_logs.append(self.ALog(log_text=self.current_entry_log.warn_title + txt))
+                                        self.log_formatted('self.logger.warning', const.NOT_REQUIRED_ALERT + txt)
                                     return None
                         elif src == 'MULTIPLE SOURCES':
                             # this is going to be covered in its children
@@ -2965,16 +3297,18 @@ class CifEMDBTranslator(object):
                         else:
                             # this should not happen - write out an error
                             if src is not None:
-                                self.logger.error(const.REQUIRED_ALERT+'_emd_supramolecule.source is %s and could only be NATURAL, RECOMBINANT, MULTIPLE SOURCES', src)
-                                self.logger.error('')
+                                txt = '_emd_supramolecule.source is (%s) and could only be one of these values: NATURAL, RECOMBINANT, MULTIPLE SOURCES.' % src
+                                self.current_entry_log.error_logs.append(self.ALog(log_text=self.current_entry_log.error_title + txt))
+                                self.log_formatted('self.logger.error', const.REQUIRED_ALERT + txt)
                             else:
                                 err_txt = 'macromolecule'
                                 if is_supramolecule:
                                     err_txt = 'supramolecule'
-                                self.logger.error(const.REQUIRED_ALERT+'The value for _emd_supramolecule.source is missing for %s id=%s. Value expected is one of NATURAL, RECOMBINANT, MULTIPLE SOURCES', err_txt, ent_id_in)
-                                self.logger.error('')
+                                txt = 'The value for (_emd_supramolecule.source) is missing for (%s) id=(%s). Value expected is one of: NATURAL, RECOMBINANT, MULTIPLE SOURCES.' % (err_txt, ent_id_in)
+                                self.current_entry_log.error_logs.append(self.ALog(log_text=self.current_entry_log.error_title + txt))
+                                self.log_formatted('self.logger.error', const.REQUIRED_ALERT + txt)
                             return None
-            
+
             def get_rec_exp_dict(ent_id_in, src_dicts, cif_cat_in, is_supramolecule):
                 """
                 Replace above
@@ -2983,7 +3317,7 @@ class CifEMDBTranslator(object):
                 SUPRAMOLECULE are all map entries. Cif category _emd_supramolecule:
                 source molecule: emd_natural_source - should always be present.
                 if _emd_supramolecule.source = RECOMBINANT;  then get expression system from _emd_recombinant_expression
-                
+
                 MACROMOLECULE
 
                 from entity and its children.
@@ -2991,10 +3325,10 @@ class CifEMDBTranslator(object):
                                 1. nat; The return category is _entity_src_nat
                                 2. man; The return category is _entity_src_gen
                                 3. syn; The return category is _entity_src_syn
-                
+
                 if _entity_type != polymer then no source information will be present.
-                
-                Details for both SUPRAMOLECULE and MACROMOLECULE  are required by the depUI on separate pages so you will always get data for both (map+model) or just supramolecule (map only). 
+
+                Details for both SUPRAMOLECULE and MACROMOLECULE  are required by the depUI on separate pages so you will always get data for both (map+model) or just supramolecule (map only).
 
                 Parameters:
                 @param ent_id_in:
@@ -3005,51 +3339,50 @@ class CifEMDBTranslator(object):
                     src = get_cif_value('source', const.EMD_SUPRAMOLECULE, cif_cat_in)
                     if src == 'RECOMBINANT':
                         if src_dicts.get('rec_exp_dict_in', None) is None:
-                            self.logger.warning(const.REQUIRED_ALERT+'_emd_recombinant_expression category missing for creating recombinant expression for the map and model supramolecule entry %s', ent_id_in)
-                            self.logger.warning('')
+                            txt = '(_emd_recombinant_expression) category missing for creating recombinant expression for the map and model supramolecule entry (%s).' % ent_id_in
+                            self.current_entry_log.warn_logs.append(self.ALog(log_text=self.current_entry_log.warn_title + txt))
+                            self.log_formatted('self.logger.warning', const.NOT_REQUIRED_ALERT + txt)
                         else:
                             return src_dicts['rec_exp_dict_in']
-                else: # macromolecules
+                else:  # macromolecules
                     entity_dict = make_dict(const.ENTITY, 'id')
                     if ent_id_in in entity_dict:
                         ent_type = get_cif_value('type', const.ENTITY, entity_dict[ent_id_in])
                         if ent_type == 'polymer':
-                            ent_src_method = get_cif_value('src_method', const.ENTITY,entity_dict[ent_id_in])
+                            ent_src_method = get_cif_value('src_method', const.ENTITY, entity_dict[ent_id_in])
                             if ent_src_method == 'nat':
-                                pass
-#                                 if src_dicts.get('ent_src_nat_dict', None) is None:
-#                                     self.logger.warning(const.REQUIRED_ALERT+'_entity_src_nat category missing for creating recombinant expression for the map and model entry %s where _emd_supramolecule.source is RECOMBINANT and polymer is nat', ent_id_in)
-#                                     self.logger.warning('')
-#                                 else:
-#                                     print 'ent_src_nat_dict'
-#                                     return src_dicts['ent_src_nat_dict']
+                                pass # CHECK THIS
                             elif ent_src_method == 'man':
                                 if src_dicts.get('ent_src_gen_dict', None) is None:
-                                    self.logger.warning(const.REQUIRED_ALERT+'_entity_src_gen category missing for creating recombinant expression for the map and model entry %s where _emd_supramolecule.source is RECOMBINANT and polymer is man', ent_id_in)
-                                    self.logger.warning('')
+                                    txt = '(_entity_src_gen) category missing for creating recombinant expression for the map and model entry (%s) where (_emd_supramolecule.source) is (RECOMBINANT) and polymer is (man).' % ent_id_in
+                                    self.current_entry_log.warn_logs.append(self.ALog(log_text=self.current_entry_log.warn_title + txt))
+                                    self.log_formatted('self.logger.warning', const.NOT_REQUIRED_ALERT + txt)
                                 else:
                                     return src_dicts['ent_src_gen_dict']
                             if ent_src_method == 'syn':
                                 if src_dicts.get('ent_src_syn_dict', None) is None:
-                                    self.logger.warning(const.REQUIRED_ALERT+'_entity_src_syn category missing for creating recombinant expression for the map and model entry %s where _emd_supramolecule.source is RECOMBINANT and polymer is man', ent_id_in)
-                                    self.logger.warning('')
+                                    txt = '(_entity_src_syn) category missing for creating recombinant expression for the map and model entry (%s) where (_emd_supramolecule.source) is (RECOMBINANT) and polymer is (man).' % ent_id_in
+                                    self.current_entry_log.warn_logs.append(self.ALog(log_text=self.current_entry_log.warn_title + txt))
+                                    self.log_formatted('self.logger.warning', const.NOT_REQUIRED_ALERT + txt)
                                 else:
                                     return src_dicts['ent_src_syn_dict']
-            
+
             def set_recombinant_source_type(r_exp, rec_exp_in):
                 """
                 XSD: <xs:complexType name="recombinant_source_type"> has
                 .. 1 attribute and
                 .. a sequence of 5 elements
                 """
+
                 def set_attr_database(r_exp):
                     """
                     XSD: <xs:attribute name="database"> has
                     the value of "NCBI"
                     CIF: _emd_recombinant_expression.ncbi_tax_id
                     """
-                    set_cif_value(r_exp.set_database, 'ncbi_tax_id', const.EMD_RECOMBINANT_EXPRESSION, cif_list=rec_exp_in, cif_value='NCBI')
-    
+                    set_cif_value(r_exp.set_database, 'ncbi_tax_id', const.EMD_RECOMBINANT_EXPRESSION,
+                                  cif_list=rec_exp_in, cif_value='NCBI')
+
                 def set_el_recombinant_organism(r_exp, rec_exp_in):
                     """
                     XSD: <xs:element name="recombinant_organism" type="organism_type">
@@ -3059,37 +3392,28 @@ class CifEMDBTranslator(object):
                     if '_emd_recombinant_expression.ncbi_tax_id' in rec_exp_dict:
                         tax_id = get_cif_value('ncbi_tax_id', const.EMD_RECOMBINANT_EXPRESSION, rec_exp_in)
                         if tax_id is not None or tax_id.isspace():
-                                set_cif_value(r_exp.set_recombinant_organism, 'organism', const.EMD_RECOMBINANT_EXPRESSION, cif_list=rec_exp_in, constructor=emdb.organism_type, ncbi=tax_id)
+                            set_cif_value(r_exp.set_recombinant_organism, 'organism', const.EMD_RECOMBINANT_EXPRESSION,
+                                          cif_list=rec_exp_in, constructor=emdb.organism_type, ncbi=tax_id)
                         else:
-                            self.logger.error('')
-                            self.logger.error(const.REQUIRED_ALERT+'_emd_recombinant_expression.ncbi_tax_id not given. Needed for setting recombinant expression organism.')
-#                     elif '_entity_src_nat.pdbx_ncbi_taxonomy_id' in rec_exp_dict:
-#                         tax_id = get_cif_value('pdbx_ncbi_taxonomy_id', const.ENTITY_SRC_NAT, rec_exp_in)
-#                         if tax_id is not None or tax_id.isspace():
-#                                 set_cif_value(r_exp.set_recombinant_organism, 'pdbx_organism_scientific', const.ENTITY_SRC_NAT, cif_list=rec_exp_in, constructor=emdb.organism_type, ncbi=tax_id)
-#                         else:
-#                             self.logger.error('')
-#                             self.logger.error(const.REQUIRED_ALERT+'_entity_src_nat.pdbx_ncbi_taxonomy_id not given. Needed for setting recombinant expression organism.')
+                            txt = 'The value for (_emd_recombinant_expression.ncbi_tax_id) is not given. It is required for setting the recombinant expression organism.'
+                            self.current_entry_log.error_logs.append(self.ALog(log_text=self.current_entry_log.error_title + txt))
+                            self.log_formatted('self.logger.error', const.REQUIRED_ALERT + txt)
                     elif '_entity_src_gen.pdbx_host_org_ncbi_taxonomy_id' in rec_exp_dict:
                         tax_id = get_cif_value('pdbx_host_org_ncbi_taxonomy_id', const.ENTITY_SRC_GEN, rec_exp_in)
                         if tax_id is not None or tax_id.isspace():
-                                set_cif_value(r_exp.set_recombinant_organism, 'pdbx_host_org_scientific_name', const.ENTITY_SRC_GEN, cif_list=rec_exp_in, constructor=emdb.organism_type, ncbi=tax_id)
+                            set_cif_value(r_exp.set_recombinant_organism, 'pdbx_host_org_scientific_name', const.ENTITY_SRC_GEN,
+                                          cif_list=rec_exp_in, constructor=emdb.organism_type, ncbi=tax_id)
                         else:
-                            self.logger.error('')
-                            self.logger.error(const.REQUIRED_ALERT+'_entity_src_gen.pdbx_host_org_ncbi_taxonomy_id not given. Needed for setting recombinant expression organism.')
+                            txt = 'The value for (_entity_src_gen.pdbx_host_org_ncbi_taxonomy_id) is not given. It is required for setting the recombinant expression organism.'
+                            self.current_entry_log.error_logs.append(self.ALog(log_text=self.current_entry_log.error_title + txt))
+                            self.log_formatted('self.logger.error', const.REQUIRED_ALERT + txt)
                     elif '_pdbx_entity_src_syn.ncbi_taxonomy_id' in rec_exp_dict:
                         pass
-#                         tax_id = get_cif_value('ncbi_taxonomy_id', const.PDBX_ENTITY_SRC_SYN, rec_exp_in)
-#                         print 'pdbx_entity_src_syn'
-#                         if tax_id is not None or tax_id.isspace():
-#                                 set_cif_value(r_exp.set_recombinant_organism, 'organism_scientific', const.PDBX_ENTITY_SRC_SYN, cif_list=rec_exp_in, constructor=emdb.organism_type, ncbi=tax_id)
-#                         else:
-#                             self.logger.error(const.REQUIRED_ALERT+'_pdbx_entity_src_syn.ncbi_taxonomy_id not given. Needed for setting recombinant expression organism.')
-#                             self.logger.error('')        
                     else:
                         # shouldn't happen
-                        self.logger.error(const.REQUIRED_ALERT+'Cannot set recombinant organism. Information missing in %s', rec_exp_dict)
-                        self.logger.error('')
+                        txt = 'Cannot set recombinant organism. Information is missing in (%s).' % rec_exp_dict
+                        self.current_entry_log.error_logs.append(self.ALog(log_text=self.current_entry_log.error_title + txt))
+                        self.log_formatted('self.logger.error', const.REQUIRED_ALERT + txt)
 
                 def set_el_recombinant_strain(r_exp, rec_exp_in):
                     """
@@ -3097,27 +3421,27 @@ class CifEMDBTranslator(object):
                     CIF: _emd_recombinant_expression.strain ?
                     """
                     set_cif_value(r_exp.set_recombinant_strain, 'strain', const.EMD_RECOMBINANT_EXPRESSION, cif_list=rec_exp_in)
-    
+
                 def set_el_recombinant_cell(r_exp, rec_exp_in):
                     """
                     XSD: <xs:element name="recombinant_cell" type="xs:token" minOccurs="0">
                     CIF: _emd_recombinant_expression.cell ?
                     """
                     set_cif_value(r_exp.set_recombinant_cell, 'cell', const.EMD_RECOMBINANT_EXPRESSION, cif_list=rec_exp_in)
-    
+
                 def set_el_recombinant_plasmid(r_exp, rec_exp_in):
                     """
                     XSD: <xs:element name="recombinant_plasmid" type="xs:token" minOccurs="0"/>
                     CIF: _emd_recombinant_expression.plasmid 'pHis-Parallel 1'
                     """
                     set_cif_value(r_exp.set_recombinant_plasmid, 'plasmid', const.EMD_RECOMBINANT_EXPRESSION, cif_list=rec_exp_in)
-    
+
                 def set_el_recombinant_synonym_organism():
                     """
                     <xs:element name="synonym_organism" type="xs:token" minOccurs="0">
                     Deprecated (2014-10-21)
                     """
-    
+
                 # attribute 1
                 set_attr_database(r_exp)
                 # element 1
@@ -3130,11 +3454,12 @@ class CifEMDBTranslator(object):
                 set_el_recombinant_plasmid(r_exp, rec_exp_in)
                 # element 5
                 set_el_recombinant_synonym_organism()
-            
+
             def set_el_supramolecule_list(sample):
                 """
                 XSD: <xs:element name="supramolecule_list" maxOccurs="1">
                 """
+
                 def set_sup_mol_weight(supra_mol, mol_wt_in):
                     """
                     Set molecular weight object of supra_mol from values in sup_in
@@ -3143,6 +3468,7 @@ class CifEMDBTranslator(object):
                     @param supra_mol: supramolecule object with a set_molecular_weight method
                     @param mol_wt_in: cif emd_molecular_mass
                     """
+
                     def set_molecular_weight_type(mol_weight):
                         """
                         XSD: <xs:complexType name="molecular_weight_type"> is
@@ -3161,14 +3487,16 @@ class CifEMDBTranslator(object):
                         if exprtl == 'YES':
                             # element 1
                             # XSD: <xs:element name="experimental" minOccurs="0">
-                            set_cif_value(mol_weight.set_experimental, 'value', const.EMD_MOLECULAR_MASS, cif_list=mol_wt_in, constructor=emdb.experimentalType, units=wt_units)
+                            set_cif_value(mol_weight.set_experimental, 'value', const.EMD_MOLECULAR_MASS,
+                                          cif_list=mol_wt_in, constructor=emdb.experimentalType, units=wt_units)
                         else:
                             # element 2
                             # XSD: <xs:element name="theoretical" minOccurs="0">
-                            set_cif_value(mol_weight.set_theoretical, 'value', const.EMD_MOLECULAR_MASS, cif_list=mol_wt_in, constructor=emdb.experimentalType, units=wt_units)
+                            set_cif_value(mol_weight.set_theoretical, 'value', const.EMD_MOLECULAR_MASS,
+                                          cif_list=mol_wt_in, constructor=emdb.experimentalType, units=wt_units)
                         # element 3
                         # XSD: <xs:element name="method" type="xs:token" minOccurs="0"/>
-                        #CIF: method doesn't exist in the dictionary!!!!
+                        # CIF: method doesn't exist in the dictionary!!!!
                         # mol_weight.set_method()
 
                     mol_weight = emdb.molecular_weight_type()
@@ -3185,7 +3513,7 @@ class CifEMDBTranslator(object):
                     emdb.{virus,cell,tissue,organelle,complex,sample}_natural_source_type
                     @param cif_category: contains natural source info (emd_natural_source)
                     @param src_in: source in cif: natural from emd_natural_source
-                    XSD: <xs:complexType name="base_source_type"> 
+                    XSD: <xs:complexType name="base_source_type">
                     """
                     set_base_source_type(sup_mol, cif_category, src_in)
 
@@ -3210,6 +3538,7 @@ class CifEMDBTranslator(object):
                     .. an extension of base="base_source_type" and
                     .. a sequence of 5 possible elements
                     """
+
                     def set_el_organ(nat_src, cif_category, sup_mol_nat_src_in):
                         """
                         XSD: <xs:element name="organ" type="xs:token" minOccurs="0"/>
@@ -3243,7 +3572,8 @@ class CifEMDBTranslator(object):
                         XSD: <xs:element name="cellular_location" type="xs:token" minOccurs="0">
                         CIF: _emd_natural_source.cellular_location ?
                         """
-                        set_cif_value(nat_src.set_cellular_location, 'cellular_location', cif_category, cif_list=sup_mol_nat_src_in)
+                        set_cif_value(nat_src.set_cellular_location, 'cellular_location', cif_category,
+                                      cif_list=sup_mol_nat_src_in)
 
                     for sup_mol_nat_src_in in src_dict_in:
                         set_sup_mol_base_source(nat_src, cif_category, sup_mol_nat_src_in)
@@ -3306,12 +3636,14 @@ class CifEMDBTranslator(object):
                     .. 1 attribute and
                     .. a sequence of 9 elements
                     """
+
                     def set_attr_id(sup_mol, sup_mol_id_in):
                         """
                         XSD: <xs:attribute name="id" type="xs:positiveInteger" use="required"/>
                         CIF: _emd_supramolecule.id 1
                         """
-                        set_cif_value(sup_mol.set_supramolecule_id, 'id', const.EMD_SUPRAMOLECULE, cif_value=sup_mol_id_in, fmt=int)
+                        set_cif_value(sup_mol.set_supramolecule_id, 'id', const.EMD_SUPRAMOLECULE,
+                                      cif_value=sup_mol_id_in, fmt=int)
 
                     def set_el_name(sup_mol, sup_in):
                         """
@@ -3321,16 +3653,20 @@ class CifEMDBTranslator(object):
                         if isinstance(sup_mol, emdb.virus_supramolecule_type):
                             virus_name = get_cif_value('name', const.EMD_SUPRAMOLECULE, cif_list=sup_in)
                             if virus_name is None:
-                                virus_name_from_nat_source = get_cif_value('organism', const.EMD_NATURAL_SOURCE, cif_list=sup_in)
-                                self.logger.warning('')
+                                virus_name_from_nat_source = get_cif_value('organism', const.EMD_NATURAL_SOURCE,
+                                                                           cif_list=sup_in)
                                 if virus_name_from_nat_source is not None:
-                                    self.logger.warning(const.CHANGE_MADE+'_emd_supramolecule.name is not given so _emd_natural_source.organism value is used.')
                                     set_cif_value(sup_mol.set_name, 'organism', const.EMD_NATURAL_SOURCE, cif_list=sup_in,
                                                   constructor=emdb.sci_name_type, cif_value=virus_name_from_nat_source)
+                                    txt = '(_emd_supramolecule.name) is not given so the value for (_emd_natural_source.organism) is used.'
+                                    self.current_entry_log.warn_logs.append(self.ALog(log_text=self.current_entry_log.change_title + txt))
+                                    self.log_formatted('self.logger.warning', const.CHANGE_MADE + txt)
                                 else:
-                                    self.logger.warning(const.CHANGE_MADE+'_emd_supramolecule.name and _emd_natural_source.organism not given. The value of Unspecified is used.')
                                     set_cif_value(sup_mol.set_name, 'organism', const.EMD_NATURAL_SOURCE, cif_list=sup_in,
                                                   constructor=emdb.sci_name_type, cif_value='Unspecified')
+                                    txt = 'The values for (_emd_supramolecule.name) and (_emd_natural_source.organism) are not given. The value of Unspecified is used.'
+                                    self.current_entry_log.warn_logs.append(self.ALog(log_text=self.current_entry_log.change_title + txt))
+                                    self.log_formatted('self.logger.warning', const.CHANGE_MADE + txt)
                             else:
                                 set_cif_value(sup_mol.set_name, 'name', const.EMD_SUPRAMOLECULE, cif_list=sup_in, constructor=emdb.sci_name_type)
                         else:
@@ -3378,13 +3714,13 @@ class CifEMDBTranslator(object):
                                     a_macromol = emdb.macromoleculeType(macromolecule_id=int(m_in))
                                     a_macromol.original_tagname_ = 'macromolecule'
                                     macro_list.add_macromolecule(a_macromol)
-                                log(id_list_item,
-                                    macro_list.add_macromolecule,
-                                    macro_list_str_in)
+                                log(id_list_item, macro_list.add_macromolecule, macro_list_str_in)
                                 if macro_list.hasContent_():
                                     sup_mol.set_macromolecule_list(macro_list)
                             else:
-                                log(id_list_item, macro_list.add_macromolecule)
+                                txt = 'No macromolecule found for (%s).' % id_list_item
+                                self.current_entry_log.warn_logs.append(self.ALog(log_text=self.current_entry_log.warn_title + txt))
+                                self.log_formatted('self.logger.warning', const.NOT_REQUIRED_ALERT + txt)
 
                     def set_el_details(sup_mol, sup_in):
                         """
@@ -3447,6 +3783,7 @@ class CifEMDBTranslator(object):
                     ..a sequence of <xs:element ref="supramolecule" maxOccurs="unbounded"/>
 
                     """
+
                     def set_complex_supramolecule_type(complex_sup_mol, sup_in, sup_mol_id_in, sup_mol_dicts, sample):
                         """
                         XSD: <xs:element name="complex_supramolecule" substitutionGroup="supramolecule" type="complex_supramolecule_type"/> is
@@ -3454,12 +3791,14 @@ class CifEMDBTranslator(object):
                         .. 1 attribute and
                         .. a sequence of 4 elements
                         """
+
                         def set_attr_chimera(complex_sup_mol, sup_in):
                             """
                             XSD: <xs:attribute fixed="true" name="chimera" type="xs:boolean"/>
                             CIF: _emd_supramolecule.chimera ?/YES (NO cannot be given)
                             """
-                            set_cif_value(complex_sup_mol.set_chimera, 'chimera', const.EMD_SUPRAMOLECULE, cif_list=sup_in, fmt=bool)
+                            set_cif_value(complex_sup_mol.set_chimera, 'chimera', const.EMD_SUPRAMOLECULE,
+                                          cif_list=sup_in, fmt=bool)
 
                         def set_el_natural_source(complex_sup_mol, sup_mol_id_in, sup_mol_dicts):
                             """
@@ -3471,14 +3810,15 @@ class CifEMDBTranslator(object):
                             nat_src_dict_in = sup_mol_dicts['nat_src_dict_in']
                             if sup_mol_id_in in nat_src_dict_in:
                                 sup_mol_dict_in = nat_src_dict_in[sup_mol_id_in]
-                                cmpx_dict = {'add_nat_src':True,
-                                             'add_organ':False,
-                                             'add_tissue':False,
-                                             'add_cell':False,
-                                             'add_organelle':False,
-                                             'add_cellular_location':False
-                                            }
-                                set_sup_mol_nat_src(cns, complex_sup_mol, const.EMD_NATURAL_SOURCE, sup_mol_dict_in, cmpx_dict)
+                                cmpx_dict = {'add_nat_src': True,
+                                             'add_organ': False,
+                                             'add_tissue': False,
+                                             'add_cell': False,
+                                             'add_organelle': False,
+                                             'add_cellular_location': False
+                                             }
+                                set_sup_mol_nat_src(cns, complex_sup_mol, const.EMD_NATURAL_SOURCE, sup_mol_dict_in,
+                                                    cmpx_dict)
 
                         def set_el_recombinant_expression(complex_sup_mol, sup_mol_id_in, rec_exp_dict_in):
                             """
@@ -3498,7 +3838,7 @@ class CifEMDBTranslator(object):
                             XSD:<xs:element name="ribosome-details" type="xs:string" minOccurs="0">
                             Deprecated (2014/11/17)
                             """
-                            #if sup_type == 'RIBOSOME':
+                            # if sup_type == 'RIBOSOME':
                             #    complex_sup_mol.set_ribosome_details('RIBOSOME')
 
                         # set up the supramolecule specific tagname explicitly
@@ -3524,16 +3864,19 @@ class CifEMDBTranslator(object):
                         ..an extension of base="base_supramolecule_type" with
                         ..a sequence of 14 elements
                         """
+
                         def set_el_sci_species_name(virus_sup_mol, nat_src_in):
                             """
                             XSD: <xs:element name="sci_species_name" type="virus_species_name_type" minOccurs="0">
                             """
+
                             def set_virus_species_name_type(virus_name):
                                 """
                                 XSD: <xs:element name="sci_species_name" type="virus_species_name_type" minOccurs="0"> has
                                 CIF: _emd_natural_source.organism 'Oryctolagus cuniculus'
                                 .. a xs:token with 1 attribute
                                 """
+
                                 def set_attr_ncbi(virus_name, nat_src_in):
                                     """
                                     XSD: <xs:attribute name="ncbi" type="xs:positiveInteger"/>
@@ -3542,10 +3885,11 @@ class CifEMDBTranslator(object):
                                     tax_id = get_cif_value('ncbi_tax_id', const.EMD_NATURAL_SOURCE, nat_src_in)
                                     if tax_id is None:
                                         # this shouldn't happen - it's mandatory
-                                        tax_id = 32644 # ID for unknown
-                                        self.logger.warning('')
-                                        self.logger.warning(const.CHANGE_MADE+'The value for _emd_natural_source.ncbi_tax_id is missing. Value set is 32644 for unknown.')
+                                        tax_id = 32644  # ID for unknown
                                         set_cif_value(virus_name.set_ncbi, 'ncbi_tax_id', const.EMD_NATURAL_SOURCE, cif_list=nat_src_in, cif_value=tax_id)
+                                        txt = 'The value for (_emd_natural_source.ncbi_tax_id) is not given. The value set is (%s) for unknown.' % tax_id
+                                        self.current_entry_log.warn_logs.append(self.ALog(log_text=self.current_entry_log.change_title + txt))
+                                        self.log_formatted('self.logger.warning', const.CHANGE_MADE + txt)
                                     else:
                                         set_cif_value(virus_name.set_ncbi, 'ncbi_tax_id', const.EMD_NATURAL_SOURCE, cif_list=nat_src_in, fmt=int)
 
@@ -3572,6 +3916,7 @@ class CifEMDBTranslator(object):
                             """
                             XSD: <xs:element name="natural_host" type="virus_natural_host_type" minOccurs="0" maxOccurs="unbounded"/>
                             """
+
                             def set_virus_natural_host_type(nat_host, nat_host_in):
                                 """
                                 XSD: <xs:element name="natural_host" type="virus_natural_host_type" minOccurs="0" maxOccurs="unbounded"/>
@@ -3581,31 +3926,36 @@ class CifEMDBTranslator(object):
                                 .. 1 attribute and
                                 .. a sequence of 3 elements
                                 """
+
                                 def set_attr_database(nat_host, nat_host_in):
                                     """
                                     XSD: <xs:attribute name="database">
                                     CIF: _emd_virus_natural_host.ncbi_tax_id 7460
                                     """
-                                    set_cif_value(nat_host.set_database, 'ncbi_tax_id', const.EMD_VIRUS_NATURAL_HOST, cif_list=nat_host_in, cif_value='NCBI')
+                                    set_cif_value(nat_host.set_database, 'ncbi_tax_id', const.EMD_VIRUS_NATURAL_HOST,
+                                                  cif_list=nat_host_in, cif_value='NCBI')
 
                                 def set_el_organism(org, nat_host_in):
                                     """
                                     XSD: <xs:element name="organism" type="organism_type"> has
                                     .. 1 attribute
                                     """
+
                                     def set_attr_ncbi(org, nat_host_in):
                                         """
                                         XSD: <xs:attribute name="ncbi" type="xs:positiveInteger"/>
                                         CIF: _emd_virus_natural_host.ncbi_tax_id
                                         """
-                                        set_cif_value(org.set_ncbi, 'ncbi_tax_id', const.EMD_VIRUS_NATURAL_HOST, cif_list=nat_host_in, fmt=int)
+                                        set_cif_value(org.set_ncbi, 'ncbi_tax_id', const.EMD_VIRUS_NATURAL_HOST,
+                                                      cif_list=nat_host_in, fmt=int)
 
                                     def set_organism(org, nat_host_in):
                                         """
                                         XSD: <xs:element name="organism" type="organism_type">
                                         CIF: _emd_virus_natural_host.organism 'Apis mellifera'
                                         """
-                                        set_cif_value(org.set_valueOf_, 'organism', const.EMD_VIRUS_NATURAL_HOST, cif_list=nat_host_in, parent_el_req=False)
+                                        set_cif_value(org.set_valueOf_, 'organism', const.EMD_VIRUS_NATURAL_HOST,
+                                                      cif_list=nat_host_in, parent_el_req=False)
 
                                     # attribute 1
                                     set_attr_ncbi(org, nat_host_in)
@@ -3617,7 +3967,8 @@ class CifEMDBTranslator(object):
                                     XSD: <xs:element name="strain" type="xs:token" minOccurs="0"/>
                                     CIF: _emd_virus_natural_host.strain ?
                                     """
-                                    set_cif_value(nat_host.set_strain, 'strain', const.EMD_VIRUS_NATURAL_HOST, cif_list=nat_host_in, parent_el_req=False)
+                                    set_cif_value(nat_host.set_strain, 'strain', const.EMD_VIRUS_NATURAL_HOST,
+                                                  cif_list=nat_host_in, parent_el_req=False)
 
                                 def set_el_synonym_organism():
                                     """
@@ -3663,12 +4014,14 @@ class CifEMDBTranslator(object):
                             .. 1 attribute and
                             .. a sequence of 3 elements
                             """
+
                             def set_attr_id(virus_shell, vs_in):
                                 """
                                 XSD: <xs:attribute name="id" type="xs:positiveInteger"/>
                                 CIF: _emd_virus_shell.id
                                 """
-                                set_cif_value(virus_shell.set_shell_id, const.K_ID, const.EMD_VIRUS_SHELL, cif_list=vs_in, fmt=int)
+                                set_cif_value(virus_shell.set_shell_id, const.K_ID, const.EMD_VIRUS_SHELL,
+                                              cif_list=vs_in, fmt=int)
 
                             def set_el_name(virus_shell, vs_in):
                                 """
@@ -3682,14 +4035,17 @@ class CifEMDBTranslator(object):
                                 XSD: <xs:element name="diameter" minOccurs="0">
                                 CIF: _emd_virus_shell.diameter
                                 """
-                                set_cif_value(virus_shell.set_diameter, 'diameter', const.EMD_VIRUS_SHELL, cif_list=vs_in, constructor=emdb.diameterType, fmt=float, units=const.U_ANG)
+                                set_cif_value(virus_shell.set_diameter, 'diameter', const.EMD_VIRUS_SHELL,
+                                              cif_list=vs_in, constructor=emdb.diameterType, fmt=float,
+                                              units=const.U_ANG)
 
                             def set_el_triangulation(virus_shell, vs_in):
                                 """
                                 XSD: <xs:element name="triangulation" type="xs:positiveInteger" minOccurs="0">
                                 CIF: _emd_virus_shell.triangulation
                                 """
-                                set_cif_value(virus_shell.set_triangulation, 'triangulation', const.EMD_VIRUS_SHELL, cif_list=vs_in, fmt=int)
+                                set_cif_value(virus_shell.set_triangulation, 'triangulation', const.EMD_VIRUS_SHELL,
+                                              cif_list=vs_in, fmt=int)
 
                             if sup_mol_id_in in virus_shell_dict_in:
                                 virus_shell_in = virus_shell_dict_in[sup_mol_id_in]
@@ -3721,10 +4077,11 @@ class CifEMDBTranslator(object):
                             """
                             virus_iso = get_cif_value('isolate', const.EMD_VIRUS, virus_in)
                             if virus_iso is None:
-                                virus_iso = 'OTHER' # default value
-                                self.logger.warning('')
-                                self.logger.warning(const.CHANGE_MADE+'The value for _emd_virus.isolate is not given. Set to OTHER.')
+                                virus_iso = 'OTHER'  # default value
                                 set_cif_value(virus_sup_mol.set_virus_isolate, 'isolate', const.EMD_VIRUS, cif_list=virus_in, cif_value=virus_iso)
+                                txt = 'The value for (_emd_virus.isolate) is not given. Set to (OTHER).'
+                                self.current_entry_log.warn_logs.append(self.ALog(log_text=self.current_entry_log.change_title + txt))
+                                self.log_formatted('self.logger.warning', const.CHANGE_MADE + txt)
                             else:
                                 set_cif_value(virus_sup_mol.set_virus_isolate, 'isolate', const.EMD_VIRUS, cif_list=virus_in)
 
@@ -3735,10 +4092,11 @@ class CifEMDBTranslator(object):
                             """
                             virus_env = get_cif_value('enveloped', const.EMD_VIRUS, virus_in)
                             if virus_env is None:
-                                virus_env = 'False' # default value
-                                self.logger.warning('')
-                                self.logger.warning(const.CHANGE_MADE+'The value for _emd_virus.enveloped is not given. Set to False.')
+                                virus_env = 'False'  # default value
                                 set_cif_value(virus_sup_mol.set_virus_enveloped, 'enveloped', const.EMD_VIRUS, cif_list=virus_in, cif_value=virus_env)
+                                txt = 'The value for (_emd_virus.enveloped) is not given. Set to (False).'
+                                self.current_entry_log.warn_logs.append(self.ALog(log_text=self.current_entry_log.change_title + txt))
+                                self.log_formatted('self.logger.warning', const.CHANGE_MADE + txt)
                             else:
                                 set_cif_value(virus_sup_mol.set_virus_enveloped, 'enveloped', const.EMD_VIRUS, cif_list=virus_in, fmt=cif_bool)
 
@@ -3749,10 +4107,11 @@ class CifEMDBTranslator(object):
                             """
                             virus_empty = get_cif_value('empty', const.EMD_VIRUS, virus_in)
                             if virus_empty is None:
-                                virus_empty = 'True' # default value
-                                self.logger.warning('')
-                                self.logger.warning(const.CHANGE_MADE+'The value for _emd_virus.enveloped is not given. Set to True.')
+                                virus_empty = 'True'  # default value
                                 set_cif_value(virus_sup_mol.set_virus_empty, 'empty', const.EMD_VIRUS, cif_list=virus_in, cif_value=virus_empty)
+                                txt = 'The value for (_emd_virus.enveloped) is not given. Set to (True).'
+                                self.current_entry_log.warn_logs.append(self.ALog(log_text=self.current_entry_log.change_title + txt))
+                                self.log_formatted('self.logger.warning', const.CHANGE_MADE + txt)
                             else:
                                 set_cif_value(virus_sup_mol.set_virus_empty, 'empty', const.EMD_VIRUS, cif_list=virus_in, fmt=cif_bool)
 
@@ -3789,15 +4148,18 @@ class CifEMDBTranslator(object):
                             len_nat_src_list_in = len(nat_src_list_in)
                             if len_nat_src_list_in > 0:
                                 if len_nat_src_list_in > 1:
-                                    self.logger.warning(const.INFO_ALERT+ 'Only the first row of the %s emd_natural_source rows for supramolecule %s;', len_nat_src_list_in, sup_mol_id_in)
+                                    txt = 'Only the first row of the (%s) (_emd_natural_source) rows for supramolecule (%s).' % (len_nat_src_list_in, sup_mol_id_in)
+                                    self.current_entry_log.warn_logs.append(self.ALog(log_text=self.current_entry_log.warn_title + txt))
+                                    self.log_formatted('self.logger.warning', const.NOT_REQUIRED_ALERT + txt)
                                 nat_src_in = nat_src_list_in[0]
                                 # element 1
                                 set_el_sci_species_name(virus_sup_mol, nat_src_in)
                                 # element 2
                                 set_el_sci_species_strain(virus_sup_mol, nat_src_in)
                             else:
-                                self.logger.error(const.REQUIRED_ALERT+'Empty natural source category for virus!')
-                                self.logger.error('')
+                                txt = 'Empty natural source category for virus!'
+                                self.current_entry_log.error_logs.append(self.ALog(log_text=self.current_entry_log.error_title + txt))
+                                self.log_formatted('self.logger.error', const.REQUIRED_ALERT + txt)
                         # element 3
                         virus_nat_host_dict_in = sup_mol_dicts['virus_nat_host_dict_in']
                         set_el_natural_host(virus_sup_mol, sup_mol_id_in, virus_nat_host_dict_in)
@@ -3826,11 +4188,13 @@ class CifEMDBTranslator(object):
                                     # element 10
                                     set_el_virus_empty(virus_sup_mol, virus_in)
                             else:
-                                self.logger.error(const.REQUIRED_ALERT+'Cannot set virus type. This supramolecule with id=%s is not in the _emd_virus category: %s', sup_mol_id_in, virus_dict_in)
-                                self.logger.error('')
+                                txt = 'Cannot set virus type. This supramolecule with id=(%s) is not in the (_emd_virus) category: (%s).' % sup_mol_id_in, virus_dict_in
+                                self.current_entry_log.error_logs.append(self.ALog(log_text=self.current_entry_log.error_title + txt))
+                                self.log_formatted('self.logger.error', const.REQUIRED_ALERT + txt)
                         else:
-                            self.logger.error(const.REQUIRED_ALERT+'Cannot set virus type. The _emd_virus category does not exist in cif.')
-                            self.logger.error('')
+                            txt = 'Cannot set virus type. The (_emd_virus) category does not exist in cif.'
+                            self.current_entry_log.error_logs.append(self.ALog(log_text=self.current_entry_log.error_title + txt))
+                            self.log_formatted('self.logger.error', const.REQUIRED_ALERT + txt)
                         # element 11
                         set_el_syn_species_name()
                         # element 12
@@ -3846,6 +4210,7 @@ class CifEMDBTranslator(object):
                         XSD: type="organelle_or_cellular_component_supramolecule_type" has
                         .. 3 additional elements to the base ones
                         """
+
                         def set_el_natural_source(org_or_cell_sup_mol, nat_src_dict_in):
                             """
                             XSD: <xs:element name="natural_source">
@@ -3853,14 +4218,15 @@ class CifEMDBTranslator(object):
                             cns = emdb.organelle_natural_source_type()
                             if sup_mol_id_in in nat_src_dict_in:
                                 sup_mol_dict_in = nat_src_dict_in[sup_mol_id_in]
-                                org_dict = {'add_nat_src':True,
-                                            'add_organ':True,
-                                            'add_tissue':True,
-                                            'add_cell':True,
-                                            'add_organelle':True,
-                                            'add_cellular_location':True
-                                           }
-                                set_sup_mol_nat_src(cns, org_or_cell_sup_mol, const.EMD_NATURAL_SOURCE, sup_mol_dict_in, org_dict)
+                                org_dict = {'add_nat_src': True,
+                                            'add_organ': True,
+                                            'add_tissue': True,
+                                            'add_cell': True,
+                                            'add_organelle': True,
+                                            'add_cellular_location': True
+                                            }
+                                set_sup_mol_nat_src(cns, org_or_cell_sup_mol, const.EMD_NATURAL_SOURCE, sup_mol_dict_in,
+                                                    org_dict)
 
                         def set_el_molecular_weight(org_or_cell_sup_mol, sup_mol_id_in, s_mol_wt_dict_in):
                             """
@@ -3893,6 +4259,7 @@ class CifEMDBTranslator(object):
                         XSD: type="tissue_supramolecule_type" has
                         .. 1 additional element to the base ones
                         """
+
                         def set_el_natural_source(tissue_sup_mol, sup_mol_id_in, sup_mol_dicts):
                             """
                             XSD: <xs:element name="natural_source">
@@ -3901,14 +4268,15 @@ class CifEMDBTranslator(object):
                             nat_src_dict_in = sup_mol_dicts['nat_src_dict_in']
                             if sup_mol_id_in in nat_src_dict_in:
                                 sup_mol_dict_in = nat_src_dict_in[sup_mol_id_in]
-                                tiss_dict = {'add_nat_src':True,
-                                             'add_organ':True,
-                                             'add_tissue':True,
-                                             'add_cell':False,
-                                             'add_organelle':False,
-                                             'add_cellular_location':False
-                                            }
-                                set_sup_mol_nat_src(cns, tissue_sup_mol, const.EMD_NATURAL_SOURCE, sup_mol_dict_in, tiss_dict)
+                                tiss_dict = {'add_nat_src': True,
+                                             'add_organ': True,
+                                             'add_tissue': True,
+                                             'add_cell': False,
+                                             'add_organelle': False,
+                                             'add_cellular_location': False
+                                             }
+                                set_sup_mol_nat_src(cns, tissue_sup_mol, const.EMD_NATURAL_SOURCE, sup_mol_dict_in,
+                                                    tiss_dict)
 
                         # set up the supramolecule specific tagname explicitly
                         # as DSgenerate doesn't provide it
@@ -3923,6 +4291,7 @@ class CifEMDBTranslator(object):
                         XSD: type="cell_supramolecule_type" has
                         .. 1 additional element to the base ones
                         """
+
                         def set_el_natural_source(cell_sup_mol, sup_mol_id_in, sup_mol_dicts):
                             """
                             XSD: <xs:element name="natural_source">
@@ -3931,14 +4300,15 @@ class CifEMDBTranslator(object):
                             nat_src_dict_in = sup_mol_dicts['nat_src_dict_in']
                             if sup_mol_id_in in nat_src_dict_in:
                                 sup_mol_dict_in = nat_src_dict_in[sup_mol_id_in]
-                                cell_dict = {'add_nat_src':True,
-                                             'add_organ':True,
-                                             'add_tissue':True,
-                                             'add_cell':True,
-                                             'add_organelle':False,
-                                             'add_cellular_location':False
-                                            }
-                                set_sup_mol_nat_src(cns, cell_sup_mol, const.EMD_NATURAL_SOURCE, sup_mol_dict_in, cell_dict)
+                                cell_dict = {'add_nat_src': True,
+                                             'add_organ': True,
+                                             'add_tissue': True,
+                                             'add_cell': True,
+                                             'add_organelle': False,
+                                             'add_cellular_location': False
+                                             }
+                                set_sup_mol_nat_src(cns, cell_sup_mol, const.EMD_NATURAL_SOURCE, sup_mol_dict_in,
+                                                    cell_dict)
 
                         # set up the supramolecule specific tagname explicitly
                         # as DSgenerate doesn't provide it
@@ -3960,43 +4330,52 @@ class CifEMDBTranslator(object):
                                 if sup_type is not None:
                                     if sup_type in ['RIBOSOME', 'COMPLEX']:
                                         complex_sup_mol = emdb.complex_supramolecule_type()
-                                        set_complex_supramolecule_type(complex_sup_mol, sup_in, sup_mol_id_in, sup_mol_dicts, sample)
+                                        set_complex_supramolecule_type(complex_sup_mol, sup_in, sup_mol_id_in,
+                                                                       sup_mol_dicts, sample)
                                         if complex_sup_mol.hasContent_():
                                             sup_list.add_supramolecule(complex_sup_mol)
                                     elif sup_type == 'VIRUS':
                                         virus_sup_mol = emdb.virus_supramolecule_type()
-                                        set_virus_supramolecule_type(virus_sup_mol, sup_in, sup_mol_id_in, sup_mol_dicts, sample)
+                                        set_virus_supramolecule_type(virus_sup_mol, sup_in, sup_mol_id_in,
+                                                                     sup_mol_dicts, sample)
                                         if virus_sup_mol.hasContent_():
                                             sup_list.add_supramolecule(virus_sup_mol)
                                     elif sup_type == 'ORGANELLE OR CELLULAR COMPONENT':
                                         org_or_cell_sup_mol = emdb.organelle_or_cellular_component_supramolecule_type()
-                                        set_orgorcell_supmol_type(org_or_cell_sup_mol, sup_in, sup_mol_id_in, sup_mol_dicts, sample)
+                                        set_orgorcell_supmol_type(org_or_cell_sup_mol, sup_in, sup_mol_id_in,
+                                                                  sup_mol_dicts, sample)
                                         if org_or_cell_sup_mol.hasContent_():
                                             sup_list.add_supramolecule(org_or_cell_sup_mol)
                                     elif sup_type == 'TISSUE':
                                         tissue_sup_mol = emdb.tissue_supramolecule_type()
-                                        set_tissue_supramolecule_type(tissue_sup_mol, sup_in, sup_mol_id_in, sup_mol_dicts, sample)
+                                        set_tissue_supramolecule_type(tissue_sup_mol, sup_in, sup_mol_id_in,
+                                                                      sup_mol_dicts, sample)
                                         if tissue_sup_mol.hasContent_():
                                             sup_list.add_supramolecule(tissue_sup_mol)
                                     elif sup_type == 'CELL':
                                         cell_sup_mol = emdb.cell_supramolecule_type()
-                                        set_cell_supramolecule_type(cell_sup_mol, sup_in, sup_mol_id_in, sup_mol_dicts, sample)
+                                        set_cell_supramolecule_type(cell_sup_mol, sup_in, sup_mol_id_in, sup_mol_dicts,
+                                                                    sample)
                                         if cell_sup_mol.hasContent_():
                                             sup_list.add_supramolecule(cell_sup_mol)
                                     else:
-                                        self.logger.error(const.REQUIRED_ALERT+ 'Supramolecule type not implemented. _emd_supramolecule.type is (%s)', sup_type)
-                                        self.logger.error('')
+                                        txt = 'Supramolecule type not implemented. (_emd_supramolecule.type) is (%s)' % sup_type
+                                        self.current_entry_log.error_logs.append(self.ALog(log_text=self.current_entry_log.error_title + txt))
+                                        self.log_formatted('self.logger.error', const.REQUIRED_ALERT + txt)
                                 else:
                                     # supramolecule type is None
-                                     self.logger.error(const.REQUIRED_ALERT+ 'Supramolecule type for supramolecule with id=%s is not given in the cif file. This supramolecule cannot be written into output XML file.', sup_mol_id_in)
-                                     self.logger.error('')  
+                                    txt = 'Supramolecule type for supramolecule with id=(%s) is not given in the cif file. This supramolecule cannot be written into the output XML file.' % sup_mol_id_in
+                                    self.current_entry_log.error_logs.append(self.ALog(log_text=self.current_entry_log.error_title + txt))
+                                    self.log_formatted('self.logger.error', const.REQUIRED_ALERT + txt)
                             else:
                                 # supramolecule id is None!
-                                self.logger.error(const.REQUIRED_ALERT+ 'Supramolecule id (_emd_supramolecule.id) not given in %s', sup_in)
-                                self.logger.error('')
+                                txt = 'Supramolecule id (_emd_supramolecule.id) missing in (%s).' % sup_in
+                                self.current_entry_log.error_logs.append(self.ALog(log_text=self.current_entry_log.error_title + txt))
+                                self.log_formatted('self.logger.error', const.REQUIRED_ALERT + txt)
                     else:
-                        self.logger.error('')
-                        self.logger.error(const.REQUIRED_ALERT+'CIF category _emd_supramolecule is missing')
+                        txt = 'CIF category (_emd_supramolecule) is missing.'
+                        self.current_entry_log.error_logs.append(self.ALog(log_text=self.current_entry_log.error_title + txt))
+                        self.log_formatted('self.logger.error', const.REQUIRED_ALERT + txt)
 
                 # Create a natural source dictionary with the supramolecule as the key
                 # order by _emd_natural_source.emd_supramolecule_id
@@ -4014,13 +4393,13 @@ class CifEMDBTranslator(object):
                 virus_nat_host_dict_in = make_list_of_dicts(const.EMD_VIRUS_NATURAL_HOST, const.K_EMD_SUPRAMOLECULE_ID)
                 # Virus shell dictionary with supramolecule ID as key -> dictionary of lists
                 virus_shell_dict_in = make_list_of_dicts(const.EMD_VIRUS_SHELL, const.K_EMD_SUPRAMOLECULE_ID)
-                sup_mol_dicts = {'nat_src_dict_in':nat_src_dict_in,
-                                 'rec_exp_dict_in':rec_exp_dict_in,
-                                 's_mol_wt_dict_in':s_mol_wt_dict_in,
-                                 'virus_dict_in':virus_dict_in,
-                                 'virus_nat_host_dict_in':virus_nat_host_dict_in,
-                                 'virus_shell_dict_in':virus_shell_dict_in
-                                }
+                sup_mol_dicts = {'nat_src_dict_in': nat_src_dict_in,
+                                 'rec_exp_dict_in': rec_exp_dict_in,
+                                 's_mol_wt_dict_in': s_mol_wt_dict_in,
+                                 'virus_dict_in': virus_dict_in,
+                                 'virus_nat_host_dict_in': virus_nat_host_dict_in,
+                                 'virus_shell_dict_in': virus_shell_dict_in
+                                 }
 
                 sup_list = emdb.supramolecule_listType()
                 set_supramolecule_list(sup_list, sup_mol_dicts)
@@ -4036,6 +4415,7 @@ class CifEMDBTranslator(object):
                     polypeptide(D), polypeptide(L), polyribonucleotide
                     polysaccharide(D), polysaccharide(L)
                 """
+
                 def set_mol_weight(mol, ent_in):
                     """
                     Set molecular weight object of mol from values in ent_in
@@ -4046,6 +4426,7 @@ class CifEMDBTranslator(object):
                     XSD: <xs:complexType name="molecular_weight_type"> is
                     .. a sequence of 3 of elements
                     """
+
                     def set_el_experimental(mol_weight, ent_in):
                         """
                         XSD: <xs:element name="experimental" minOccurs="0">
@@ -4054,7 +4435,8 @@ class CifEMDBTranslator(object):
                         theo_wt_in = get_cif_value('formula_weight', const.ENTITY, ent_in)
                         if theo_wt_in is not None:
                             set_cif_value(mol_weight.set_theoretical, 'formula_weight', const.ENTITY, cif_list=ent_in,
-                                          constructor=emdb.theoreticalType, units=const.U_MDA, fmt=lambda x: float(x) * const.DA2MDA)
+                                          constructor=emdb.theoreticalType, units=const.U_MDA,
+                                          fmt=lambda x: float(x) * const.DA2MDA)
                             return True
                         else:
                             return False
@@ -4066,8 +4448,10 @@ class CifEMDBTranslator(object):
                         """
                         exp_wt_in = get_cif_value('pdbx_formula_weight_exptl', const.ENTITY, ent_in)
                         if exp_wt_in is not None:
-                            set_cif_value(mol_weight.set_experimental, 'pdbx_formula_weight_exptl', const.ENTITY, cif_list=ent_in,
-                                          constructor=emdb.experimentalType, units=const.U_MDA, fmt=lambda x: float(x) * const.DA2MDA)
+                            set_cif_value(mol_weight.set_experimental, 'pdbx_formula_weight_exptl', const.ENTITY,
+                                          cif_list=ent_in,
+                                          constructor=emdb.experimentalType, units=const.U_MDA,
+                                          fmt=lambda x: float(x) * const.DA2MDA)
                             return True
                         else:
                             return False
@@ -4116,15 +4500,16 @@ class CifEMDBTranslator(object):
                     .. a base of base_source_type
                     .. a sequence of 5 elements
                     """
+
                     def set_el_organ(macromol_src, cif_category, src_in):
                         """
                         XSD: <xs:element name="organ" type="xs:token" minOccurs="0"/>
                         CIF: _entity_src_nat.pdbx_organ
                         CIF: _entity_src_gen.pdbx_gene_src_organ
                         """
-                        a_dict = {const.ENTITY_SRC_NAT:'pdbx_organ',
-                                  const.ENTITY_SRC_GEN:'pdbx_gene_src_organ',
-                                  const.PDBX_ENTITY_SRC_SYN:None}
+                        a_dict = {const.ENTITY_SRC_NAT: 'pdbx_organ',
+                                  const.ENTITY_SRC_GEN: 'pdbx_gene_src_organ',
+                                  const.PDBX_ENTITY_SRC_SYN: None}
                         cif_key = a_dict.get(cif_category, None)
                         if cif_key is not None:
                             set_cif_value(macromol_src.set_organ, cif_key, cif_category, cif_list=src_in)
@@ -4135,9 +4520,9 @@ class CifEMDBTranslator(object):
                         CIF: _entity_src_nat.tissue
                         CIF: _entity_src_gen.gene_src_tissue
                         """
-                        a_dict = {const.ENTITY_SRC_NAT:'tissue',
-                                  const.ENTITY_SRC_GEN:'gene_src_tissue',
-                                  const.PDBX_ENTITY_SRC_SYN:None}
+                        a_dict = {const.ENTITY_SRC_NAT: 'tissue',
+                                  const.ENTITY_SRC_GEN: 'gene_src_tissue',
+                                  const.PDBX_ENTITY_SRC_SYN: None}
                         cif_key = a_dict.get(cif_category, None)
                         if cif_key is not None:
                             set_cif_value(macromol_src.set_tissue, cif_key, cif_category, cif_list=src_in)
@@ -4148,9 +4533,9 @@ class CifEMDBTranslator(object):
                         CIF: _entity_src_nat.pdbx_cell
                         CIF: _entity_src_gen.pdbx_gene_src_cell
                         """
-                        a_dict = {const.ENTITY_SRC_NAT:'pdbx_cell',
-                                  const.ENTITY_SRC_GEN:'pdbx_gene_src_cell',
-                                  const.PDBX_ENTITY_SRC_SYN:None}
+                        a_dict = {const.ENTITY_SRC_NAT: 'pdbx_cell',
+                                  const.ENTITY_SRC_GEN: 'pdbx_gene_src_cell',
+                                  const.PDBX_ENTITY_SRC_SYN: None}
                         cif_key = a_dict.get(cif_category, None)
                         if cif_key is not None:
                             set_cif_value(macromol_src.set_cell, cif_key, cif_category, cif_list=src_in)
@@ -4161,9 +4546,9 @@ class CifEMDBTranslator(object):
                         CIF: _entity_src_nat.pdbx_organelle
                         CIF: _entity_src_gen.pdbx_gene_src_organelle
                         """
-                        a_dict = {const.ENTITY_SRC_NAT:'pdbx_organelle',
-                                  const.ENTITY_SRC_GEN:'pdbx_gene_src_organelle',
-                                  const.PDBX_ENTITY_SRC_SYN:None}
+                        a_dict = {const.ENTITY_SRC_NAT: 'pdbx_organelle',
+                                  const.ENTITY_SRC_GEN: 'pdbx_gene_src_organelle',
+                                  const.PDBX_ENTITY_SRC_SYN: None}
                         cif_key = a_dict.get(cif_category, None)
                         if cif_key is not None:
                             set_cif_value(macromol_src.set_organelle, cif_key, cif_category, cif_list=src_in)
@@ -4174,9 +4559,9 @@ class CifEMDBTranslator(object):
                         CIF: _entity_src_nat.pdbx_cellular_location
                         CIF: _entity_src_gen.pdbx_gene_src_cellular_location
                         """
-                        a_dict = {const.ENTITY_SRC_NAT:'pdbx_cellular_location',
-                                  const.ENTITY_SRC_GEN:'pdbx_gene_src_cellular_location',
-                                  const.PDBX_ENTITY_SRC_SYN:None}
+                        a_dict = {const.ENTITY_SRC_NAT: 'pdbx_cellular_location',
+                                  const.ENTITY_SRC_GEN: 'pdbx_gene_src_cellular_location',
+                                  const.PDBX_ENTITY_SRC_SYN: None}
                         cif_key = a_dict.get(cif_category, None)
                         if cif_key is not None:
                             set_cif_value(macromol_src.set_cellular_location, cif_key, cif_category, cif_list=src_in)
@@ -4215,12 +4600,12 @@ class CifEMDBTranslator(object):
                     XSD: <xs:element name="natural_source" type="molecule_source_type" minOccurs="0"/>
                     """
                     if ent_src_dict is not None and cif_category is not None:
-                        mol_src_dict = {'add_organ':True,
-                                        'add_tissue':True,
-                                        'add_cell':True,
-                                        'add_organelle':True,
-                                        'add_cellular_location':True
-                                       }
+                        mol_src_dict = {'add_organ': True,
+                                        'add_tissue': True,
+                                        'add_cell': True,
+                                        'add_organelle': True,
+                                        'add_cellular_location': True
+                                        }
                         nat_src = make_mol_src(cif_category, ent_src_dict, mol_src_dict)
                         if nat_src.hasContent_():
                             mol.set_natural_source(nat_src)
@@ -4243,6 +4628,7 @@ class CifEMDBTranslator(object):
                     .. 3 attributes and
                     .. 7 elements
                     """
+
                     def set_attr_id(mol, ent_in):
                         """
                         XSD: <xs:attribute name="macromolecule_id" type="xs:positiveInteger" use="required">
@@ -4269,7 +4655,8 @@ class CifEMDBTranslator(object):
                         XSD: <xs:element name="name" type="sci_name_type">
                         CIF: _entity.pdbx_description uL2
                         """
-                        set_cif_value(mol.set_name, 'pdbx_description', const.ENTITY, cif_list=ent_in, constructor=emdb.sci_name_type)
+                        set_cif_value(mol.set_name, 'pdbx_description', const.ENTITY, cif_list=ent_in,
+                                      constructor=emdb.sci_name_type)
 
                     def set_el_natural_source(mol, ent_id_in, mol_dicts):
                         """
@@ -4311,7 +4698,8 @@ class CifEMDBTranslator(object):
                         XSD: <xs:element name="number_of_copies" type="pos_int_or_string_type" minOccurs="0"/>
                         CIF: _entity.pdbx_number_of_molecules
                         """
-                        set_cif_value(mol.set_number_of_copies, 'pdbx_number_of_molecules', const.ENTITY, cif_list=ent_in, fmt=int)
+                        set_cif_value(mol.set_number_of_copies, 'pdbx_number_of_molecules', const.ENTITY,
+                                      cif_list=ent_in, fmt=int)
 
                     def set_el_oligomeric_state():
                         """
@@ -4359,13 +4747,15 @@ class CifEMDBTranslator(object):
                     XSD: <xs:element name="sequence"> is
                     .. a sequence of 3 elements
                     """
+
                     def set_el_string(seq, ent_poly_in):
                         """
                         XSD: <xs:element name="string" type="xs:token" minOccurs="0">
                         CIF: _entity_poly.pdbx_seq_one_letter_code
                         MGRVIRGQRKGAGSVFRAHVKHRKGAARLRAVDFAERHGYIKGIVKDIIHDPGRGAPLAKVVFRDPYRFKKRTE
                         """
-                        set_cif_value(seq.set_string, 'pdbx_seq_one_letter_code', const.ENTITY_POLY, cif_list=ent_poly_in)
+                        set_cif_value(seq.set_string, 'pdbx_seq_one_letter_code', const.ENTITY_POLY,
+                                      cif_list=ent_poly_in)
 
                     def set_el_discrepancy_list():
                         """
@@ -4377,6 +4767,7 @@ class CifEMDBTranslator(object):
                         """
                         XSD: <xs:element name="external_references" maxOccurs="unbounded" minOccurs="0">
                         """
+
                         def set_external_references_type(cross_ref, rel_in):
                             """
                             XSD: <xs:element name="external_references" maxOccurs="unbounded" minOccurs="0"> has
@@ -4389,10 +4780,12 @@ class CifEMDBTranslator(object):
                             if db_code is not None:
                                 db_in = get_cif_value('db_name', const.STRUCT_REF, rel_in)
                                 if db_in == 'UNP':
-                                    set_cif_value(cross_ref.set_type, 'db_name', const.STRUCT_REF, cif_list=rel_in, cif_value='UNIPROTKB')
+                                    set_cif_value(cross_ref.set_type, 'db_name', const.STRUCT_REF, cif_list=rel_in,
+                                                  cif_value='UNIPROTKB')
                                     set_cif_value(cross_ref.set_valueOf_, 'db_code', const.STRUCT_REF, cif_list=rel_in)
                                 elif db_in == 'GB':
-                                    set_cif_value(cross_ref.set_type, 'db_name', const.STRUCT_REF, cif_list=rel_in, cif_value='GENBANK')
+                                    set_cif_value(cross_ref.set_type, 'db_name', const.STRUCT_REF, cif_list=rel_in,
+                                                  cif_value='GENBANK')
                                     set_cif_value(cross_ref.set_valueOf_, 'db_code', const.STRUCT_REF, cif_list=rel_in)
                                 elif db_in is not None:
                                     set_cif_value(cross_ref.set_type, 'db_name', const.STRUCT_REF, cif_list=rel_in)
@@ -4429,7 +4822,7 @@ class CifEMDBTranslator(object):
                     XSD: <xs:complexType name="recombinant_source_type"> has
                     .. 1  attribute and
                     .. 5 elements
-                    """                    
+                    """
                     if mol_rec_exp_dict is not None:
                         if ent_id_in in mol_rec_exp_dict:
                             r_exp_in = mol_rec_exp_dict[ent_id_in]
@@ -4438,8 +4831,9 @@ class CifEMDBTranslator(object):
                             if r_exp.hasContent_():
                                 mol.set_recombinant_expression(r_exp)
                     else:
-                        self.logger.warning('The dictionary for recombinant expression for macromolecule %s not found', ent_id_in)
-                        self.logger.warning('')
+                        txt = 'The dictionary for recombinant expression for macromolecule id (%s) not found.' % ent_id_in
+                        self.current_entry_log.warn_logs.append(self.ALog(log_text=self.current_entry_log.warn_title + txt))
+                        self.log_formatted('self.logger.warning', const.NOT_REQUIRED_ALERT + txt)
 
                 def set_rna_macromolecule_type(rna_mol, ent_in, ent_id_in, ent_poly_in, src_dicts):
                     """
@@ -4447,6 +4841,7 @@ class CifEMDBTranslator(object):
                     .. a base of base_macromolecule_type and
                     .. a sequence of 5 elements
                     """
+
                     def set_el_sequence(rna_mol, ent_poly_in, ent_id_in, ent_ref_dict):
                         """
                         XSD:  <xs:element name="sequence">
@@ -4479,11 +4874,12 @@ class CifEMDBTranslator(object):
                         ec_num_in = get_cif_value('pdbx_ec', const.ENTITY, cif_list=ent_in)
                         if ec_num_in is not None:
                             if ec_num_in.find(',') != -1:
-                                #there is more than one EC number: split it and write the first bit
+                                # there is more than one EC number: split it and write the first bit
                                 ec_num = ec_num_in.split(',')[0]
                                 set_cif_value(rna_mol.add_ec_number, 'pdbx_ec', const.ENTITY, cif_list=ent_in, cif_value=ec_num)
-                                self.logger.warning('')
-                                self.logger.warning(const.CHANGE_MADE+'(_entity.pdbx_ec) shows %s but the value %s is set', ec_num_in, ec_num)
+                                txt = '(_entity.pdbx_ec) is given (%s) but the value (%s) is set.' % (ec_num_in, ec_num)
+                                self.current_entry_log.warn_logs.append(self.ALog(log_text=self.current_entry_log.change_title + txt))
+                                self.log_formatted('self.logger.warning', const.CHANGE_MADE + txt)
                             else:
                                 set_cif_value(rna_mol.add_ec_number, 'pdbx_ec', const.ENTITY, cif_list=ent_in)
 
@@ -4510,6 +4906,7 @@ class CifEMDBTranslator(object):
                     .. a base of base_macromolecule_type and
                     .. a sequence of 4 elements
                     """
+
                     def set_el_sequence(dna_mol, ent_poly_in, ent_id_in, ent_ref_dict):
                         """
                         XSD: <xs:element name="sequence">
@@ -4535,6 +4932,7 @@ class CifEMDBTranslator(object):
                         XSD: <xs:element name="synthetic_flag" type="xs:boolean" minOccurs="0">
                         Deprecated 2014/11/29
                         """
+
                     ent_ref_dict = src_dicts['ent_ref_dict']
                     dna_mol.original_tagname_ = 'dna'
                     # base
@@ -4554,6 +4952,7 @@ class CifEMDBTranslator(object):
                     .. a base of base_macromolecule_type and
                     .. a sequence of 4 elements
                     """
+
                     def set_el_recombinant_expression(p_mol, ent_id_in, rec_exp_dict_in):
                         """
                         XSD: <xs:element name="recombinant_expression" type="recombinant_source_type" minOccurs="0"/>
@@ -4583,11 +4982,12 @@ class CifEMDBTranslator(object):
                         ec_num_in = get_cif_value('pdbx_ec', const.ENTITY, cif_list=ent_in)
                         if ec_num_in is not None:
                             if ec_num_in.find(',') != -1:
-                                #there is more than one EC number: split it and write the first bit
+                                # there is more than one EC number: split it and write the first bit
                                 ec_num = ec_num_in.split(',')[0]
                                 set_cif_value(p_mol.add_ec_number, 'pdbx_ec', const.ENTITY, cif_list=ent_in, cif_value=ec_num)
-                                self.logger.warning('')
-                                self.logger.warning(const.CHANGE_MADE+'(_entity.pdbx_ec) shows %s but the value %s is set', ec_num_in, ec_num)
+                                txt = '(_entity.pdbx_ec) is given: (%s) but the value: (%s) is set instead.'% (ec_num_in, ec_num)
+                                self.current_entry_log.warn_logs.append(self.ALog(log_text=self.current_entry_log.change_title + txt))
+                                self.log_formatted('self.logger.warning', const.CHANGE_MADE + txt)
                             else:
                                 set_cif_value(p_mol.add_ec_number, 'pdbx_ec', const.ENTITY, cif_list=ent_in)
 
@@ -4613,6 +5013,7 @@ class CifEMDBTranslator(object):
                     .. a base of base_macromolecule_type and
                     .. a sequence of 3 elements
                     """
+
                     def set_el_enantiomer(poly_mol):
                         """
                         XSD: <xs:element name="enantiomer">
@@ -4652,6 +5053,7 @@ class CifEMDBTranslator(object):
                     .. a base of base_macromolecule_type and
                     .. a sequence of 5 elements
                     """
+
                     def set_el_sequence(other_mol, ent_poly_in, ent_id_in, ent_ref_dict):
                         """
                         XSD: <xs:element name="sequence" minOccurs="0">
@@ -4708,6 +5110,7 @@ class CifEMDBTranslator(object):
                     .. a base of base_macromolecule_type and
                     .. a sequence of 3 elements
                     """
+
                     def set_el_formula(lig_mol, ent_non_poly_dict, ent_id_in):
                         """
                         XSD: <xs:element name="formula" minOccurs="0">
@@ -4715,7 +5118,8 @@ class CifEMDBTranslator(object):
                         """
                         ent_non_poly_in = ent_non_poly_dict[ent_id_in]
                         if ent_non_poly_in is not None:
-                            set_cif_value(lig_mol.set_formula, 'comp_id', const.PDBX_ENTITY_NONPOLY, cif_list=ent_non_poly_in)
+                            set_cif_value(lig_mol.set_formula, 'comp_id', const.PDBX_ENTITY_NONPOLY,
+                                          cif_list=ent_non_poly_in)
 
                     def set_el_external_references():
                         """
@@ -4731,6 +5135,7 @@ class CifEMDBTranslator(object):
                         safe_set(get_cif_value('pdbx_number_of_molecules',
                                 const.ENTITY, ent_in), mol.set_number_of_copies, int)
                         """
+
                     # set up the macromolecule specific tagname explicitly
                     # as DSgenerate doesn't provide it
                     lig_mol.original_tagname_ = 'ligand'
@@ -4752,11 +5157,11 @@ class CifEMDBTranslator(object):
                 ent_src_gen_dict = make_dict(const.ENTITY_SRC_GEN, const.K_ENTITY_ID)
                 ent_src_syn_dict = make_dict(const.PDBX_ENTITY_SRC_SYN, const.K_ENTITY_ID)
                 ent_ref_dict = make_list_of_dicts(const.PDBX_DEPOSITOR_INFO, const.K_ENTITY_ID)
-                src_dicts = {'ent_src_nat_dict':ent_src_nat_dict,
-                             'ent_src_gen_dict':ent_src_gen_dict,
-                             'ent_src_syn_dict':ent_src_syn_dict,
-                             'ent_ref_dict':ent_ref_dict
-                            }
+                src_dicts = {'ent_src_nat_dict': ent_src_nat_dict,
+                             'ent_src_gen_dict': ent_src_gen_dict,
+                             'ent_src_syn_dict': ent_src_syn_dict,
+                             'ent_ref_dict': ent_ref_dict
+                             }
                 entity_list_in = self.cif.get(const.ENTITY, None)
                 for ent_in in entity_list_in:
                     ent_id_in = get_cif_value(const.K_ID, const.ENTITY, ent_in)
@@ -4779,12 +5184,15 @@ class CifEMDBTranslator(object):
                             poly_mol = emdb.saccharide_macromolecule_type()
                             set_saccharide_mol_type(poly_mol, ent_in, ent_id_in, src_dicts)
                             mol_list.add_macromolecule(poly_mol)
-                        elif ent_type_in in [const.ENT_CYCLIC_PSEUDO_PEPTIDE, const.ENT_DNA_RNA, const.ENT_OTHER, const.ENT_PEPTIDE_NUCLEIC_ACID]:
+                        elif ent_type_in in [const.ENT_CYCLIC_PSEUDO_PEPTIDE, const.ENT_DNA_RNA, const.ENT_OTHER,
+                                             const.ENT_PEPTIDE_NUCLEIC_ACID]:
                             other_mol = emdb.other_macromolecule_type()
                             set_other_macromolecule_type(other_mol, ent_in, ent_id_in, ent_poly_in, src_dicts)
                             mol_list.add_macromolecule(other_mol)
                         else:
-                            self.logger.error(const.REQUIRED_ALERT+'Entity poly type not recognized: %s', ent_type_in)
+                            txt = 'Entity poly type (%s) not recognized. It needs changing to an allowed type.' % ent_type_in
+                            self.current_entry_log.error_logs.append(self.ALog(log_text=self.current_entry_log.error_title + txt))
+                            self.log_formatted('self.logger.error', const.REQUIRED_ALERT + txt)
                     elif ent_id_in in ent_non_poly_dict:
                         # Entity non-poly
                         lig_mol = emdb.ligand_macromolecule_type()
@@ -4816,47 +5224,55 @@ class CifEMDBTranslator(object):
             .. 1 attribute and
             .. 8 elements
             """
+
             def set_attr_id(specimen, spec_prep_in):
                 """
                 XSD: <xs:attribute name="id" type="xs:positiveInteger" use="required">
                 CIF: _emd_specimen.id
                 """
-                set_cif_value(specimen.set_preparation_id, const.K_ID, const.EMD_SPECIMEN, cif_list=spec_prep_in, fmt=int)
+                set_cif_value(specimen.set_preparation_id, const.K_ID, const.EMD_SPECIMEN, cif_list=spec_prep_in,
+                              fmt=int)
 
             def set_el_concentration(specimen, spec_prep_in):
                 """
                 XSD: <xs:element name="concentration" minOccurs="0">
                 CIF: _emd_specimen.concentration
                 """
-                set_cif_value(specimen.set_concentration, 'concentration', const.EMD_SPECIMEN, cif_list=spec_prep_in, constructor=emdb.concentrationType, units=const.U_MG_ML)
+                set_cif_value(specimen.set_concentration, 'concentration', const.EMD_SPECIMEN, cif_list=spec_prep_in,
+                              constructor=emdb.concentrationType, units=const.U_MG_ML)
 
             def set_el_buffer(specimen, sp_id_in, buff_dict_in):
                 """
                 XSD:  <xs:element name="buffer" type="buffer_type" minOccurs="0">
                 CIF: _emd_buffer
                 """
+
                 def set_buffer_type(buff, buff_in):
                     """
                     XSD <xs:complexType name="buffer_type"> has
                     .. 3 elements
                     """
+
                     def set_el_ph(buff, buff_in):
                         """
                         XSD: <xs:element name="ph">
                         CIF: _emd_buffer.ph 7.4
                         """
-                        set_cif_value(buff.set_ph, 'ph', const.EMD_BUFFER, cif_list=buff_in, fmt=float, parent_el_req=False)
+                        set_cif_value(buff.set_ph, 'ph', const.EMD_BUFFER, cif_list=buff_in, fmt=float,
+                                      parent_el_req=False)
 
                     def set_el_component(buff, buff_id_in, buff_comp_dict_in):
                         """
                         XSD: <xs:element name="component" maxOccurs="unbounded">
                         CIF: _emd_buffer_component
                         """
+
                         def set_buffer_component_type(buff_comp, buff_comp_in):
                             """
                             XSD: <xs:complexType name="buffer_component_type"> has
                             .. 3 elements
                             """
+
                             def set_el_concentration(buff_comp, buff_comp_in):
                                 """
                                 XSD: <xs:element name="concentration" minOccurs="0">
@@ -4865,10 +5281,13 @@ class CifEMDBTranslator(object):
                                 """
                                 conc_units = get_cif_value('concentration_units', const.EMD_BUFFER_COMPONENT, buff_comp_in)
                                 if conc_units is not None:
-                                    set_cif_value(buff_comp.set_concentration, 'concentration', const.EMD_BUFFER_COMPONENT, cif_list=buff_comp_in,
+                                    set_cif_value(buff_comp.set_concentration, 'concentration',
+                                                  const.EMD_BUFFER_COMPONENT, cif_list=buff_comp_in,
                                                   constructor=emdb.concentrationType, fmt=float, units=conc_units)
                                 else:
-                                    self.logger.warning(const.NOT_REQUIRED_ALERT+'_emd_buffer_component.concentration_units value is missing. Buffer concentration will not be set.')
+                                    txt = 'The value for (_emd_buffer_component.concentration_units) is missing. Buffer concentration will not be set.'
+                                    self.current_entry_log.warn_logs.append(self.ALog(log_text=self.current_entry_log.warn_title + txt))
+                                    self.log_formatted('self.logger.warning', const.NOT_REQUIRED_ALERT + txt)
 
                             def set_el_formula(buff_comp, buff_comp_in):
                                 """
@@ -4923,6 +5342,7 @@ class CifEMDBTranslator(object):
                 XSD: <xs:element name="staining" minOccurs="0"> has
                 .. 3 elements
                 """
+
                 def set_el_type(stain, stain_in):
                     """
                     XSD: <xs:element name="type">
@@ -4934,7 +5354,9 @@ class CifEMDBTranslator(object):
                         set_cif_value(stain.set_type, 'type', const.EMD_STAINING, cif_list=stain_in)
                     else:
                         set_cif_value(stain.set_type, 'type', const.EMD_STAINING, cif_list=stain_in, cif_value='NEGATIVE')
-                        self.logger.warning(const.NOT_REQUIRED_ALERT+'No value is given for _emd_staining.type - the value NEGATIVE is given')
+                        txt = 'No value is given for (_emd_staining.type). The value (NEGATIVE) is given.'
+                        self.current_entry_log.warn_logs.append(self.ALog(log_text=self.current_entry_log.warn_title + txt))
+                        self.log_formatted('self.logger.warning', const.NOT_REQUIRED_ALERT + txt)
 
                 def set_el_material(stain, stain_in):
                     """
@@ -4966,24 +5388,28 @@ class CifEMDBTranslator(object):
                 """
                 XSD: <xs:element name="sugar_embedding" minOccurs="0">
                 """
+
                 def set_sugar_embedding_type(embed, embed_in):
                     """
                     XSD: <xs:element name="sugar_embedding" minOccurs="0"> has
                     .. 2 elements
                     """
+
                     def set_el_material(embed, embed_in):
                         """
                         XSD: <xs:element name="material" type="xs:token">
                         CIF: _emd_embedding.material 'tannin and glucose'
                         """
-                        set_cif_value(embed.set_material, 'material', const.EMD_EMBEDDING, cif_value=embed_in, parent_el_req=False)
+                        set_cif_value(embed.set_material, 'material', const.EMD_EMBEDDING, cif_value=embed_in,
+                                      parent_el_req=False)
 
                     def set_el_details(embed, embed_in):
                         """
                         XSD: <xs:element name="details" type="xs:string" minOccurs="0" >
                         CIF: _emd_embedding.details ?
                         """
-                        set_cif_value(embed.set_details, 'details', const.EMD_EMBEDDING, cif_list=embed_in, parent_el_req=False)
+                        set_cif_value(embed.set_details, 'details', const.EMD_EMBEDDING, cif_list=embed_in,
+                                      parent_el_req=False)
 
                     # element 1
                     set_el_material(embed, embed_in)
@@ -5001,17 +5427,20 @@ class CifEMDBTranslator(object):
                 """
                 XSD: <xs:element name="shadowing" minOccurs="0">
                 """
+
                 def set_shadowing_type(shadow):
                     """
                     XSD: <xs:element name="shadowing" minOccurs="0"> is
                     .. a sequence of 4 elements
                     """
+
                     def set_el_material(shadow, shadow_in):
                         """
                         XSD: <xs:element name="material" type="xs:token">
                         CIF: _emd_shadowing.material 'Platinum'
                         """
-                        set_cif_value(shadow.set_material, 'material', const.EMD_SHADOWING, cif_lit=shadow_in, parent_el_req=False)
+                        set_cif_value(shadow.set_material, 'material', const.EMD_SHADOWING, cif_lit=shadow_in,
+                                      parent_el_req=False)
 
                     def set_el_angle(shadow, shadow_in):
                         """
@@ -5021,14 +5450,16 @@ class CifEMDBTranslator(object):
                         CIF: _emd_shadowing.angle 20
                         IS THIS CORRECT??????
                         """
-                        set_cif_value(shadow.set_angle, 'angle', const.EMD_SHADOWING, cif_list=shadow_in, constructor=emdb.angleType, fmt=float, parent_el_req=False)
+                        set_cif_value(shadow.set_angle, 'angle', const.EMD_SHADOWING, cif_list=shadow_in,
+                                      constructor=emdb.angleType, fmt=float, parent_el_req=False)
 
                     def set_el_thickness(shadow, shadow_in):
                         """
                         XSD: <xs:element name="thickness">
                         CIF: _emd_shadowing.thickness ?
                         """
-                        set_cif_value(shadow.set_thickness, 'thickness', const.EMD_SHADOWING, cif_list=shadow_in, constructor=emdb.thicknessType, fmt=float, parent_el_req=False)
+                        set_cif_value(shadow.set_thickness, 'thickness', const.EMD_SHADOWING, cif_list=shadow_in,
+                                      constructor=emdb.thicknessType, fmt=float, parent_el_req=False)
 
                     def set_el_details(shadow, shadow_in):
                         """
@@ -5058,12 +5489,14 @@ class CifEMDBTranslator(object):
                 """
                 XSD: <xs:element name="grid" type="grid_type">
                 """
+
                 def set_grid_type(grid, film_dict_in, pretreat_dict_in):
                     """
                     XSD: <xs:element name="grid" type="grid_type"> is
                     .. a sequence of 6 elements
                     CIF: _emd_grid.id 1
                     """
+
                     def set_el_model(grid, grid_in):
                         """
                         XSD: <xs:element name="model" type="xs:token" minOccurs="0">
@@ -5089,32 +5522,37 @@ class CifEMDBTranslator(object):
                         """
                         XSD: <xs:element name="support_film" type="film_type" maxOccurs="unbounded">
                         """
+
                         def set_film_type(film, film_in):
                             """
                             XSD: <xs:complexType name="film_type"> has
                             .. 1 attribute and
                             .. 3 elements
                             """
+
                             def set_attr_id(film, film_in):
                                 """
                                 XSD: <xs:attribute name="id" type="xs:positiveInteger" use="required"/>
                                 CIF: _emd_support_film.id 1
                                 """
-                                set_cif_value(film.set_film_type_id, 'id', const.EMD_SUPPORT_FILM, cif_list=film_in, fmt=int)
+                                set_cif_value(film.set_film_type_id, 'id', const.EMD_SUPPORT_FILM, cif_list=film_in,
+                                              fmt=int)
 
                             def set_el_film_material(film, film_in):
                                 """
                                 XSD: <xs:element name="film_material" type="xs:token" minOccurs="0">
                                 CIF: _emd_support_film.material CARBON
                                 """
-                                set_cif_value(film.set_film_material, 'material', const.EMD_SUPPORT_FILM, cif_list=film_in)
+                                set_cif_value(film.set_film_material, 'material', const.EMD_SUPPORT_FILM,
+                                              cif_list=film_in)
 
                             def set_el_film_topology(film, film_in):
                                 """
                                 XSD: <xs:element name="film_topology">
                                 CIF: _emd_support_film.topology CONTINUOUS
                                 """
-                                set_cif_value(film.set_film_topology, 'topology', const.EMD_SUPPORT_FILM, cif_list=film_in)
+                                set_cif_value(film.set_film_topology, 'topology', const.EMD_SUPPORT_FILM,
+                                              cif_list=film_in)
 
                             def set_el_film_thickness(film, film_in):
                                 """
@@ -5126,11 +5564,13 @@ class CifEMDBTranslator(object):
                                 if film_thickness is not None:
                                     fl_film_thickness = float(film_thickness) * 0.1
                                     if fl_film_thickness < 5:
-                                        self.logger.warning('')
-                                        self.logger.warning(const.NOT_CHANGED_FOR_NOW+'_emd_support_film.thickness is %s angstroms. The lowest value should be 5.0 nm.', film_thickness)
+                                        txt = 'The value for (_emd_support_film.thickness) is (%s) angstroms. The lowest value should be 5.0 nm.' % film_thickness
+                                        self.current_entry_log.warn_logs.append(self.ALog(log_text=self.current_entry_log.not_changed_for_now_title + txt))
+                                        self.log_formatted('self.logger.warning', const.NOT_CHANGED_FOR_NOW + txt)
                                     elif fl_film_thickness > 50:
-                                        self.logger.warning('')
-                                        self.logger.warning(const.NOT_CHANGED_FOR_NOW+'_emd_support_film.thickness is %s angstroms. The highest value is 50.0 nm.', film_thickness)
+                                        txt = 'The value for (_emd_support_film.thickness) is (%s) angstroms. The highest value is 50.0 nm.'% film_thickness
+                                        self.current_entry_log.warn_logs.append(self.ALog(log_text=self.current_entry_log.not_changed_for_now_title + txt))
+                                        self.log_formatted('self.logger.warning', const.NOT_CHANGED_FOR_NOW + txt)
 
                                 set_cif_value(film.set_film_thickness, 'thickness', const.EMD_SUPPORT_FILM, cif_list=film_in,
                                               constructor=emdb.film_thicknessType, fmt=lambda x: float(x) * 0.1, units=const.U_NM)
@@ -5154,24 +5594,29 @@ class CifEMDBTranslator(object):
                         """
                         XSD: <xs:element name="pretreatment" type="grid_pretreatment_type" minOccurs="0"/>
                         """
+
                         def set_grid_pretreatment_type(pretreat):
                             """
                             XSD: <xs:complexType name="grid_pretreatment_type"> is
                             .. a sequence of 4 elements
                             """
+
                             def set_el_type(pretreat, pretreat_in):
                                 """
                                 XSD: <xs:element name="type" type="xs:token"/>
                                 CIF: _emd_grid_pretreatment.type 'GLOW DISCHARGE'
                                 """
-                                set_cif_value(pretreat.set_type, 'type', const.EMD_GRID_PRETREATMENT, cif_list=pretreat_in, parent_el_req=False)
+                                set_cif_value(pretreat.set_type, 'type', const.EMD_GRID_PRETREATMENT,
+                                              cif_list=pretreat_in, parent_el_req=False)
 
                             def set_el_time(pretreat, pretreat_in):
                                 """
                                 XSD: <xs:element name="time" minOccurs="0">
                                 CIF: _emd_grid_pretreatment.pretreat_time ? or 60
                                 """
-                                set_cif_value(pretreat.set_time, 'pretreat_time', const.EMD_GRID_PRETREATMENT, cif_list=pretreat_in, constructor=emdb.timeType, fmt=int, units=const.U_SEC)
+                                set_cif_value(pretreat.set_time, 'pretreat_time', const.EMD_GRID_PRETREATMENT,
+                                              cif_list=pretreat_in, constructor=emdb.timeType, fmt=int,
+                                              units=const.U_SEC)
 
                             def set_el_atmosphere(pretreat, pretreat_in):
                                 """
@@ -5186,8 +5631,9 @@ class CifEMDBTranslator(object):
                                         # the value is not in the currently allowed values - set it to OTHER
                                         atm_value_up = 'OTHER'
                                         set_cif_value(pretreat.set_atmosphere, 'atmosphere', const.EMD_GRID_PRETREATMENT, cif_list=pretreat_in, fmt=str.upper, cif_value=atm_value_up)
-                                        self.logger.warning('')
-                                        self.logger.warning(const.CHANGE_MADE+'The value (%s) for _emd_grid_pretreatment.atmosphere is changed to %s',  atm_value, atm_value_up)
+                                        txt = 'The value (%s) for (_emd_grid_pretreatment.atmosphere) is not allowed so it is changed to (%s).' % (atm_value, atm_value_up)
+                                        self.current_entry_log.warn_logs.append(self.ALog(log_text=self.current_entry_log.change_title + txt))
+                                        self.log_formatted('self.logger.warning', const.CHANGE_MADE + txt)
                                     else:
                                         set_cif_value(pretreat.set_atmosphere, 'atmosphere', const.EMD_GRID_PRETREATMENT, cif_list=pretreat_in, fmt=str.upper)
 
@@ -5246,6 +5692,7 @@ class CifEMDBTranslator(object):
                 """
                 XSD: <xs:element name="vitrification" type="vitrification_type" minOccurs="0">
                 """
+
                 def set_vitrification_type(vitr, vitr_in):
                     """
                     XSD: <xs:complexType name="vitrification_type"> is
@@ -5254,6 +5701,7 @@ class CifEMDBTranslator(object):
                     They are the same; XSD references the former,
                     here the latter is used.
                     """
+
                     def set_el_cryogen_name(vitr, vitr_in):
                         """
                         XSD: <xs:element name="cryogen_name">
@@ -5266,7 +5714,8 @@ class CifEMDBTranslator(object):
                         XSD: <xs:element name="chamber_humidity" minOccurs="0">
                         CIF: _emd_vitrification.chamber_humidity 100
                         """
-                        set_cif_value(vitr.set_chamber_humidity, 'chamber_humidity', const.EMD_VITRIFICATION, cif_list=vitr_in, constructor=emdb.chamber_humidityType, units=const.U_PERCENT)
+                        set_cif_value(vitr.set_chamber_humidity, 'chamber_humidity', const.EMD_VITRIFICATION,
+                                      cif_list=vitr_in, constructor=emdb.chamber_humidityType, units=const.U_PERCENT)
 
                     def set_el_chamber_temperature(vitr, vitr_in):
                         """
@@ -5277,13 +5726,16 @@ class CifEMDBTranslator(object):
                         if chamber_temp is not None:
                             fl_chamber_temp = float(chamber_temp)
                             if fl_chamber_temp < 85:
-                                self.logger.warning('')
-                                self.logger.warning(const.NOT_CHANGED_FOR_NOW+'_emd_vitrification.chamber_temperature is %s K. The lowest value should be 85.0 K.', fl_chamber_temp)
+                                txt = 'The value given for (_emd_vitrification.chamber_temperature) is (%s) K. The lowest value should be 85.0 K.' % fl_chamber_temp
+                                self.current_entry_log.warn_logs.append(self.ALog(log_text=self.current_entry_log.not_changed_for_now_title + txt))
+                                self.log_formatted('self.logger.warning', const.NOT_CHANGED_FOR_NOW + txt)
                             elif fl_chamber_temp > 300:
-                                self.logger.warning('')
-                                self.logger.warning(const.NOT_CHANGED_FOR_NOW+'_emd_vitrification.chamber_temperature is %s K. The highest value should be 300.0 K.', fl_chamber_temp)
+                                txt = 'The value given for (_emd_vitrification.chamber_temperature) is (%s) K. The highest value should be 300.0 K.' % fl_chamber_temp
+                                self.current_entry_log.warn_logs.append(self.ALog(log_text=self.current_entry_log.not_changed_for_now_title + txt))
+                                self.log_formatted('self.logger.warning', const.NOT_CHANGED_FOR_NOW + txt)
 
-                        set_cif_value(vitr.set_chamber_temperature, 'chamber_temperature', const.EMD_VITRIFICATION, cif_list=vitr_in, constructor=emdb.chamber_temperatureType, units=const.U_KEL)
+                        set_cif_value(vitr.set_chamber_temperature, 'chamber_temperature', const.EMD_VITRIFICATION,
+                                      cif_list=vitr_in, constructor=emdb.chamber_temperatureType, units=const.U_KEL)
 
                     def set_el_instrument(vitr, vitr_in):
                         """
@@ -5292,15 +5744,17 @@ class CifEMDBTranslator(object):
                         """
                         details_txt = ''
                         instrument = get_cif_value('instrument', const.EMD_VITRIFICATION, cif_list=vitr_in)
-                        allowed_instruments =  {'FEI VITROBOT MARK I', 'FEI VITROBOT MARK II', 'FEI VITROBOT MARK III', 'FEI VITROBOT MARK IV',
-                                                'GATAN CRYOPLUNGE 3', 'HOMEMADE PLUNGER', 'LEICA EM CPC', 'LEICA EM GP', 'LEICA KF80',
-                                                'LEICA PLUNGER', 'REICHERT-JUNG PLUNGER', 'OTHER'}
+                        allowed_instruments = {'FEI VITROBOT MARK I', 'FEI VITROBOT MARK II', 'FEI VITROBOT MARK III',
+                                               'FEI VITROBOT MARK IV',
+                                               'GATAN CRYOPLUNGE 3', 'HOMEMADE PLUNGER', 'LEICA EM CPC', 'LEICA EM GP',
+                                               'LEICA KF80',
+                                               'LEICA PLUNGER', 'REICHERT-JUNG PLUNGER', 'OTHER'}
                         if instrument is not None:
                             if instrument in allowed_instruments:
                                 set_cif_value(vitr.set_instrument, 'instrument', const.EMD_VITRIFICATION, cif_list=vitr_in)
                             else:
                                 # write OTHER and add note in details
-                                set_cif_value(vitr.set_instrument, 'instrument', const.EMD_VITRIFICATION, cif_list=vitr_in, cif_value='OTHER')
+                                set_cif_value(vitr.set_instrument, 'instrument', const.EMD_VITRIFICATION,  cif_list=vitr_in, cif_value='OTHER')
                                 details_txt = 'The value given for _emd_vitrification.instrument is %s. This is not in a list of allowed values %s so OTHER is written into the XML file.' % (instrument, allowed_instruments)
                         return details_txt
 
@@ -5315,7 +5769,8 @@ class CifEMDBTranslator(object):
                             all_details = '. '.join((current_details, details_txt))
                         else:
                             all_details = details_txt
-                        set_cif_value(vitr.set_details, 'details', const.EMD_VITRIFICATION, cif_list=vitr_in, cif_value=all_details)
+                        set_cif_value(vitr.set_details, 'details', const.EMD_VITRIFICATION, cif_list=vitr_in,
+                                      cif_value=all_details)
 
                     def set_el_timed_resolved_state():
                         """
@@ -5401,16 +5856,19 @@ class CifEMDBTranslator(object):
             .. a sequence of 5 elements
             CIF:  _emd_tomography_preparation.id
             """
+
             def set_el_fiducial_markers_list(tom_prep, tom_id_in, fid_dict_in):
                 """
                 XSD: <xs:element name="fiducial_markers_list" minOccurs="0">
                 CIF: _emd_tomography_preparation.fiducial_markers YES
                 """
+
                 def set_fiducial_marker_type(fid, fid_in):
                     """
                     XSD: <xs:complexType name="fiducial_marker_type"> has
                     .. 3 elements
                     """
+
                     def set_el_fiducial_type():
                         """
                         XSD: <xs:element name="fiducial_type" type="xs:token" minOccurs="0"/>
@@ -5429,7 +5887,8 @@ class CifEMDBTranslator(object):
                         XSD: <xs:element name="diameter" type="fiducial_marker_diameter_type"/>
                         CIF:  _emd_fiducial_markers.diameter 14
                         """
-                        set_cif_value(fid.set_diameter, 'diameter', const.EMD_FIDUCIAL_MARKERS, cif_list=fid_in, constructor=emdb.fiducial_marker_diameter_type, units=const.U_NMF)
+                        set_cif_value(fid.set_diameter, 'diameter', const.EMD_FIDUCIAL_MARKERS, cif_list=fid_in,
+                                      constructor=emdb.fiducial_marker_diameter_type, units=const.U_NMF)
 
                     # element 1
                     set_el_fiducial_type()
@@ -5455,11 +5914,13 @@ class CifEMDBTranslator(object):
                 XSD: <xs:element name="high_pressure_freezing" minOccurs="0">
                 CIF: _emd_tomography_preparation.high_pressure_freezing YES
                 """
+
                 def set_high_pressure_freezing_type(h_pf, h_pf_in):
                     """
                     XSD: <xs:element name="high_pressure_freezing" minOccurs="0"> has
                     .. 2 elements
                     """
+
                     def set_el_instrument(h_pf, h_pf_in):
                         """
                         XSD: <xs:element name="instrument">
@@ -5467,15 +5928,18 @@ class CifEMDBTranslator(object):
                         """
                         details_txt = ''
                         instrument = get_cif_value('instrument', const.EMD_HIGH_PRESSURE_FREEZING, cif_list=h_pf_in)
-                        allowed_instruments =  {'BAL-TEC HPM 010', 'EMS-002 RAPID IMMERSION FREEZER', 'LEICA EM HPM100', 'LEICA EM PACT', 'LEICA EM PACT2', 'OTHER'}
+                        allowed_instruments = {'BAL-TEC HPM 010', 'EMS-002 RAPID IMMERSION FREEZER', 'LEICA EM HPM100',
+                                               'LEICA EM PACT', 'LEICA EM PACT2', 'OTHER'}
                         if instrument is not None:
                             if instrument in allowed_instruments:
-                                set_cif_value(h_pf.set_instrument, 'instrument', const.EMD_HIGH_PRESSURE_FREEZING, cif_list=h_pf_in, parent_el_req=False)
+                                set_cif_value(h_pf.set_instrument, 'instrument', const.EMD_HIGH_PRESSURE_FREEZING,
+                                              cif_list=h_pf_in, parent_el_req=False)
                             else:
                                 # write OTHER and add note in details
-                                set_cif_value(h_pf.set_instrument, 'instrument', const.EMD_HIGH_PRESSURE_FREEZING, cif_list=h_pf_in, cif_value='OTHER', parent_el_req=False)
+                                set_cif_value(h_pf.set_instrument, 'instrument', const.EMD_HIGH_PRESSURE_FREEZING,
+                                              cif_list=h_pf_in, cif_value='OTHER', parent_el_req=False)
                                 details_txt = 'The value given for _emd_high_pressure_freezing.instrument is %s. This is not in a list of allowed values %s so OTHER is written into the XML file.' % (instrument, allowed_instruments)
-                        return details_txt        
+                        return details_txt
 
                     def set_el_details(h_pf, h_pf_in, details_txt):
                         """
@@ -5488,7 +5952,8 @@ class CifEMDBTranslator(object):
                             all_details = '. '.join((current_details, details_txt))
                         else:
                             all_details = details_txt
-                        set_cif_value(h_pf.set_details, 'details', const.EMD_HIGH_PRESSURE_FREEZING, cif_list=h_pf_in, cif_value=all_details, parent_el_req=False)
+                        set_cif_value(h_pf.set_details, 'details', const.EMD_HIGH_PRESSURE_FREEZING, cif_list=h_pf_in,
+                                      cif_value=all_details, parent_el_req=False)
 
                     # element 1
                     details_txt = set_el_instrument(h_pf, h_pf_in)
@@ -5514,7 +5979,8 @@ class CifEMDBTranslator(object):
                 XSD: <xs:element name="cryo_protectant" minOccurs="0" type="xs:token">
                 CIF: _emd_tomography_preparation.cryo_protectant '2% glycerol'
                 """
-                set_cif_value(tom_prep.set_cryo_protectant, 'cryo_protectant', const.EMD_TOMOGRAPHY_PREPARATION, cif_list=tom_prep_in)
+                set_cif_value(tom_prep.set_cryo_protectant, 'cryo_protectant', const.EMD_TOMOGRAPHY_PREPARATION,
+                              cif_list=tom_prep_in)
 
             def set_el_sectioning(tom_prep, tom_prep_in, u_tome_dict_in):
                 """
@@ -5523,31 +5989,36 @@ class CifEMDBTranslator(object):
                 CIF: _emd_tomography_preparation.sectioning
                 {ULTRAMICROTOMY, FOCUSED ION BEAM, NO SECTIONING }
                 """
+
                 def set_ultramicrotomy_type(u_tome):
                     """
                     XSD: <xs:element name="ultramicrotomy"> has
                     .. 4 elements
                     """
+
                     def set_el_instrument(u_tome, u_tome_in):
                         """
                         XSD: <xs:element name="instrument" type="xs:token">
                         CIF: _emd_sectioning_ultramicrotomy.instrument 'Leica EM UC7'
                         """
-                        set_cif_value(u_tome.set_instrument, 'instrument', const.EMD_SECTIONING_ULTRAMICROTOMY, cif_list=u_tome_in)
+                        set_cif_value(u_tome.set_instrument, 'instrument', const.EMD_SECTIONING_ULTRAMICROTOMY,
+                                      cif_list=u_tome_in)
 
                     def set_el_temperature(u_tome, u_tome_in):
                         """
                         XSD: <xs:element name="temperature" type="temperature_type"/>
                         CIF: _emd_sectioning_ultramicrotomy.temperature 100
                         """
-                        set_cif_value(u_tome.set_temperature, 'temperature', const.EMD_SECTIONING_ULTRAMICROTOMY, cif_list=u_tome_in, constructor=emdb.temperature_type, units=const.U_KEL)
+                        set_cif_value(u_tome.set_temperature, 'temperature', const.EMD_SECTIONING_ULTRAMICROTOMY,
+                                      cif_list=u_tome_in, constructor=emdb.temperature_type, units=const.U_KEL)
 
                     def set_el_final_thickness(u_tome, u_tome_in):
                         """
                         XSD: <xs:element name="final_thickness" type="ultramicrotomy_final_thickness_type"/>
                         CIF: _emd_sectioning_ultramicrotomy.final_thickness 60
                         """
-                        set_cif_value(u_tome.set_final_thickness, 'final_thickness', const.EMD_SECTIONING_ULTRAMICROTOMY, cif_list=u_tome_in,
+                        set_cif_value(u_tome.set_final_thickness, 'final_thickness',
+                                      const.EMD_SECTIONING_ULTRAMICROTOMY, cif_list=u_tome_in,
                                       constructor=emdb.ultramicrotomy_final_thickness_type, units=const.U_NM)
 
                     def set_el_details(u_tome, u_tome_in):
@@ -5555,7 +6026,8 @@ class CifEMDBTranslator(object):
                         XSD: <xs:element name="details" type="xs:string" minOccurs="0"/>
                         CIF: _emd_sectioning_ultramicrotomy.details ?
                         """
-                        set_cif_value(u_tome.set_details, 'details', const.EMD_SECTIONING_ULTRAMICROTOMY, cif_list=u_tome_in)
+                        set_cif_value(u_tome.set_details, 'details', const.EMD_SECTIONING_ULTRAMICROTOMY,
+                                      cif_list=u_tome_in)
 
                     # element 1
                     set_el_instrument(u_tome, u_tome_in)
@@ -5571,6 +6043,7 @@ class CifEMDBTranslator(object):
                     XSD: <xs:element name="focused_ion_beam"> has
                     .. 10 elements
                     """
+
                     def set_el_instrument(fib, fib_in):
                         """
                         XSD: <xs:element name="instrument">
@@ -5578,13 +6051,15 @@ class CifEMDBTranslator(object):
                         """
                         details_txt = ''
                         instrument = get_cif_value('instrument', const.EMD_SECTIONING_FOCUSED_ION_BEAM, cif_list=fib_in)
-                        allowed_instruments =  {'DB235', 'OTHER'}
+                        allowed_instruments = {'DB235', 'OTHER'}
                         if instrument is not None:
                             if instrument in allowed_instruments:
-                                set_cif_value(fib.set_instrument, 'instrument', const.EMD_SECTIONING_FOCUSED_ION_BEAM, cif_list=fib_in)
+                                set_cif_value(fib.set_instrument, 'instrument', const.EMD_SECTIONING_FOCUSED_ION_BEAM,
+                                              cif_list=fib_in)
                             else:
                                 # write OTHER and add note in details
-                                set_cif_value(fib.set_instrument, 'instrument', const.EMD_SECTIONING_FOCUSED_ION_BEAM, cif_list=fib_in, cif_value='OTHER')
+                                set_cif_value(fib.set_instrument, 'instrument', const.EMD_SECTIONING_FOCUSED_ION_BEAM,
+                                              cif_list=fib_in, cif_value='OTHER')
                                 details_txt = 'The value given for _emd_sectioning_focused_ion_beam.instrument is %s. This is not in a list of allowed values %s so OTHER is written into the XML file.' % (instrument, allowed_instruments)
                         return details_txt
 
@@ -5597,61 +6072,72 @@ class CifEMDBTranslator(object):
                         allowed_ions = {'GALLIUM+', 'OTHER'}
                         if ion is not None:
                             if ion in allowed_ions:
-                                set_cif_value(fib.set_ion, 'ion', const.EMD_SECTIONING_FOCUSED_ION_BEAM, cif_list=fib_in)
+                                set_cif_value(fib.set_ion, 'ion', const.EMD_SECTIONING_FOCUSED_ION_BEAM,
+                                              cif_list=fib_in)
                             else:
-                                set_cif_value(fib.set_ion, 'ion', const.EMD_SECTIONING_FOCUSED_ION_BEAM, cif_list=fib_in, cif_value='OTHER')
-                                add_text = ' The value given for _emd_sectioning_focused_ion_beam.ions is %s. This is not in a list of allowed values %s so OTHER is written into the XML file.' % (ion, allowed_ions)
+                                set_cif_value(fib.set_ion, 'ion', const.EMD_SECTIONING_FOCUSED_ION_BEAM,
+                                              cif_list=fib_in, cif_value='OTHER')
+                                add_text = ' The value given for _emd_sectioning_focused_ion_beam.ions is %s. This is not in a list of allowed values %s so OTHER is written into the XML file.' % (
+                                    ion, allowed_ions)
                                 details_txt = ''.join(add_text)
                         return details_txt
-  
+
                     def set_el_voltage(fib, fib_in):
                         """
                         XSD: <xs:element name="voltage" type="fib_voltage_type"/>
                         CIF: _emd_sectioning_focused_ion_beam.voltage  30
                         """
-                        set_cif_value(fib.set_voltage, 'voltage', const.EMD_SECTIONING_FOCUSED_ION_BEAM, cif_list=fib_in, constructor=emdb.fib_voltage_type, units=const.U_KVOLT)
+                        set_cif_value(fib.set_voltage, 'voltage', const.EMD_SECTIONING_FOCUSED_ION_BEAM,
+                                      cif_list=fib_in, constructor=emdb.fib_voltage_type, units=const.U_KVOLT)
 
                     def set_el_current(fib, fib_in):
                         """
                         XSD: <xs:element name="current" type="fib_current_type"/>
                         CIF: _emd_sectioning_focused_ion_beam.current
                         """
-                        set_cif_value(fib.set_current, 'current', const.EMD_SECTIONING_FOCUSED_ION_BEAM, cif_list=fib_in, constructor=emdb.fib_current_type, units=const.U_NAMP)
+                        set_cif_value(fib.set_current, 'current', const.EMD_SECTIONING_FOCUSED_ION_BEAM,
+                                      cif_list=fib_in, constructor=emdb.fib_current_type, units=const.U_NAMP)
 
                     def set_el_dose_rate(fib, fib_in):
                         """
                         XSD: <xs:element name="dose_rate" type="fib_dose_rate_type"/>
                         CIF: _emd_sectioning_focused_ion_beam.dose_rate
                         """
-                        set_cif_value(fib.set_dose_rate, 'dose_rate', const.EMD_SECTIONING_FOCUSED_ION_BEAM, cif_list=fib_in, constructor=emdb.fib_dose_rate_type, units=const.U_FIB_DOSE_RATE)
+                        set_cif_value(fib.set_dose_rate, 'dose_rate', const.EMD_SECTIONING_FOCUSED_ION_BEAM,
+                                      cif_list=fib_in, constructor=emdb.fib_dose_rate_type, units=const.U_FIB_DOSE_RATE)
 
                     def set_el_duration(fib, fib_in):
                         """
                         XSD: <xs:element name="duration" type="fib_duration_type"/>
                         CIF: _emd_sectioning_focused_ion_beam.duration
                         """
-                        set_cif_value(fib.set_duration, 'duration', const.EMD_SECTIONING_FOCUSED_ION_BEAM, cif_list=fib_in, constructor=emdb.fib_duration_type, units=const.U_SEC)
+                        set_cif_value(fib.set_duration, 'duration', const.EMD_SECTIONING_FOCUSED_ION_BEAM,
+                                      cif_list=fib_in, constructor=emdb.fib_duration_type, units=const.U_SEC)
 
                     def set_el_temperature(fib, fib_in):
                         """
                         XSD: <xs:element name="temperature" type="temperature_type"/>
                         CIF: _emd_sectioning_focused_ion_beam.temperature 100
                         """
-                        set_cif_value(fib.set_temperature, 'temperature', const.EMD_SECTIONING_FOCUSED_ION_BEAM, cif_list=fib_in, constructor=emdb.temperature_type, units=const.U_KEL)
+                        set_cif_value(fib.set_temperature, 'temperature', const.EMD_SECTIONING_FOCUSED_ION_BEAM,
+                                      cif_list=fib_in, constructor=emdb.temperature_type, units=const.U_KEL)
 
                     def set_el_initial_thickness(fib, fib_in):
                         """
                         XSD: <xs:element name="initial_thickness" type="fib_initial_thickness_type">
                         CIF: _emd_sectioning_focused_ion_beam.initial_thickness
                         """
-                        set_cif_value(fib.set_initial_thickness, 'initial_thickness', const.EMD_SECTIONING_FOCUSED_ION_BEAM, cif_list=fib_in, constructor=emdb.fib_initial_thickness_type, units=const.U_NM)
+                        set_cif_value(fib.set_initial_thickness, 'initial_thickness',
+                                      const.EMD_SECTIONING_FOCUSED_ION_BEAM, cif_list=fib_in,
+                                      constructor=emdb.fib_initial_thickness_type, units=const.U_NM)
 
                     def set_el_final_thickness(fib, fib_in):
                         """
                         XSD: <xs:element name="final_thickness" type="fib_final_thickness_type"/>
                         CIF: _emd_sectioning_focused_ion_beam.final_thickness
                         """
-                        set_cif_value(fib.set_final_thickness, 'final_thickness', const.EMD_SECTIONING_FOCUSED_ION_BEAM, cif_list=fib_in, constructor=emdb.fib_final_thickness_type, units=const.U_NM)
+                        set_cif_value(fib.set_final_thickness, 'final_thickness', const.EMD_SECTIONING_FOCUSED_ION_BEAM,
+                                      cif_list=fib_in, constructor=emdb.fib_final_thickness_type, units=const.U_NM)
 
                     def set_el_details(fib, fib_in, details_txt):
                         """
@@ -5659,12 +6145,14 @@ class CifEMDBTranslator(object):
                         CIF: _emd_sectioning_focused_ion_beam.details
                         """
                         all_details = ''
-                        current_details = get_cif_value('details', const.EMD_SECTIONING_FOCUSED_ION_BEAM, cif_list=fib_in)
+                        current_details = get_cif_value('details', const.EMD_SECTIONING_FOCUSED_ION_BEAM,
+                                                        cif_list=fib_in)
                         if current_details is not None:
                             all_details = '. '.join((current_details, details_txt))
                         else:
                             all_details = details_txt
-                        set_cif_value(fib.set_details, 'details', const.EMD_SECTIONING_FOCUSED_ION_BEAM, cif_list=fib_in, cif_value=all_details)
+                        set_cif_value(fib.set_details, 'details', const.EMD_SECTIONING_FOCUSED_ION_BEAM,
+                                      cif_list=fib_in, cif_value=all_details)
 
                     # element 1
                     details_txt = set_el_instrument(fib, fib_in)
@@ -5732,24 +6220,28 @@ class CifEMDBTranslator(object):
             Parameters:
             @param sp_id_in:
             """
+
             def set_crystal_formation_type(cryst):
                 """
                 XSD: <xs:element name="crystal_formation"> has
                 .. 7 elements
                 """
+
                 def set_el_lipid_protein_ratio(cryst, cryst_in):
                     """
                     XSD: <xs:element name="lipid_protein_ratio" type="xs:float" minOccurs="0"/>
                     CIF: _emd_crystal_formation.lipid_protein_ratio 5.0
                     """
-                    set_cif_value(cryst.set_lipid_protein_ratio, 'lipid_protein_ratio', const.EMD_CRYSTAL_FORMATION, cif_list=cryst_in, fmt=float)
+                    set_cif_value(cryst.set_lipid_protein_ratio, 'lipid_protein_ratio', const.EMD_CRYSTAL_FORMATION,
+                                  cif_list=cryst_in, fmt=float)
 
                 def set_el_lipid_mixture(cryst, cryst_in):
                     """
                     XSD: <xs:element name="lipid_mixture" type="xs:token" minOccurs="0"/>
                     CIF: _emd_crystal_formation.lipid_mixture
                     """
-                    set_cif_value(cryst.set_lipid_mixture, 'lipid_mixture', const.EMD_CRYSTAL_FORMATION, cif_list=cryst_in)
+                    set_cif_value(cryst.set_lipid_mixture, 'lipid_mixture', const.EMD_CRYSTAL_FORMATION,
+                                  cif_list=cryst_in)
 
                 def set_el_instrument(cryst, cryst_in):
                     """
@@ -5777,6 +6269,7 @@ class CifEMDBTranslator(object):
                     """
                     XSD: <xs:element name="time" type="crystal_formation_time_type" minOccurs="0"/>
                     """
+
                     def set_crystal_formation_time_type(cryst_tm):
                         """
                         XSD: <xs:complexType name="crystal_formation_time_type">
@@ -5787,8 +6280,10 @@ class CifEMDBTranslator(object):
                         tm_units_in = get_cif_value('time_unit', const.EMD_CRYSTAL_FORMATION, cryst_in)
                         if tm_in is not None and tm_units_in is not None:
                             # write the value for time only if both values are given
-                            set_cif_value(cryst_tm.set_valueOf_, 'time', const.EMD_CRYSTAL_FORMATION, cif_list=cryst_in, fmt=float)
-                            set_cif_value(cryst_tm.set_units, 'time_unit', const.EMD_CRYSTAL_FORMATION, cif_list=cryst_in)
+                            set_cif_value(cryst_tm.set_valueOf_, 'time', const.EMD_CRYSTAL_FORMATION, cif_list=cryst_in,
+                                          fmt=float)
+                            set_cif_value(cryst_tm.set_units, 'time_unit', const.EMD_CRYSTAL_FORMATION,
+                                          cif_list=cryst_in)
                             cryst.set_time(cryst_tm)
 
                     cryst_tm = emdb.crystal_formation_time_type()
@@ -5834,24 +6329,28 @@ class CifEMDBTranslator(object):
             @return clas: classification type object
             XSD: <xs:complexType name="classification_type">
             """
+
             def set_classification_type(clas, f_c_in, cat_soft_dict_in):
                 """
                 XSD: <xs:complexType name="classification_type"> has
                 .. 4 elements
                 """
+
                 def set_el_number_classes(clas, f_c_in):
                     """
                     XSD: <xs:element name="number_classes" type="xs:positiveInteger" minOccurs="0">
                     CIF: _emd_final_classification.number_classes 200
                     """
-                    set_cif_value(clas.set_number_classes, 'number_classes', const.EMD_FINAL_CLASSIFICATION, cif_list=f_c_in, fmt=int)
+                    set_cif_value(clas.set_number_classes, 'number_classes', const.EMD_FINAL_CLASSIFICATION,
+                                  cif_list=f_c_in, fmt=int)
 
                 def set_el_av_num_members_per_class(clas, f_c_in):
                     """
                     XSD: <xs:element name="average_number_members_per_class" minOccurs="0">
                     CIF: _emd_final_classification.average_number_images_per_class 75
                     """
-                    set_cif_value(clas.set_average_number_members_per_class, 'average_number_images_per_class', const.EMD_FINAL_CLASSIFICATION, cif_list=f_c_in, fmt=float)
+                    set_cif_value(clas.set_average_number_members_per_class, 'average_number_images_per_class',
+                                  const.EMD_FINAL_CLASSIFICATION, cif_list=f_c_in, fmt=float)
 
                 def set_el_software_list(clas, cat_soft_dict_in):
                     """
@@ -5886,12 +6385,14 @@ class CifEMDBTranslator(object):
             .. 1 attribute and
             .. a sequence of 6 elements
             """
+
             def set_attr_id(struct_det):
                 """
                 XSD: <xs:attribute name="id" type="xs:positiveInteger" use="required">
                 CIF: _emd_structure_determination.id 1
                 """
-                set_cif_value(struct_det.set_structure_determination_id, 'id', const.EMD_STRUCTURE_DETERMINATION, fmt=int)
+                set_cif_value(struct_det.set_structure_determination_id, 'id', const.EMD_STRUCTURE_DETERMINATION,
+                              fmt=int)
 
             def set_el_method(struct_det):
                 """
@@ -5906,7 +6407,7 @@ class CifEMDBTranslator(object):
                                   'TOMOGRAPHY': const.EMM_TOM,
                                   'HELICAL': const.EMM_HEL,
                                   'CRYSTALLOGRAPHY': const.EMM_EC
-                                 }
+                                  }
                 # em_method is so fundamental - if it fails, let it. WHY?????
                 em_method = None
                 method = get_cif_value('method', const.EXPTL)
@@ -5919,14 +6420,15 @@ class CifEMDBTranslator(object):
                     if metd is not None:
                         em_method = em_method_dict.get(metd)
                     else:
-                        self.logger.error(const.REQUIRED_ALERT+'The value for '+metd_item+' is not given.')
-
+                        txt = 'The value for (%s) is not given.' % metd_item
+                        self.current_entry_log.error_logs.append(self.ALog(log_text=self.current_entry_log.error_title + txt))
+                        self.log_formatted('self.logger.error', const.REQUIRED_ALERT + txt)
                     if em_method is not None:
                         set_cif_value(struct_det.set_method, 'method', const.EMD_STRUCTURE_DETERMINATION, cif_value=em_method)
                     else:
-                        self.logger.error(const.REQUIRED_ALERT+metd_item+' is not a recognised structure determination method.')
-                        gap = ' ' * len(const.REQUIRED_ALERT)
-                        self.logger.error(gap+'Recognised methods are: SINGLE PARTICLE, SUBTOMOGRAM AVERAGING, TOMOGRAPHY, HELICAL, CRYSTALLOGRAPHY')
+                        txt = '(%s) is not a recognised structure determination method. Recognised methods are: SINGLE PARTICLE, SUBTOMOGRAM AVERAGING, TOMOGRAPHY, HELICAL, CRYSTALLOGRAPHY.' % metd_item
+                        self.current_entry_log.error_logs.append(self.ALog(log_text=self.current_entry_log.error_title + txt))
+                        self.log_formatted('self.logger.error', const.REQUIRED_ALERT + txt)
                 return em_method
 
             def set_el_aggregation_state(struct_det):
@@ -5934,7 +6436,8 @@ class CifEMDBTranslator(object):
                 XSD: <xs:element name="aggregation_state">
                 CIF: _emd_structure_determination.aggregation_state PARTICLE
                 """
-                set_cif_value(struct_det.set_aggregation_state, 'aggregation_state', const.EMD_STRUCTURE_DETERMINATION, fmt=const.AGG_STATE_CIF2XML)
+                set_cif_value(struct_det.set_aggregation_state, 'aggregation_state', const.EMD_STRUCTURE_DETERMINATION,
+                              fmt=const.AGG_STATE_CIF2XML)
 
             def set_el_mol_and_complexes():
                 """
@@ -5947,6 +6450,7 @@ class CifEMDBTranslator(object):
                 XSD: <xs:element name="specimen_preparation_list"> has
                 .. is a sequence of 1 element - "specimen_preparation"
                 """
+
                 def set_spec_prep_list_type(spec_prep_list, em_method):
                     """
                     XSD: <xs:element name="specimen_preparation" type="base_preparation_type"> has
@@ -5986,7 +6490,9 @@ class CifEMDBTranslator(object):
                             set_el_cryst_prep_specifics(sp_id_in, cryst_prep)
                             spec_prep_list.add_specimen_preparation(cryst_prep)
                         else:
-                            self.logger.error(const.REQUIRED_ALERT+'Unknown EM method: %s. The specimen preparation section cannot be set', em_method)
+                            txt = 'Unknown EM method: (%s). The specimen preparation section, therefore, cannot be set.' % em_method
+                            self.current_entry_log.error_logs.append(self.ALog(log_text=self.current_entry_log.error_title + txt))
+                            self.log_formatted('self.logger.error', const.REQUIRED_ALERT + txt)
                             break
 
                 spec_prep_list = emdb.specimen_preparation_listType()
@@ -5997,6 +6503,7 @@ class CifEMDBTranslator(object):
                 """
                 XSD: <xs:element name="microscopy_list">
                 """
+
                 def get_tilt_axis(ts_in, axis1=True):
                     """
                     Get axis min, max and inc from a EMD_MICROSCOPY_TOMOGRAPHY
@@ -6009,18 +6516,21 @@ class CifEMDBTranslator(object):
                     @return: axis XML element that can be added to tilt series
                     XSD: <xs:complexType name="axis_type">
                     """
+
                     def set_axis_type(axis, min_angle, max_angle, angle_inc, ts_in):
                         """
                         <xs:complexType name="axis_type"> has
                         .. 3 elements
                         """
+
                         def set_el_min_angle(axis, min_angle, ts_in):
                             """
                             XSD: <xs:element name="min_angle" minOccurs="0">
                             CIF: _emd_microscopy_tomography.axis1_min_angle
                             CIF: _emd_microscopy_tomography.axis2_min_angle
                             """
-                            set_cif_value(axis.set_min_angle, min_angle, const.EMD_MICROSCOPY_TOMOGRAPHY, cif_list=ts_in, constructor=emdb.min_angleType, units=const.U_DEG)
+                            set_cif_value(axis.set_min_angle, min_angle, const.EMD_MICROSCOPY_TOMOGRAPHY,
+                                          cif_list=ts_in, constructor=emdb.min_angleType, units=const.U_DEG)
 
                         def set_el_max_angle(axis, max_angle, ts_in):
                             """
@@ -6028,7 +6538,8 @@ class CifEMDBTranslator(object):
                             CIF: _emd_microscopy_tomography.axis1_max_angle
                             CIF: _emd_microscopy_tomography.axis2_max_angle
                             """
-                            set_cif_value(axis.set_max_angle, max_angle, const.EMD_MICROSCOPY_TOMOGRAPHY, cif_list=ts_in, constructor=emdb.max_angleType, units=const.U_DEG)
+                            set_cif_value(axis.set_max_angle, max_angle, const.EMD_MICROSCOPY_TOMOGRAPHY,
+                                          cif_list=ts_in, constructor=emdb.max_angleType, units=const.U_DEG)
 
                         def set_el_angle_increment(axis, angle_inc, ts_in):
                             """
@@ -6036,7 +6547,8 @@ class CifEMDBTranslator(object):
                             CIF: _emd_microscopy_tomography.axis1_angle_increment
                             CIF: _emd_microscopy_tomography.axis2_angle_increment
                             """
-                            set_cif_value(axis.set_angle_increment, angle_inc, const.EMD_MICROSCOPY_TOMOGRAPHY, cif_list=ts_in, constructor=emdb.max_angleType, units=const.U_DEG)
+                            set_cif_value(axis.set_angle_increment, angle_inc, const.EMD_MICROSCOPY_TOMOGRAPHY,
+                                          cif_list=ts_in, constructor=emdb.max_angleType, units=const.U_DEG)
 
                         # element 1
                         set_el_min_angle(axis, min_angle, ts_in)
@@ -6068,47 +6580,55 @@ class CifEMDBTranslator(object):
                     @param mic: microscopy object
                     XSD: <xs:complexType name="specialist_optics_type">
                     """
+
                     def set_specialist_optics_type(sp_op, sp_op_in):
                         """
                         XSD: <xs:complexType name="specialist_optics_type"> has
                         .. a sequence of 4 elements
                         """
+
                         def set_el_phase_plate(sp_op, sp_op_in):
                             """
                             XSD: <xs:element name="phase_plate" type="xs:token" minOccurs="0"/>
                             CIF: _emd_specialist_optics.phase_plate 'Zernike phase plate'
                             """
-                            set_cif_value(sp_op.set_phase_plate, 'phase_plate', const.EMD_SPECIALIST_OPTICS, cif_list=sp_op_in)
+                            set_cif_value(sp_op.set_phase_plate, 'phase_plate', const.EMD_SPECIALIST_OPTICS,
+                                          cif_list=sp_op_in)
 
                         def set_el_sph_aberration_corrector(sp_op, sp_op_in):
                             """
                             XSD: <xs:element name="sph_aberration_corrector" type="xs:token" minOccurs="0"/>
                             CIF: _emd_specialist_optics.sph_aberration_corrector
                             """
-                            set_cif_value(sp_op.set_sph_aberration_corrector, 'sph_aberration_corrector', const.EMD_SPECIALIST_OPTICS, cif_list=sp_op_in)
+                            set_cif_value(sp_op.set_sph_aberration_corrector, 'sph_aberration_corrector',
+                                          const.EMD_SPECIALIST_OPTICS, cif_list=sp_op_in)
 
                         def set_el_chr_aberration_corrector(sp_op, sp_op_in):
                             """
                             XSD: <xs:element name="chr_aberration_corrector" type="xs:token" minOccurs="0"/>
                             CIF: _emd_specialist_optics.chr_aberration_corrector
                             """
-                            set_cif_value(sp_op.set_chr_aberration_corrector, 'chr_aberration_corrector', const.EMD_SPECIALIST_OPTICS, cif_list=sp_op_in)
+                            set_cif_value(sp_op.set_chr_aberration_corrector, 'chr_aberration_corrector',
+                                          const.EMD_SPECIALIST_OPTICS, cif_list=sp_op_in)
 
                         def set_el_energy_filter(sp_op, sp_op_in):
                             """
                             XSD: <xs:element name="energy_filter" minOccurs="0">
                             """
+
                             def set_energy_filter_type(eng_flt, sp_op_in):
                                 """
                                 XSD: <xs:element name="energy_filter" minOccurs="0"> has
                                 .. 3 elements
                                 """
+
                                 def set_el_name(eng_flt, sp_op_in):
                                     """
                                     XSD: <xs:element name="name" type="xs:token" minOccurs="0">
                                     CIF: _emd_specialist_optics.energyfilter_name 'FEI'
                                     """
-                                    set_cif_value(eng_flt.set_name, 'energyfilter_name', const.EMD_SPECIALIST_OPTICS, cif_list=sp_op_in)
+                                    set_cif_value(eng_flt.set_name, 'energyfilter_name', const.EMD_SPECIALIST_OPTICS,
+                                                  cif_list=sp_op_in)
 
                                 def set_el_lower_energy_threshold(eng_flt, sp_op_in):
                                     """
@@ -6122,8 +6642,9 @@ class CifEMDBTranslator(object):
                                                           constructor=emdb.lower_energy_thresholdType, fmt=float, units=const.U_EV)
                                         else:
                                             # should be a float
-                                            self.logger.critical('')
-                                            self.logger.critical(const.REQUIRED_ALERT+'The value for lower energy threshold should not be: %s' % eng_flt_low)
+                                            txt = 'The value for (_emd_specialist_optics.energyfilter_lower) should not be: (%s).' % eng_flt_low
+                                            self.current_entry_log.error_logs.append(self.ALog(log_text=self.current_entry_log.error_title + txt))
+                                            self.log_formatted('self.logger.critical', const.REQUIRED_ALERT + txt)
 
                                 def set_el_upper_energy_threshold(eng_flt, sp_op_in):
                                     """
@@ -6137,8 +6658,9 @@ class CifEMDBTranslator(object):
                                                           constructor=emdb.upper_energy_thresholdType, fmt=float, units=const.U_EV)
                                         else:
                                             # should be a float
-                                            self.logger.critical('')
-                                            self.logger.critical(const.REQUIRED_ALERT+'The value for upper energy threshold should not be: %s' % eng_flt_uppr)
+                                            txt = 'The value for (_emd_specialist_optics.energyfilter_upper) should not be: (%s).' % eng_flt_uppr
+                                            self.current_entry_log.error_logs.append(self.ALog(log_text=self.current_entry_log.error_title + txt))
+                                            self.log_formatted('self.logger.critical', const.REQUIRED_ALERT + txt)
 
                                 # element 1
                                 set_el_name(eng_flt, sp_op_in)
@@ -6179,18 +6701,21 @@ class CifEMDBTranslator(object):
                     @param: mic_id: microscopy id
                     XSD: <xs:element name="image_recording">
                     """
+
                     def set_image_recording_type(im_rec, im_rec_in, im_dig_dict_in):
                         """
                         XSD: <xs:element name="image_recording"> has
                         .. 1 attribute and
                         .. 12 elements
                         """
+
                         def set_attr_id(im_rec, im_rec_in):
                             """
                             XSD: <xs:attribute name="id" type="xs:positiveInteger"/>
                             CIF: _emd_image_recording.id 1
                             """
-                            set_cif_value(im_rec.set_image_recording_id, const.K_ID, const.EMD_IMAGE_RECORDING, cif_list=im_rec_in, fmt=int)
+                            set_cif_value(im_rec.set_image_recording_id, const.K_ID, const.EMD_IMAGE_RECORDING,
+                                          cif_list=im_rec_in, fmt=int)
 
                         def set_el_film_or_detector_model(im_rec, im_rec_in):
                             """
@@ -6200,7 +6725,9 @@ class CifEMDBTranslator(object):
                             # film_or_detector_model has an attribute describing
                             # the type of detector - this does not seem to have been
                             # implemented in D&A
-                            set_cif_value(im_rec.set_film_or_detector_model, 'film_or_detector_model', const.EMD_IMAGE_RECORDING, cif_list=im_rec_in, constructor=emdb.film_or_detector_modelType)
+                            set_cif_value(im_rec.set_film_or_detector_model, 'film_or_detector_model',
+                                          const.EMD_IMAGE_RECORDING, cif_list=im_rec_in,
+                                          constructor=emdb.film_or_detector_modelType)
 
                         def set_el_detector_mode(im_rec, im_rec_in):
                             """
@@ -6208,24 +6735,28 @@ class CifEMDBTranslator(object):
                             CIF: _emd_image_recording.detector_mode
                                 {COUNTING,INTEGRATING,OTHER,SUPER-RESOLUTION}
                             """
-                            set_cif_value(im_rec.set_detector_mode, 'detector_mode', const.EMD_IMAGE_RECORDING, cif_list=im_rec_in)
+                            set_cif_value(im_rec.set_detector_mode, 'detector_mode', const.EMD_IMAGE_RECORDING,
+                                          cif_list=im_rec_in)
 
                         def set_el_digitization_details(im_rec, im_rec_in, im_dig_dict_in):
                             """
                             XSD: <xs:element name="digitization_details">
                             CIF: emd_image_digitization
                             """
+
                             def set_digitization_details_type(im_dig, im_dig_in):
                                 """
                                 XSD: <xs:element name="digitization_details"> has
                                 .. 4 elements
                                 """
+
                                 def set_el_scanner(im_dig, im_dig_in):
                                     """
                                     XSD: <xs:element name="scanner" minOccurs="0">
                                     CIF: _emd_image_digitization.scanner 'EIKONIX IEEE 488'
                                     """
-                                    set_cif_value(im_dig.set_scanner, 'scanner', const.EMD_IMAGE_DIGITIZATION, cif_list=im_dig_in)
+                                    set_cif_value(im_dig.set_scanner, 'scanner', const.EMD_IMAGE_DIGITIZATION,
+                                                  cif_list=im_dig_in)
 
                                 def set_el_dimensions(im_dig, im_dig_in):
                                     """
@@ -6237,14 +6768,16 @@ class CifEMDBTranslator(object):
                                     height = get_cif_value('dimension_height', const.EMD_IMAGE_DIGITIZATION, im_dig_in)
                                     if width is not None and height is not None:
                                         im_dig.set_dimensions(
-                                            emdb.dimensionsType(width=emdb.widthType(valueOf_=int(width), units=const.U_PIXEL),
-                                                                   height=emdb.heightType(valueOf_=int(height), units=const.U_PIXEL)))
-                                        self.logger.info('')
-                                        self.logger.info(const.INFO_ALERT+'(im_dig.set_dimensions) set with width %s and height %s', width, height)
-                                        self.logger.info(' '*len(const.INFO_ALERT)+'This creates XML for <xs:element name="dimensions">')
+                                            emdb.dimensionsType(
+                                                width=emdb.widthType(valueOf_=int(width), units=const.U_PIXEL),
+                                                height=emdb.heightType(valueOf_=int(height), units=const.U_PIXEL)))
+                                        txt = '(im_dig.set_dimensions) set with width (%s) and height (%s).' % (width, height)
+                                        self.current_entry_log.info_logs.append(self.ALog(log_text=self.current_entry_log.info_title + txt))
+                                        self.log_formatted('self.logger.info', const.INFO_ALERT + txt)
                                     elif width is not None or height is not None:
-                                        self.logger.error(const.REQUIRED_ALERT+'(im_dig.set_dimensions) cannot be set since the width and height are not given')
-                                        self.logger.error(' '*len(const.REQUIRED_ALERT)+'(_emd_image_digitization.dimension_height) and (_emd_image_digitization.dimension_height) values need to be given')
+                                        txt = '(im_dig.set_dimensions) cannot be set since the width and height are not given. Both (_emd_image_digitization.dimension_height) and (_emd_image_digitization.dimension_height) values need to be given.'
+                                        self.current_entry_log.error_logs.append(self.ALog(log_text=self.current_entry_log.error_title + txt))
+                                        self.log_formatted('self.logger.error', const.REQUIRED_ALERT + txt)
 
                                 def set_el_sampling_interval(im_dig, im_dig_in):
                                     """
@@ -6282,28 +6815,32 @@ class CifEMDBTranslator(object):
                             XSD: <xs:element name="number_grids_imaged" type="xs:positiveInteger" minOccurs="0"/>
                             CIF: _emd_image_recording.number_grids_imaged 10
                             """
-                            set_cif_value(im_rec.set_number_grids_imaged, 'number_grids_imaged', const.EMD_IMAGE_RECORDING, cif_list=im_rec_in, fmt=int)
+                            set_cif_value(im_rec.set_number_grids_imaged, 'number_grids_imaged',
+                                          const.EMD_IMAGE_RECORDING, cif_list=im_rec_in, fmt=int)
 
                         def set_el_number_real_images(im_rec, im_rec_in):
                             """
                             XSD: <xs:element name="number_real_images" type="xs:positiveInteger" minOccurs="0"/>
                             CIF: _emd_image_recording.number_real_images 10
                             """
-                            set_cif_value(im_rec.set_number_real_images, 'number_real_images', const.EMD_IMAGE_RECORDING, cif_list=im_rec_in, fmt=int)
+                            set_cif_value(im_rec.set_number_real_images, 'number_real_images',
+                                          const.EMD_IMAGE_RECORDING, cif_list=im_rec_in, fmt=int)
 
                         def set_el_number_diffr_images(im_rec, im_rec_in):
                             """
                             XSD: <xs:element name="number_diffraction_images" type="xs:positiveInteger" minOccurs="0"/>
                             CIF: _emd_image_recording.number_diffraction_images 10
                             """
-                            set_cif_value(im_rec.set_number_diffraction_images, 'number_diffraction_images', const.EMD_IMAGE_RECORDING, cif_list=im_rec_in, fmt=int)
+                            set_cif_value(im_rec.set_number_diffraction_images, 'number_diffraction_images',
+                                          const.EMD_IMAGE_RECORDING, cif_list=im_rec_in, fmt=int)
 
                         def set_el_average_exposure_time(im_rec, im_rec_in):
                             """
                             XSD: <xs:element name="average_exposure_time" minOccurs="0">
                             CIF: _emd_image_recording.average_exposure_time 2.0
                             """
-                            set_cif_value(im_rec.set_average_exposure_time, 'average_exposure_time', const.EMD_IMAGE_RECORDING, cif_list=im_rec_in,
+                            set_cif_value(im_rec.set_average_exposure_time, 'average_exposure_time',
+                                          const.EMD_IMAGE_RECORDING, cif_list=im_rec_in,
                                           constructor=emdb.average_exposure_timeType, fmt=float, units=const.U_SEC)
 
                         def set_el_av_el_dose_per_image(im_rec, im_rec_in):
@@ -6311,8 +6848,10 @@ class CifEMDBTranslator(object):
                             XSD: <xs:element name="average_electron_dose_per_image" minOccurs="0">
                             CIF: _emd_image_recording.average_electron_dose_per_image
                             """
-                            set_cif_value(im_rec.set_average_electron_dose_per_image, 'average_electron_dose_per_image', const.EMD_IMAGE_RECORDING, cif_list=im_rec_in,
-                                          constructor=emdb.average_electron_dose_per_imageType, fmt=float, units=const.U_EOVERANGSQR)
+                            set_cif_value(im_rec.set_average_electron_dose_per_image, 'average_electron_dose_per_image',
+                                          const.EMD_IMAGE_RECORDING, cif_list=im_rec_in,
+                                          constructor=emdb.average_electron_dose_per_imageType, fmt=float,
+                                          units=const.U_EOVERANGSQR)
 
                         def set_el_detector_distance():
                             """
@@ -6371,8 +6910,9 @@ class CifEMDBTranslator(object):
                     im_dig_dict_in = make_dict(const.EMD_IMAGE_DIGITIZATION, const.K_EMD_IMAGE_RECORDING_ID)
 
                     if mic_id not in im_rec_dict_in:
-                        self.logger.critical('')
-                        self.logger.critical(const.REQUIRED_ALERT+'No emd_image_recording found for microscope: %s' % mic_id)
+                        txt = 'No value for (_emd_image_recording) found for microscope: (%s).' % mic_id
+                        self.current_entry_log.error_logs.append(self.ALog(log_text=self.current_entry_log.error_title + txt))
+                        self.log_formatted('self.logger.critical', const.REQUIRED_ALERT + txt)
                     else:
                         im_rec_list_in = im_rec_dict_in[mic_id]
                         im_rec_list = emdb.image_recording_listType()
@@ -6397,6 +6937,7 @@ class CifEMDBTranslator(object):
                     .. 1 attribute
                     .. 26 elements
                     """
+
                     def set_attr_id(mic):
                         """
                         XSD: <xs:attribute name="id" type="xs:positiveInteger" use="required">
@@ -6422,7 +6963,8 @@ class CifEMDBTranslator(object):
                         XSD: <xs:element name="illumination_mode">
                         CIF: _emd_microscopy.illumination_mode 'FLOOD BEAM'
                         """
-                        set_cif_value(mic.set_illumination_mode, 'illumination_mode', const.EMD_MICROSCOPY, cif_list=mic_in)
+                        set_cif_value(mic.set_illumination_mode, 'illumination_mode', const.EMD_MICROSCOPY,
+                                      cif_list=mic_in)
 
                     def set_el_imaging_mode(mic, mic_in):
                         """
@@ -6443,7 +6985,8 @@ class CifEMDBTranslator(object):
                         XSD: <xs:element name="acceleration_voltage">
                         CIF: _emd_microscopy.acceleration_voltage 300
                         """
-                        set_cif_value(mic.set_acceleration_voltage, 'acceleration_voltage', const.EMD_MICROSCOPY, cif_list=mic_in,
+                        set_cif_value(mic.set_acceleration_voltage, 'acceleration_voltage', const.EMD_MICROSCOPY,
+                                      cif_list=mic_in,
                                       constructor=emdb.acceleration_voltageType, fmt=int, units=const.U_KVOLT)
 
                     def set_el_c2_aperture_diameter(mic, mic_in):
@@ -6451,7 +6994,8 @@ class CifEMDBTranslator(object):
                         XSD: <xs:element name="c2_aperture_diameter" minOccurs="0">
                         CIF: _emd_microscopy.c2_aperture_diameter 100
                         """
-                        set_cif_value(mic.set_c2_aperture_diameter, 'c2_aperture_diameter', const.EMD_MICROSCOPY, cif_list=mic_in,
+                        set_cif_value(mic.set_c2_aperture_diameter, 'c2_aperture_diameter', const.EMD_MICROSCOPY,
+                                      cif_list=mic_in,
                                       constructor=emdb.c2_aperture_diameterType, fmt=float, units=const.U_MICROM)
 
                     def set_el_nominal_cs(mic, mic_in):
@@ -6459,23 +7003,28 @@ class CifEMDBTranslator(object):
                         XSD: <xs:element name="nominal_cs" minOccurs="0">
                         CIF: _emd_microscopy.nominal_cs 2.7
                         """
-                        set_cif_value(mic.set_nominal_cs, 'nominal_cs', const.EMD_MICROSCOPY, cif_list=mic_in, constructor=emdb.nominal_csType, fmt=float, units=const.U_MM)
+                        set_cif_value(mic.set_nominal_cs, 'nominal_cs', const.EMD_MICROSCOPY, cif_list=mic_in,
+                                      constructor=emdb.nominal_csType, fmt=float, units=const.U_MM)
 
                     def set_el_nominal_defocus_min(mic, mic_in):
                         """
                         XSD: <xs:element name="nominal_defocus_min" minOccurs="0">
                         CIF: _emd_microscopy.nominal_defocus_min  1200 (in nm)
                         """
-                        set_cif_value(mic.set_nominal_defocus_min, 'nominal_defocus_min', const.EMD_MICROSCOPY, cif_list=mic_in,
-                                      constructor=emdb.nominal_defocus_minType, units=const.U_MICROM, fmt=lambda x: float(x) * 0.001)
+                        set_cif_value(mic.set_nominal_defocus_min, 'nominal_defocus_min', const.EMD_MICROSCOPY,
+                                      cif_list=mic_in,
+                                      constructor=emdb.nominal_defocus_minType, units=const.U_MICROM,
+                                      fmt=lambda x: float(x) * 0.001)
 
                     def set_el_calibrated_defocus_min(mic, mic_in):
                         """
                         XSD: <xs:element name="calibrated_defocus_min" minOccurs="0">
                         CIF: _emd_microscopy.calibrated_defocus_min 1200 (in nm)
                         """
-                        set_cif_value(mic.set_calibrated_defocus_min, 'calibrated_defocus_min', const.EMD_MICROSCOPY, cif_list=mic_in,
-                                      constructor=emdb.calibrated_defocus_minType, units=const.U_MICROM, fmt=lambda x: float(x) * 0.001)
+                        set_cif_value(mic.set_calibrated_defocus_min, 'calibrated_defocus_min', const.EMD_MICROSCOPY,
+                                      cif_list=mic_in,
+                                      constructor=emdb.calibrated_defocus_minType, units=const.U_MICROM,
+                                      fmt=lambda x: float(x) * 0.001)
 
                     def set_el_nominal_defocus_max(mic, mic_in):
                         """
@@ -6486,11 +7035,13 @@ class CifEMDBTranslator(object):
                         if nom_def is not None:
                             fl_nom_fel = float(nom_def) * 0.001
                             if fl_nom_fel < -20:
-                                self.logger.warning('')
-                                self.logger.warning(const.NOT_CHANGED_FOR_NOW+'_emd_microscopy.nominal_defocus_max (%s) is less than -20', fl_nom_fel)
+                                txt = '_emd_microscopy.nominal_defocus_max (%s) is less than -20.' % fl_nom_fel
+                                self.current_entry_log.warn_logs.append(self.ALog(log_text=self.current_entry_log.not_changed_for_now_title + txt))
+                                self.log_formatted('self.logger.warning', const.NOT_CHANGED_FOR_NOW + txt)
                             elif fl_nom_fel > 20:
-                                self.logger.warning('')
-                                self.logger.warning(const.NOT_CHANGED_FOR_NOW+'_emd_microscopy.nominal_defocus_max (%s) is larger than 20', fl_nom_fel)
+                                txt = '_emd_microscopy.nominal_defocus_max (%s) is larger than 20.' %  fl_nom_fel
+                                self.current_entry_log.warn_logs.append(self.ALog(log_text=self.current_entry_log.not_changed_for_now_title + txt))
+                                self.log_formatted('self.logger.warning', const.NOT_CHANGED_FOR_NOW + txt)
                             set_cif_value(mic.set_nominal_defocus_max, 'nominal_defocus_max', const.EMD_MICROSCOPY, cif_list=mic_in,
                                           constructor=emdb.nominal_defocus_maxType, units=const.U_MICROM, fmt=lambda x: float(x) * 0.001)
 
@@ -6503,11 +7054,13 @@ class CifEMDBTranslator(object):
                         if cal_def is not None:
                             fl_cal_fel = float(cal_def) * 0.001
                             if fl_cal_fel < -20:
-                                self.logger.warning('')
-                                self.logger.warning(const.NOT_CHANGED_FOR_NOW+'_emd_microscopy.calibrated_defocus_max (%s) is less than -20', fl_cal_fel)
+                                txt = 'The value given to (_emd_microscopy.calibrated_defocus_max): (%s) is less than -20.' % fl_cal_fel
+                                self.current_entry_log.warn_logs.append(self.ALog(log_text=self.current_entry_log.not_changed_for_now_title + txt))
+                                self.log_formatted('self.logger.warning', const.NOT_CHANGED_FOR_NOW + txt)
                             elif fl_cal_fel > 20:
-                                self.logger.warning('')
-                                self.logger.warning(const.NOT_CHANGED_FOR_NOW+'_emd_microscopy.calibrated_defocus_max (%s) is larger than 20', fl_cal_fel)
+                                txt = 'The value given to (_emd_microscopy.calibrated_defocus_max): (%s) is larger than 20.' %  fl_cal_fel
+                                self.current_entry_log.warn_logs.append(self.ALog(log_text=self.current_entry_log.not_changed_for_now_title + txt))
+                                self.log_formatted('self.logger.warning', const.NOT_CHANGED_FOR_NOW + txt)
                             set_cif_value(mic.set_calibrated_defocus_max, 'calibrated_defocus_max', const.EMD_MICROSCOPY, cif_list=mic_in,
                                           constructor=emdb.calibrated_defocus_maxType, units=const.U_MICROM, fmt=lambda x: float(x) * 0.001)
 
@@ -6549,8 +7102,12 @@ class CifEMDBTranslator(object):
                         temp_min_in = get_cif_value('temperature_min', const.EMD_MICROSCOPY, mic_in)
                         if temp_max_in is not None or temp_min_in is not None:
                             temp = emdb.temperatureType()
-                            set_cif_value(temp.set_temperature_max, 'temperature_max', const.EMD_MICROSCOPY, cif_list=mic_in, constructor=emdb.temperature_type, fmt=float, units=const.U_KEL)
-                            set_cif_value(temp.set_temperature_min, 'temperature_min', const.EMD_MICROSCOPY, cif_list=mic_in, constructor=emdb.temperature_type, fmt=float, units=const.U_KEL)
+                            set_cif_value(temp.set_temperature_max, 'temperature_max', const.EMD_MICROSCOPY,
+                                          cif_list=mic_in, constructor=emdb.temperature_type, fmt=float,
+                                          units=const.U_KEL)
+                            set_cif_value(temp.set_temperature_min, 'temperature_min', const.EMD_MICROSCOPY,
+                                          cif_list=mic_in, constructor=emdb.temperature_type, fmt=float,
+                                          units=const.U_KEL)
                             mic.set_temperature(temp)
 
                     def set_el_alignment_procedure(mic, mic_in):
@@ -6701,11 +7258,13 @@ class CifEMDBTranslator(object):
                     @param: mic_id: microscopy id
                     XSD: <xs:element name="tilt_series" type="tilt_series_type" maxOccurs="unbounded">
                     """
+
                     def set_tilt_series_type(tilt_ser, ts_in):
                         """
                         XSD: <xs:complexType name="tilt_series_type"> has
                         .. 3 elements
                         """
+
                         def set_el_axis1(tilt_ser, ts_in):
                             """
                             XSD: <xs:element name="axis1" type="axis_type"/>
@@ -6731,7 +7290,9 @@ class CifEMDBTranslator(object):
                             XSD: <xs:element name="axis_rotation" fixed="90" minOccurs="0">
                             CIF: _emd_microscopy_tomography.dual_tilt_axis_rotation
                             """
-                            set_cif_value(tilt_ser.set_axis_rotation, 'dual_tilt_axis_rotation', const.EMD_MICROSCOPY_TOMOGRAPHY, cif_list=ts_in, constructor=emdb.axis_rotationType, units=const.U_DEG)
+                            set_cif_value(tilt_ser.set_axis_rotation, 'dual_tilt_axis_rotation',
+                                          const.EMD_MICROSCOPY_TOMOGRAPHY, cif_list=ts_in,
+                                          constructor=emdb.axis_rotationType, units=const.U_DEG)
 
                         # element 1
                         set_el_axis1(tilt_ser, ts_in)
@@ -6762,12 +7323,15 @@ class CifEMDBTranslator(object):
                     .. 1 element and
                     .. a choice between 2 elements
                     """
+
                     def set_el_camera_length(cryst_mic, cry_mic_in):
                         """
                         XSD: <xs:element name="camera_length">
                         CIF: _emd_microscopy_crystallography.camera_length
                         """
-                        set_cif_value(cryst_mic.set_camera_length, 'camera_length', const.EMD_MICROSCOPY_CRYSTALLOGRAPHY, cif_list=cry_mic_in, constructor=emdb.camera_lengthType, units=const.U_MM)
+                        set_cif_value(cryst_mic.set_camera_length, 'camera_length',
+                                      const.EMD_MICROSCOPY_CRYSTALLOGRAPHY, cif_list=cry_mic_in,
+                                      constructor=emdb.camera_lengthType, units=const.U_MM)
 
                     cry_mic_dict_in = make_dict(const.EMD_MICROSCOPY_CRYSTALLOGRAPHY, const.K_EMD_MICROSCOPY_ID)
                     if mic_id in cry_mic_dict_in:
@@ -6825,13 +7389,15 @@ class CifEMDBTranslator(object):
                     # all done now: set the list
                     struct_det.set_microscopy_list(microscopy_list)
                 else:
-                    self.logger.critical('')
-                    self.logger.critical(const.REQUIRED_ALERT+'CIF category %s missing', const.EMD_MICROSCOPY)
+                    txt = 'CIF category (%s) is missing.' % const.EMD_MICROSCOPY
+                    self.current_entry_log.error_logs.append(self.ALog(log_text=self.current_entry_log.error_title + txt))
+                    self.log_formatted('self.logger.critical', const.REQUIRED_ALERT + txt)
 
             def set_el_image_processing(struct_det, microscopy_list):
                 """
                 XSD: <xs:element ref="image_processing" maxOccurs="unbounded">
                 """
+
                 def set_base_image_processing(ip_in, im_proc):
                     """
                     Set all elements for base image processing type
@@ -6843,19 +7409,22 @@ class CifEMDBTranslator(object):
                     .. 1 attributes
                     .. 2 elements
                     """
+
                     def set_attr_id(ip_in, im_proc):
                         """
                         XSD: <xs:attribute name="id" type="xs:positiveInteger" use="required"/>
                         CIF: _emd_image_processing.id
                         """
-                        set_cif_value(im_proc.set_image_processing_id, const.K_ID, const.EMD_IMAGE_PROCESSING, cif_list=ip_in, fmt=int)
+                        set_cif_value(im_proc.set_image_processing_id, const.K_ID, const.EMD_IMAGE_PROCESSING,
+                                      cif_list=ip_in, fmt=int)
 
                     def set_el_image_recording_id(ip_in, im_proc):
                         """
                         XSD: <xs:element name="image_recording_id" type="xs:positiveInteger"/>
                         CIF: _emd_image_processing.emd_image_recording_id
                         """
-                        set_cif_value(im_proc.set_image_recording_id, const.K_EMD_IMAGE_RECORDING_ID, const.EMD_IMAGE_PROCESSING, cif_list=ip_in, fmt=int)
+                        set_cif_value(im_proc.set_image_recording_id, const.K_EMD_IMAGE_RECORDING_ID,
+                                      const.EMD_IMAGE_PROCESSING, cif_list=ip_in, fmt=int)
 
                     def set_el_details(ip_in, im_proc):
                         """
@@ -6880,24 +7449,28 @@ class CifEMDBTranslator(object):
                     @param cat_soft_dict_in
                     XSD: <xs:complexType name="particle_selection_type">
                     """
+
                     def set_particle_selection_type(part_sel):
                         """
                         XSD: <xs:complexType name="particle_selection_type"> has
                         ..5 elements
                         """
+
                         def set_el_num_particles_sel(part_sel, ps_in):
                             """
                             XSD: <xs:element name="number_selected" type="xs:positiveInteger"/>
                             CIF: _emd_particle_selection.number_particles_selected 840
                             """
-                            set_cif_value(part_sel.set_number_selected, 'number_particles_selected', const.EMD_PARTICLE_SELECTION, cif_list=ps_in, fmt=int)
+                            set_cif_value(part_sel.set_number_selected, 'number_particles_selected',
+                                          const.EMD_PARTICLE_SELECTION, cif_list=ps_in, fmt=int)
 
                         def set_el_reference_model(part_sel, ps_in):
                             """
                             XSD: <xs:element name="reference_model" type="xs:token" minOccurs="0">
                             CIF: _emd_particle_selection.reference_model
                             """
-                            set_cif_value(part_sel.set_reference_model, 'reference_model', const.EMD_PARTICLE_SELECTION, cif_list=ps_in)
+                            set_cif_value(part_sel.set_reference_model, 'reference_model', const.EMD_PARTICLE_SELECTION,
+                                          cif_list=ps_in)
 
                         def set_el_method(part_sel, ps_in):
                             """
@@ -6910,7 +7483,8 @@ class CifEMDBTranslator(object):
                             """
                             XSD: <xs:element name="software_list" type="software_list_type" minOccurs="0"/>
                             """
-                            set_software_list(const.SOFT_PARTICLE_SELECTION, cat_soft_dict_in, part_sel.set_software_list)
+                            set_software_list(const.SOFT_PARTICLE_SELECTION, cat_soft_dict_in,
+                                              part_sel.set_software_list)
 
                         def set_el_details(part_sel, ps_in):
                             """
@@ -6944,27 +7518,32 @@ class CifEMDBTranslator(object):
                     @param ctf_corr_dict_in: dictionary for CTF correction
                     XSD: <xs:complexType name="ctf_correction_type">
                     """
+
                     def set_ctf_correction_type(ctf_corr):
                         """
                         XSD: <xs:complexType name="ctf_correction_type"> has
                         .. 5 elements
                         """
+
                         def set_el_phase_reversal(ctf_corr, ctf_corr_in):
                             """
                             XSD: <xs:element name="phase_reversal" minOccurs="0">
                             CIF: _emd_ctf_correction.phase_reversal YES/NO
                             """
+
                             def set_phase_reversal_type(ph_rev, ctf_corr_in):
                                 """
                                 XSD: <xs:element name="phase_reversal" minOccurs="0"> has
                                 .. 2 elements
                                 """
+
                                 def set_el_anisotropic(ph_rev):
                                     """
                                     XSD: <xs:element name="anisotropic" type="xs:boolean" minOccurs="0"/>
                                     CIF: _emd_ctf_correction.phase_reversal_anisotropic YES/NO
                                     """
-                                    set_cif_value(ph_rev.set_anisotropic, 'phase_reversal_anisotropic', const.EMD_CTF_CORRECTION, cif_list=ctf_corr_in)
+                                    set_cif_value(ph_rev.set_anisotropic, 'phase_reversal_anisotropic',
+                                                  const.EMD_CTF_CORRECTION, cif_list=ctf_corr_in)
 
                                 def set_el_correction_space(ph_rev, ctf_corr_in):
                                     """
@@ -6972,10 +7551,12 @@ class CifEMDBTranslator(object):
                                     CIF: _emd_ctf_correction.phase_reversal_correction_space
                                         REAL/RECIPROCAL
                                     """
-                                    pra = get_cif_value('phase_reversal_anisotropic', const.EMD_CTF_CORRECTION, ctf_corr_in)
+                                    pra = get_cif_value('phase_reversal_anisotropic', const.EMD_CTF_CORRECTION,
+                                                        ctf_corr_in)
                                     if pra == 'YES':
                                         # Yes if Anisotropic phase reversal (flipping) was performed
-                                        set_cif_value(ph_rev.set_correction_space, 'phase_reversal_correction_space', const.EMD_CTF_CORRECTION, cif_list=ctf_corr_in)
+                                        set_cif_value(ph_rev.set_correction_space, 'phase_reversal_correction_space',
+                                                      const.EMD_CTF_CORRECTION, cif_list=ctf_corr_in)
 
                                 # element 1
                                 set_el_anisotropic(ph_rev)
@@ -6994,17 +7575,20 @@ class CifEMDBTranslator(object):
                             XSD: <xs:element name="amplitude_correction" minOccurs="0">
                             CIF: _emd_ctf_correction.amplitude_correction YES/NO
                             """
+
                             def set_amplitude_correction_type(am_corr, ctf_corr_in):
                                 """
                                 XSD: <xs:element name="amplitude_correction" minOccurs="0"> has
                                 .. 2 elements
                                 """
+
                                 def set_el_factor(am_corr, ctf_corr_in):
                                     """
                                     XSD: <xs:element name="factor" type="xs:float" minOccurs="0">
                                     CIF: _emd_ctf_correction.amplitude_correction_factor
                                     """
-                                    set_cif_value(am_corr.set_factor, 'amplitude_correction', const.EMD_CTF_CORRECTION, cif_list=ctf_corr_in)
+                                    set_cif_value(am_corr.set_factor, 'amplitude_correction', const.EMD_CTF_CORRECTION,
+                                                  cif_list=ctf_corr_in)
 
                                 def set_el_correction_space(am_corr, ctf_corr_in):
                                     """
@@ -7012,7 +7596,8 @@ class CifEMDBTranslator(object):
                                     CIF: _emd_ctf_correction.amplitude_correction_space
                                         REAL/RECIPROCAL
                                     """
-                                    set_cif_value(am_corr.set_correction_space, 'amplitude_correction_space', const.EMD_CTF_CORRECTION, cif_list=ctf_corr_in)
+                                    set_cif_value(am_corr.set_correction_space, 'amplitude_correction_space',
+                                                  const.EMD_CTF_CORRECTION, cif_list=ctf_corr_in)
 
                                 # element 1
                                 set_el_factor(am_corr, ctf_corr_in)
@@ -7033,7 +7618,8 @@ class CifEMDBTranslator(object):
                             XSD: <xs:element name="correction_operation" minOccurs="0">
                             CIF: _emd_ctf_correction.correction_operation
                             """
-                            set_cif_value(ctf_corr.set_correction_operation, 'correction_operation', const.EMD_CTF_CORRECTION, cif_list=ctf_corr_in)
+                            set_cif_value(ctf_corr.set_correction_operation, 'correction_operation',
+                                          const.EMD_CTF_CORRECTION, cif_list=ctf_corr_in)
 
                         def set_el_software_list(ctf_corr, cat_soft_dict_in):
                             """
@@ -7046,7 +7632,8 @@ class CifEMDBTranslator(object):
                             XSD: <xs:element name="details" type="xs:string" minOccurs="0"/>
                             CIF: _emd_ctf_correction.details
                             """
-                            set_cif_value(ctf_corr.set_details, 'details', const.EMD_CTF_CORRECTION, cif_list=ctf_corr_in)
+                            set_cif_value(ctf_corr.set_details, 'details', const.EMD_CTF_CORRECTION,
+                                          cif_list=ctf_corr_in)
 
                         ctf_corr_in = ctf_corr_dict_in[ip_id_in]
                         # element 1
@@ -7074,12 +7661,14 @@ class CifEMDBTranslator(object):
                     @param st_mod_dict_in: the dictionary for startup model
                     XSD: <xs:complexType name="starting_map_type">
                     """
+
                     def set_starting_map_type(st_map, sm_in):
                         """
                         XSD: <xs:complexType name="starting_map_type"> has
                         .. 1 attribute
                         .. 1 element of {1 choice of 6 elements + 1 element}
                         """
+
                         def set_attr_type_of_model(st_map, sm_in):
                             """
                             XSD: <xs:attribute name="type_of_model" type="xs:token"/>
@@ -7095,24 +7684,29 @@ class CifEMDBTranslator(object):
                             .. 1  choice of 6 elements and
                             .. 1 element
                             """
+
                             def set_choice_random_conical_tilt(rct, sm_in):
                                 """
                                 XSD: <xs:element name="random_conical_tilt" minOccurs="0"> has
                                 .. 4 elements
                                 """
+
                                 def set_el_number_images(rct, sm_in):
                                     """
                                     XSD: <xs:element name="number_images" type="xs:positiveInteger" minOccurs="0"/>
                                     CIF: _emd_startup_model.random_conical_tilt_number_images 40
                                     """
-                                    set_cif_value(rct.set_number_images, 'random_conical_tilt_number_images', const.EMD_STARTUP_MODEL, cif_list=sm_in, fmt=int)
+                                    set_cif_value(rct.set_number_images, 'random_conical_tilt_number_images',
+                                                  const.EMD_STARTUP_MODEL, cif_list=sm_in, fmt=int)
 
                                 def set_el_tilt_angle(rct, sm_in):
                                     """
                                     XSD: <xs:element name="tilt_angle" minOccurs="0">
                                     CIF: _emd_startup_model.random_conical_tilt_angle 60
                                     """
-                                    set_cif_value(rct.set_tilt_angle, 'random_conical_tilt_angle', const.EMD_STARTUP_MODEL, cif_list=sm_in, constructor=emdb.tilt_angleType, units=const.U_DEGF)
+                                    set_cif_value(rct.set_tilt_angle, 'random_conical_tilt_angle',
+                                                  const.EMD_STARTUP_MODEL, cif_list=sm_in,
+                                                  constructor=emdb.tilt_angleType, units=const.U_DEGF)
 
                                 def set_el_software_list():
                                     """
@@ -7142,6 +7736,7 @@ class CifEMDBTranslator(object):
                                 XSD: <xs:element name="orthogonal_tilt" minOccurs="0"> has
                                 .. 5 elements
                                 """
+
                                 def set_el_software_list():
                                     """
                                     XSD: <xs:element name="software_list" type="software_list_type" minOccurs="0"/>
@@ -7153,21 +7748,26 @@ class CifEMDBTranslator(object):
                                     XSD: <xs:element name="number_images" type="xs:positiveInteger"/ minOccurs="0">
                                     CIF: _emd_startup_model.orthogonal_tilt_number_images
                                     """
-                                    set_cif_value(orth_tilt.set_number_images, 'orthogonal_tilt_number_images', const.EMD_STARTUP_MODEL, cif_list=sm_in, fmt=int)
+                                    set_cif_value(orth_tilt.set_number_images, 'orthogonal_tilt_number_images',
+                                                  const.EMD_STARTUP_MODEL, cif_list=sm_in, fmt=int)
 
                                 def set_el_tilt_angle1(orth_tilt, sm_in):
                                     """
                                     XSD: <xs:element name="tilt_angle1" minOccurs="0">
                                     CIF: _emd_startup_model.orthogonal_tilt_angle1 (-180 to 180)
                                     """
-                                    set_cif_value(orth_tilt.set_tilt_angle1, 'orthogonal_tilt_angle1', const.EMD_STARTUP_MODEL, cif_list=sm_in, constructor=emdb.tilt_angle1Type, units=const.U_DEGF)
+                                    set_cif_value(orth_tilt.set_tilt_angle1, 'orthogonal_tilt_angle1',
+                                                  const.EMD_STARTUP_MODEL, cif_list=sm_in,
+                                                  constructor=emdb.tilt_angle1Type, units=const.U_DEGF)
 
                                 def set_el_tilt_angle2(orth_tilt, sm_in):
                                     """
                                     XSD: <xs:element name="tilt_angle2"  minOccurs="0">
                                     CIF: _emd_startup_model.orthogonal_tilt_angle2 (-180 to 180)
                                     """
-                                    set_cif_value(orth_tilt.set_tilt_angle2, 'orthogonal_tilt_angle2', const.EMD_STARTUP_MODEL, cif_list=sm_in, constructor=emdb.tilt_angle2Type, units=const.U_DEGF)
+                                    set_cif_value(orth_tilt.set_tilt_angle2, 'orthogonal_tilt_angle2',
+                                                  const.EMD_STARTUP_MODEL, cif_list=sm_in,
+                                                  constructor=emdb.tilt_angle2Type, units=const.U_DEGF)
 
                                 def set_el_details():
                                     """
@@ -7197,17 +7797,20 @@ class CifEMDBTranslator(object):
                                 """
                                 XSD: <xs:element name="pdb_model" type="pdb_model_type" maxOccurs="unbounded" minOccurs="0">
                                 """
+
                                 def set_pdb_model_type(pdb_mt):
                                     """
                                     XSD: <xs:complexType name="pdb_model_type"> has
                                     .. 2 elements
                                     """
+
                                     def set_el_pdb_id(pdb_mt):
                                         """
                                         XSD: <xs:element name="pdb_id" type="pdb_code_type"/>
                                         CIF: _emd_startup_model.pdb_id
                                         """
-                                        set_cif_value(pdb_mt.set_pdb_id, 'pdb_id', const.EMD_STARTUP_MODEL, cif_list=sm_in, parent_el_req=False)
+                                        set_cif_value(pdb_mt.set_pdb_id, 'pdb_id', const.EMD_STARTUP_MODEL,
+                                                      cif_list=sm_in, parent_el_req=False)
 
                                     def set_el_chain_id_list():
                                         """
@@ -7230,7 +7833,8 @@ class CifEMDBTranslator(object):
                                 XSD: <xs:element name="insilico_model" type="xs:token" minOccurs="0"/>
                                 CIF: _emd_startup_model.insilico_model
                                 """
-                                set_cif_value(st_map.set_insilico_model, 'insilico_model', const.EMD_STARTUP_MODEL, cif_list=sm_in)
+                                set_cif_value(st_map.set_insilico_model, 'insilico_model', const.EMD_STARTUP_MODEL,
+                                              cif_list=sm_in)
 
                             def set_choice_other(st_map, sm_in):
                                 """
@@ -7291,12 +7895,14 @@ class CifEMDBTranslator(object):
                     XSD: <xs:complexType name="final_reconstruction_type"> has
                     .. 8 elements
                     """
+
                     def set_el_number_classes_used(final_rec, final_rec_in):
                         """
                         XSD: <xs:element name="number_classes_used" type="xs:positiveInteger" minOccurs="0"/>
                         CIF: _emd_final_reconstruction.number_classes_used 300
                         """
-                        set_cif_value(final_rec.set_number_classes_used, 'number_classes_used', const.EMD_FINAL_RECONSTRUCTION, cif_list=final_rec_in, fmt=int)
+                        set_cif_value(final_rec.set_number_classes_used, 'number_classes_used',
+                                      const.EMD_FINAL_RECONSTRUCTION, cif_list=final_rec_in, fmt=int)
 
                     def set_el_applied_symmetry(final_rec, final_dicts):
                         """
@@ -7304,11 +7910,13 @@ class CifEMDBTranslator(object):
                         CIF: _emd_final_reconstruction.symmetry_type
                             {2D CRYSTAL,3D CRYSTAL,HELICAL,POINT}
                         """
+
                         def set_applied_symmetry_type(app_sym, final_dicts):
                             """
                             XSD: <xs:complexType name="applied_symmetry_type"> has
                             .. 1 element (3 choices)
                             """
+
                             def set_choice_space_group():
                                 """
                                 XSD: <xs:element name="space_group" type="xs:token"/>
@@ -7319,48 +7927,56 @@ class CifEMDBTranslator(object):
                                 XSD: <xs:element name="point_group">
                                 CIF: _emd_symmetry_point.group C1
                                 """
-                                set_cif_value(app_sym.set_point_group, 'group', const.EMD_SYMMETRY_POINT, cif_list=p_sym_in)
+                                set_cif_value(app_sym.set_point_group, 'group', const.EMD_SYMMETRY_POINT,
+                                              cif_list=p_sym_in)
 
                             def set_choice_helical_parameters(h_sym_in):
                                 """
                                 XSD: <xs:element name="helical_parameters" type="helical_parameters_type">
                                 """
+
                                 def set_helical_parameters_type(h_sym, h_sym_in):
                                     """
                                     XSD: <xs:complexType name="helical_parameters_type"> has
                                     .. 4 elements
                                     """
+
                                     def set_el_delta_z(h_sym, h_sym_in):
                                         """
                                         XSD: <xs:element name="delta_z">
                                         CIF: _emd_helical_parameters.delta_z 17.400000
                                         """
-                                        set_cif_value(h_sym.set_delta_z, 'delta_z', const.EMD_HELICAL_PARAMETERS, cif_list=h_sym_in, constructor=emdb.delta_zType, fmt=float, units=const.U_ANG)
+                                        set_cif_value(h_sym.set_delta_z, 'delta_z', const.EMD_HELICAL_PARAMETERS,
+                                                      cif_list=h_sym_in, constructor=emdb.delta_zType, fmt=float,
+                                                      units=const.U_ANG)
 
                                     def set_el_delta_phi(h_sym):
                                         """
                                         XSD: <xs:element name="delta_phi">
                                         CIF: _emd_helical_parameters.delta_phi -34.616000
                                         """
-                                        set_cif_value(h_sym.set_delta_phi, 'delta_phi', const.EMD_HELICAL_PARAMETERS, cif_list=h_sym_in, constructor=emdb.delta_phiType, units=const.U_DEG)
+                                        set_cif_value(h_sym.set_delta_phi, 'delta_phi', const.EMD_HELICAL_PARAMETERS,
+                                                      cif_list=h_sym_in, constructor=emdb.delta_phiType,
+                                                      units=const.U_DEG)
 
                                     def set_el_axial_symmetry(h_sym, h_sym_in):
                                         """
                                         XSD: <xs:element name="axial_symmetry">
                                         CIF: _emd_helical_parameters.axial_symmetry C1
                                         """
-                                        set_cif_value(h_sym.set_axial_symmetry, 'axial_symmetry', const.EMD_HELICAL_PARAMETERS, cif_list=h_sym_in)
+                                        set_cif_value(h_sym.set_axial_symmetry, 'axial_symmetry',
+                                                      const.EMD_HELICAL_PARAMETERS, cif_list=h_sym_in)
 
-#                                     def set_el_hand(h_sym):
-#                                         """
-#                                         XSD: <xs:element name="hand">
-#                                         CIF: _emd_helical_parameters.delta_phi
-#                                         """
-#                                         d_phi_in = get_cif_value('delta_phi', const.EMD_HELICAL_PARAMETERS, h_sym_in)
-#                                         if d_phi_in < 0:
-#                                             set_cif_value(h_sym.set_hand, 'delta_phi', const.EMD_HELICAL_PARAMETERS, cif_list=h_sym_in, cif_value="LEFT HANDED")
-#                                         else:
-#                                             set_cif_value(h_sym.set_hand, 'delta_phi', const.EMD_HELICAL_PARAMETERS, cif_list=h_sym_in, cif_value="RIGHT HANDED")
+                                    #                                     def set_el_hand(h_sym):
+                                    #                                         """
+                                    #                                         XSD: <xs:element name="hand">
+                                    #                                         CIF: _emd_helical_parameters.delta_phi
+                                    #                                         """
+                                    #                                         d_phi_in = get_cif_value('delta_phi', const.EMD_HELICAL_PARAMETERS, h_sym_in)
+                                    #                                         if d_phi_in < 0:
+                                    #                                             set_cif_value(h_sym.set_hand, 'delta_phi', const.EMD_HELICAL_PARAMETERS, cif_list=h_sym_in, cif_value="LEFT HANDED")
+                                    #                                         else:
+                                    #                                             set_cif_value(h_sym.set_hand, 'delta_phi', const.EMD_HELICAL_PARAMETERS, cif_list=h_sym_in, cif_value="RIGHT HANDED")
 
                                     # element 1
                                     set_el_delta_z(h_sym, h_sym_in)
@@ -7369,7 +7985,7 @@ class CifEMDBTranslator(object):
                                     # element 3
                                     set_el_axial_symmetry(h_sym, h_sym_in)
                                     # element 4 - REMOVED
-                                    #set_el_hand(h_sym)
+                                    # set_el_hand(h_sym)
 
                                 h_sym = emdb.helical_parameters_type()
                                 set_helical_parameters_type(h_sym, h_sym_in)
@@ -7405,15 +8021,18 @@ class CifEMDBTranslator(object):
                             {ALGEBRAIC (ARTS),BACK PROJECTION,EXACT BACK PROJECTION,
                             FOURIER SPACE,SIMULTANEOUS ITERATIVE (SIRT)}
                         """
-                        set_cif_value(final_rec.set_algorithm, 'algorithm', const.EMD_FINAL_RECONSTRUCTION, cif_list=final_rec_in)
+                        set_cif_value(final_rec.set_algorithm, 'algorithm', const.EMD_FINAL_RECONSTRUCTION,
+                                      cif_list=final_rec_in)
 
                     def set_el_resolution(final_rec, final_rec_in):
                         """
                         XSD: <xs:element name="resolution" minOccurs="0">
                         CIF: _emd_final_reconstruction.resolution 8.9
                         """
-                        set_cif_value(final_rec.set_resolution, 'resolution', const.EMD_FINAL_RECONSTRUCTION, cif_list=final_rec_in,
-                                      constructor=emdb.resolutionType, fmt=float, units=const.U_ANG, res_type='BY AUTHOR')
+                        set_cif_value(final_rec.set_resolution, 'resolution', const.EMD_FINAL_RECONSTRUCTION,
+                                      cif_list=final_rec_in,
+                                      constructor=emdb.resolutionType, fmt=float, units=const.U_ANG,
+                                      res_type='BY AUTHOR')
 
                     def set_el_resolution_method(final_rec, final_rec_in):
                         """
@@ -7421,7 +8040,8 @@ class CifEMDBTranslator(object):
                         CIF: _emd_final_reconstruction.resolution_method
                         DIFFRACTION PATTERN/LAYERLINES
                         """
-                        set_cif_value(final_rec.set_resolution_method, 'resolution_method', const.EMD_FINAL_RECONSTRUCTION, cif_list=final_rec_in)
+                        set_cif_value(final_rec.set_resolution_method, 'resolution_method',
+                                      const.EMD_FINAL_RECONSTRUCTION, cif_list=final_rec_in)
 
                     def set_el_reconstruction_filtering():
                         """
@@ -7448,7 +8068,8 @@ class CifEMDBTranslator(object):
                         XSD: <xs:element name="details" type="xs:string" minOccurs="0"/>
                         CIF: _emd_final_reconstruction.details
                         """
-                        set_cif_value(final_rec.set_details, 'details', const.EMD_FINAL_RECONSTRUCTION, cif_list=final_rec_in)
+                        set_cif_value(final_rec.set_details, 'details', const.EMD_FINAL_RECONSTRUCTION,
+                                      cif_list=final_rec_in)
 
                     final_rec_dict_in = final_dicts['final_rec_dict_in']
                     final_rec_in = final_rec_dict_in[ip_id_in]
@@ -7479,11 +8100,13 @@ class CifEMDBTranslator(object):
                     @param ang_dict_in: the dictionary containing angle assignments
                     XSD: <xs:complexType name="angle_assignment_type">
                     """
+
                     def set_angle_assignment_type(im_proc, ang, ang_in, cat_soft_dict_in, em_method, parent_req):
                         """
                         XSD: <xs:complexType name="angle_assignment_type"> has
                         .. 4 elements
                         """
+
                         def set_el_type(ang, ang_in, parent_req):
                             """
                             XSD: <xs:element name="type">
@@ -7492,19 +8115,22 @@ class CifEMDBTranslator(object):
                             angle_type = get_cif_value('type', const.EMD_ANGLE_ASSIGNMENT, cif_list=ang_in)
                             if angle_type is not None:
                                 if angle_type == '' or angle_type.isspace():
-                                    self.logger.error(const.REQUIRED_ALERT+'_emd_angle_assignment.type is an empty string. Should be one of ANGULAR RECONSTITUTION,COMMON LINE, NOT APPLICABLE,OTHER,PROJECTION MATCHING,RANDOM ASSIGNMENT,MAXIMUM LIKELIHOOD.')
-                                    self.logger.error('')
+                                    txt = 'Cif item (_emd_angle_assignment.type) is not set. The value given should be one of: ANGULAR RECONSTITUTION, COMMON LINE, NOT APPLICABLE, OTHER, PROJECTION MATCHING, RANDOM ASSIGNMENT, MAXIMUM LIKELIHOOD.'
+                                    self.current_entry_log.error_logs.append(self.ALog(log_text=self.current_entry_log.error_title + txt))
+                                    self.log_formatted('self.logger.error', const.REQUIRED_ALERT + txt)
                             set_cif_value(ang.set_type, 'type', const.EMD_ANGLE_ASSIGNMENT, cif_list=ang_in, parent_el_req=parent_req)
 
                         def set_el_proj_match_processing(ang, ang_in):
                             """
                             XSD: <xs:element name="projection_matching_processing" minOccurs="0">
                             """
+
                             def set_projection_match_proc_type(prj):
                                 """
                                 XSD: <xs:element name="projection_matching_processing" minOccurs="0"> has
                                 .. 3 elements
                                 """
+
                                 def set_el_num_ref_projections(prj, ang_in):
                                     """
                                     XSD: <xs:element name="number_reference_projections" type="xs:positiveInteger"/>
@@ -7518,7 +8144,8 @@ class CifEMDBTranslator(object):
                                     XSD: <xs:element name="merit_function" type="xs:token"/>
                                     CIF: _emd_angle_assignment.projection_matching_merit_function 'Correlation coeficient (CC)'
                                     """
-                                    set_cif_value(prj.set_merit_function, 'projection_matching_merit_function', const.EMD_ANGLE_ASSIGNMENT,
+                                    set_cif_value(prj.set_merit_function, 'projection_matching_merit_function',
+                                                  const.EMD_ANGLE_ASSIGNMENT,
                                                   cif_list=ang_in, parent_el_req=False)
 
                                 def set_el_angular_sampling(prj, ang_in):
@@ -7526,7 +8153,8 @@ class CifEMDBTranslator(object):
                                     XSD: <xs:element name="angular_sampling" minOccurs="0">
                                     CIF: _emd_angle_assignment.projection_matching_angular_sampling
                                     """
-                                    set_cif_value(prj.set_angular_sampling, 'projection_matching_angular_sampling', const.EMD_ANGLE_ASSIGNMENT, cif_list=ang_in,
+                                    set_cif_value(prj.set_angular_sampling, 'projection_matching_angular_sampling',
+                                                  const.EMD_ANGLE_ASSIGNMENT, cif_list=ang_in,
                                                   constructor=emdb.angular_samplingType, fmt=float, units=const.U_DEGF)
 
                                 # element 1
@@ -7535,6 +8163,7 @@ class CifEMDBTranslator(object):
                                 set_el_merit_function(prj, ang_in)
                                 # element 3
                                 set_el_angular_sampling(prj, ang_in)
+
                             ang_type = get_cif_value('type', const.EMD_ANGLE_ASSIGNMENT, ang_in)
                             if ang_type == 'PROJECTION MATCHING':
                                 prj = emdb.projection_matching_processingType()
@@ -7548,11 +8177,13 @@ class CifEMDBTranslator(object):
                             """
                             order = get_cif_value('order', const.EMD_ANGLE_ASSIGNMENT, ang_in)
                             if order == 'INITIAL' and em_method == const.EMM_SP:
-                                set_software_list(const.SOFT_INITIAL_EULER_ASSIGNMENT, cat_soft_dict_in, ang.set_software_list)
+                                set_software_list(const.SOFT_INITIAL_EULER_ASSIGNMENT, cat_soft_dict_in,
+                                                  ang.set_software_list)
                                 if ang.hasContent_():
                                     im_proc.set_initial_angle_assignment(ang)
                             elif order == 'FINAL':
-                                set_software_list(const.SOFT_FINAL_EULER_ASSIGNMENT, cat_soft_dict_in, ang.set_software_list)
+                                set_software_list(const.SOFT_FINAL_EULER_ASSIGNMENT, cat_soft_dict_in,
+                                                  ang.set_software_list)
                                 if ang.hasContent_():
                                     im_proc.set_final_angle_assignment(ang)
 
@@ -7585,28 +8216,33 @@ class CifEMDBTranslator(object):
                     @param cryst_dict_in: the dictionary with crystalography parameters
                     @param dict_category: category in cifused for the dictionary
                     """
+
                     def set_crystal_parameters_type(cryst, cryst_in, dict_category, parent_req):
                         """
                         XSD: <xs:complexType name="crystal_parameters_type"> has
                         .. 1 element and
                         .. 1 choice of 2 elements
                         """
+
                         def set_el_unit_cell(cryst, cryst_in, dict_category, parent_req):
                             """
                             XSD: <xs:element name="unit_cell" type="unit_cell_type"/>
                             """
+
                             def set_unit_cell_type(u_cell, cryst_in, dict_category, parent_req):
                                 """
                                 XSD: <xs:complexType name="unit_cell_type"> has
                                 .. 7 elements
                                 """
+
                                 def set_el_a(u_cell, cryst_in, dict_category):
                                     """
                                     XSD: <xs:element name="a" type="cell_type">
                                     CIF: _emd_two_d_crystal_parameters.a 62.3
                                     CIF: _emd_three_d_crystal_parameters.a 62.4
                                     """
-                                    set_cif_value(u_cell.set_a, 'a', dict_category, cif_list=cryst_in, constructor=emdb.cell_type, units=const.U_ANG)
+                                    set_cif_value(u_cell.set_a, 'a', dict_category, cif_list=cryst_in,
+                                                  constructor=emdb.cell_type, units=const.U_ANG)
 
                                 def set_el_b(u_cell, cryst_in, dict_category):
                                     """
@@ -7614,7 +8250,8 @@ class CifEMDBTranslator(object):
                                     CIF: _emd_two_d_crystal_parameters.b 62.3
                                     CIF: _emd_three_d_crystal_parameters.b 62.4
                                     """
-                                    set_cif_value(u_cell.set_b, 'b', dict_category, cif_list=cryst_in, constructor=emdb.cell_type, units=const.U_ANG)
+                                    set_cif_value(u_cell.set_b, 'b', dict_category, cif_list=cryst_in,
+                                                  constructor=emdb.cell_type, units=const.U_ANG)
 
                                 def set_el_c(u_cell, cryst_in, dict_category):
                                     """
@@ -7622,7 +8259,8 @@ class CifEMDBTranslator(object):
                                     CIF: _emd_two_d_crystal_parameters.c 62.4
                                     CIF: _emd_three_d_crystal_parameters.c
                                     """
-                                    set_cif_value(u_cell.set_c, 'c', dict_category, cif_list=cryst_in, constructor=emdb.cell_type, units=const.U_ANG)
+                                    set_cif_value(u_cell.set_c, 'c', dict_category, cif_list=cryst_in,
+                                                  constructor=emdb.cell_type, units=const.U_ANG)
 
                                 def set_el_c_sampling_length(u_cell, cryst_in, dict_category, parent_req):
                                     """
@@ -7631,7 +8269,8 @@ class CifEMDBTranslator(object):
                                     CIF: _emd_three_d_crystal_parameters.c_sampling_length
                                     """
                                     set_cif_value(u_cell.set_c_sampling_length, 'c_sampling_length', dict_category,
-                                                  cif_list=cryst_in, constructor=emdb.cell_type, units=const.U_ANG, parent_el_req=parent_req)
+                                                  cif_list=cryst_in, constructor=emdb.cell_type, units=const.U_ANG,
+                                                  parent_el_req=parent_req)
 
                                 def set_el_gamma(u_cell, cryst_in, dict_category, parent_req):
                                     """
@@ -7640,7 +8279,8 @@ class CifEMDBTranslator(object):
                                     CIF: _emd_three_d_crystal_parameters.gamma 120.0
                                     """
                                     set_cif_value(u_cell.set_gamma, 'gamma', dict_category, cif_list=cryst_in,
-                                                  constructor=emdb.cell_angle_type, units=const.U_DEG, parent_el_req=parent_req)
+                                                  constructor=emdb.cell_angle_type, units=const.U_DEG,
+                                                  parent_el_req=parent_req)
 
                                 def set_el_alpha(u_cell, cryst_in, dict_category, parent_req):
                                     """
@@ -7648,7 +8288,8 @@ class CifEMDBTranslator(object):
                                     CIF: _emd_three_d_crystal_parameters.alpha 120.0
                                     """
                                     set_cif_value(u_cell.set_alpha, 'alpha', dict_category, cif_list=cryst_in,
-                                                  constructor=emdb.cell_angle_type, units=const.U_DEG, parent_el_req=parent_req)
+                                                  constructor=emdb.cell_angle_type, units=const.U_DEG,
+                                                  parent_el_req=parent_req)
 
                                 def set_el_beta(u_cell, cryst_in, dict_category, parent_req):
                                     """
@@ -7656,7 +8297,8 @@ class CifEMDBTranslator(object):
                                     CIF: _emd_three_d_crystal_parameters.beta 120.0
                                     """
                                     set_cif_value(u_cell.set_beta, 'beta', dict_category, cif_list=cryst_in,
-                                                  constructor=emdb.cell_angle_type, units=const.U_DEG, parent_el_req=parent_req)
+                                                  constructor=emdb.cell_angle_type, units=const.U_DEG,
+                                                  parent_el_req=parent_req)
 
                                 # element 1
                                 set_el_a(u_cell, cryst_in, dict_category)
@@ -7691,9 +8333,11 @@ class CifEMDBTranslator(object):
                             CIF: _emd_two_d_crystal_parameters.plane_group
                             """
                             if dict_category == const.EMD_THREE_D_CRYSTAL_PARAMETERS:
-                                set_cif_value(cryst.set_space_group, 'space_group', const.EMD_THREE_D_CRYSTAL_PARAMETERS, cif_list=cryst_in)
+                                set_cif_value(cryst.set_space_group, 'space_group',
+                                              const.EMD_THREE_D_CRYSTAL_PARAMETERS, cif_list=cryst_in)
                             elif dict_category == const.EMD_TWO_D_CRYSTAL_PARAMETERS:
-                                set_cif_value(cryst.set_plane_group, 'plane_group', const.EMD_TWO_D_CRYSTAL_PARAMETERS, cif_list=cryst_in)
+                                set_cif_value(cryst.set_plane_group, 'plane_group', const.EMD_TWO_D_CRYSTAL_PARAMETERS,
+                                              cif_list=cryst_in)
 
                         # element 1
                         set_el_unit_cell(cryst, cryst_in, dict_category, parent_req)
@@ -7719,25 +8363,28 @@ class CifEMDBTranslator(object):
                     p_sym_dict_in, h_sym_dict_in
                     XSD: <xs:complexType name="non_subtom_final_reconstruction_type">
                     """
+
                     def set_non_subtom_final_rec_type(spfr):
                         """
                         XSD: <xs:complexType name="single_particle_final_reconstruction_type"> has
                         .. a base (reconstruction_type) and
                         .. 1 element
                         """
+
                         def set_el_number_images_used(spfr, f_rec_in):
                             """
                             XSD: <xs:element name="number_images_used" type="xs:positiveInteger" minOccurs="0">
                             CIF: _emd_final_reconstruction.number_images_used 300
                             """
-                            set_cif_value(spfr.set_number_images_used, 'number_images_used', const.EMD_FINAL_RECONSTRUCTION, cif_list=f_rec_in, fmt=int)
+                            set_cif_value(spfr.set_number_images_used, 'number_images_used',
+                                          const.EMD_FINAL_RECONSTRUCTION, cif_list=f_rec_in, fmt=int)
 
                         # base
-                        final_rec_dicts = {'final_rec_dict_in':non_st_dicts['final_rec_dict_in'],
-                                           'cat_soft_dict_in':non_st_dicts['cat_soft_dict_in'],
-                                           'p_sym_dict_in':non_st_dicts['p_sym_dict_in'],
-                                           'h_sym_dict_in':non_st_dicts['h_sym_dict_in']
-                                          }
+                        final_rec_dicts = {'final_rec_dict_in': non_st_dicts['final_rec_dict_in'],
+                                           'cat_soft_dict_in': non_st_dicts['cat_soft_dict_in'],
+                                           'p_sym_dict_in': non_st_dicts['p_sym_dict_in'],
+                                           'h_sym_dict_in': non_st_dicts['h_sym_dict_in']
+                                           }
                         set_final_reconstruction(spfr, ip_id_in, final_rec_dicts)
                         # element 1
                         set_el_number_images_used(spfr, f_rec_in)
@@ -7763,6 +8410,7 @@ class CifEMDBTranslator(object):
                     XSD: <xs:group name="single_particle_proc_add_group"> has
                     .. 9 elements
                     """
+
                     def set_el_particle_selection(ip_id_in, im_proc, sp_dict_list):
                         """
                         XSD: <xs:element name="particle_selection" type="particle_selection_type" maxOccurs="unbounded"/>
@@ -7791,11 +8439,11 @@ class CifEMDBTranslator(object):
                         """
                         XSD: <xs:element name="final_reconstruction" type="single_particle_final_reconstruction_type"/>
                         """
-                        non_st_dicts = {'final_rec_dict_in':sp_dict_list['final_rec_dict_in'],
-                                        'cat_soft_dict_in':sp_dict_list['cat_soft_dict_in'],
-                                        'p_sym_dict_in':sp_dict_list['p_sym_dict_in'],
-                                        'h_sym_dict_in':sp_dict_list['h_sym_dict_in']
-                                       }
+                        non_st_dicts = {'final_rec_dict_in': sp_dict_list['final_rec_dict_in'],
+                                        'cat_soft_dict_in': sp_dict_list['cat_soft_dict_in'],
+                                        'p_sym_dict_in': sp_dict_list['p_sym_dict_in'],
+                                        'h_sym_dict_in': sp_dict_list['h_sym_dict_in']
+                                        }
                         set_non_sub_tom_final_recon(ip_id_in, im_proc, non_st_dicts)
 
                     def set_el_initial_angle_assignment():
@@ -7808,7 +8456,8 @@ class CifEMDBTranslator(object):
                         XSD: <xs:element name="final_angle_assignment" type="angle_assignment_type" minOccurs="0"/>
                         """
                         if ip_id_in in sp_dict_list['ang_dict_in']:
-                            set_angle_assignments(im_proc, ip_id_in, sp_dict_list['ang_dict_in'], sp_dict_list['cat_soft_dict_in'], em_method, parent_req=False)
+                            set_angle_assignments(im_proc, ip_id_in, sp_dict_list['ang_dict_in'],
+                                                  sp_dict_list['cat_soft_dict_in'], em_method, parent_req=False)
 
                     def set_el_final_multi_ref_align():
                         """
@@ -7871,30 +8520,34 @@ class CifEMDBTranslator(object):
                     XSD: <xs:group name="subtomogram_averaging_proc_add_group"> has
                     .. 7 elements
                     """
+
                     def set_el_final_reconstruction(im_proc, subtom_dicts):
                         """
                         XSD: <xs:element name="final_reconstruction" type="subtomogram_final_reconstruction_type" minOccurs="0"/>
                         """
+
                         def set_subtom_final_rec_type(stfr, f_rec_in, subtom_dicts):
                             """
                             XSD: <xs:complexType name="subtomogram_final_reconstruction_type"> has
                             .. a base (final_reconstruction_type) and
                             .. 1 element
                             """
+
                             def set_el_number_subtomograms_used(stfr, f_rec_in):
                                 """
                                 XSD: <xs:element name="number_subtomograms_used" type="xs:positiveInteger" minOccurs="0">
                                 CIF: _emd_final_reconstruction.number_images_used 300
                                 """
-                                set_cif_value(stfr.set_number_subtomograms_used, 'number_images_used', const.EMD_FINAL_RECONSTRUCTION, cif_list=f_rec_in, fmt=int)
+                                set_cif_value(stfr.set_number_subtomograms_used, 'number_images_used',
+                                              const.EMD_FINAL_RECONSTRUCTION, cif_list=f_rec_in, fmt=int)
 
                             # base
                             final_rec_dicts = {
-                                'final_rec_dict_in':subtom_dicts['final_rec_dict_in'],
-                                'cat_soft_dict_in':subtom_dicts['cat_soft_dict_in'],
-                                'p_sym_dict_in':subtom_dicts['p_sym_dict_in'],
-                                'h_sym_dict_in':subtom_dicts['h_sym_dict_in']
-                                }
+                                'final_rec_dict_in': subtom_dicts['final_rec_dict_in'],
+                                'cat_soft_dict_in': subtom_dicts['cat_soft_dict_in'],
+                                'p_sym_dict_in': subtom_dicts['p_sym_dict_in'],
+                                'h_sym_dict_in': subtom_dicts['h_sym_dict_in']
+                            }
                             set_final_reconstruction(stfr, ip_id_in, final_rec_dicts)
                             # element 1
                             set_el_number_subtomograms_used(stfr, f_rec_in)
@@ -7910,38 +8563,44 @@ class CifEMDBTranslator(object):
                         """
                         XSD:  <xs:element name="extraction">
                         """
+
                         def set_extraction_type(extraction, vs_in, subtom_dicts):
                             """
                             XSD:  <xs:element name="extraction"> has
                             .. 6 elements
                             """
+
                             def set_el_number_tomograms(extraction, vs_in):
                                 """
                                 XSD: <xs:element name="number_tomograms" type="xs:positiveInteger"/>
                                 CIF: _emd_volume_selection.number_tomograms 20
                                 """
-                                set_cif_value(extraction.set_number_tomograms, 'number_tomograms', const.EMD_VOLUME_SELECTION, cif_list=vs_in, fmt=int)
+                                set_cif_value(extraction.set_number_tomograms, 'number_tomograms',
+                                              const.EMD_VOLUME_SELECTION, cif_list=vs_in, fmt=int)
 
                             def set_el_number_images_used(extraction, vs_in):
                                 """
                                 XSD: <xs:element name="number_images_used" type="xs:positiveInteger"/>
                                 CIF: _emd_volume_selection.number_volumes_extracted 840
                                 """
-                                set_cif_value(extraction.set_number_images_used, 'number_volumes_extracted', const.EMD_VOLUME_SELECTION, cif_list=vs_in, fmt=int)
+                                set_cif_value(extraction.set_number_images_used, 'number_volumes_extracted',
+                                              const.EMD_VOLUME_SELECTION, cif_list=vs_in, fmt=int)
 
                             def set_el_reference_model(extraction, vs_in):
                                 """
                                 XSD: <xs:element name="reference_model" type="xs:token" minOccurs="0">
                                 CIF: _emd_volume_selection.reference_model
                                 """
-                                set_cif_value(extraction.set_reference_model, 'reference_model', const.EMD_VOLUME_SELECTION, cif_list=vs_in)
+                                set_cif_value(extraction.set_reference_model, 'reference_model',
+                                              const.EMD_VOLUME_SELECTION, cif_list=vs_in)
 
                             def set_el_method(extraction, vs_in):
                                 """
                                 XSD: <xs:element name="method" type="xs:string" minOccurs="0">
                                 CIF: _emd_volume_selection.method 'volumes picked interactively'
                                 """
-                                set_cif_value(extraction.set_method, 'method', const.EMD_VOLUME_SELECTION, cif_list=vs_in)
+                                set_cif_value(extraction.set_method, 'method', const.EMD_VOLUME_SELECTION,
+                                              cif_list=vs_in)
 
                             def set_el_software_list(extraction, subtom_dicts):
                                 """
@@ -7955,7 +8614,8 @@ class CifEMDBTranslator(object):
                                 XSD: <xs:element name="details" type="xs:string" minOccurs="0"/>
                                 CIF: _emd_volume_selection.details
                                 """
-                                set_cif_value(extraction.set_details, 'details', const.EMD_VOLUME_SELECTION, cif_list=vs_in)
+                                set_cif_value(extraction.set_details, 'details', const.EMD_VOLUME_SELECTION,
+                                              cif_list=vs_in)
 
                             # element 1
                             set_el_number_tomograms(extraction, vs_in)
@@ -8010,16 +8670,19 @@ class CifEMDBTranslator(object):
                         ang_dict_in = subtom_dicts['ang_dict_in']
                         cat_soft_dict_in = subtom_dicts['cat_soft_dict_in']
                         if ip_id_in in ang_dict_in:
-                            set_angle_assignments(im_proc, ip_id_in, ang_dict_in, cat_soft_dict_in, em_method, parent_req=False)
+                            set_angle_assignments(im_proc, ip_id_in, ang_dict_in, cat_soft_dict_in, em_method,
+                                                  parent_req=False)
 
                     def set_el_crystal_parameters(im_proc, subtom_dicts):
                         """
                         XSD: <xs:element name="crystal_parameters" type="crystal_parameters_type" minOccurs="0"/>
                         """
                         if ip_id_in in subtom_dicts['two_d_cryst_dict_in']:
-                            set_crystal_parameters(ip_id_in, im_proc, subtom_dicts['two_d_cryst_dict_in'], const.EMD_TWO_D_CRYSTAL_PARAMETERS, parent_req=False)
+                            set_crystal_parameters(ip_id_in, im_proc, subtom_dicts['two_d_cryst_dict_in'],
+                                                   const.EMD_TWO_D_CRYSTAL_PARAMETERS, parent_req=False)
                         if ip_id_in in subtom_dicts['three_d_cryst_dict_in']:
-                            set_crystal_parameters(ip_id_in, im_proc, subtom_dicts['three_d_cryst_dict_in'], const.EMD_THREE_D_CRYSTAL_PARAMETERS, parent_req=False)
+                            set_crystal_parameters(ip_id_in, im_proc, subtom_dicts['three_d_cryst_dict_in'],
+                                                   const.EMD_THREE_D_CRYSTAL_PARAMETERS, parent_req=False)
 
                     # element 1
                     set_el_final_reconstruction(im_proc, subtom_dicts)
@@ -8050,30 +8713,34 @@ class CifEMDBTranslator(object):
                     XSD: <xs:group name="helical_processing_add_group"> has
                     .. 9 elements
                     """
+
                     def set_el_final_reconstruction(im_proc, ip_id_in, hel_dict_list):
                         """
                         XSD: <xs:element name="final_reconstruction" type="non_subtom_final_reconstruction_type" minOccurs="0"/>
                         """
+
                         def set_non_subtom_final_rec_type(nstfr, f_rec_in):
                             """
                             XSD: <xs:complexType name="non_subtom_final_reconstruction_type"> has
                             .. a base (reconstruction_type) and
                             .. 1 element
                             """
+
                             def set_el_number_images_used(nstfr, f_rec_in):
                                 """
                                 XSD: <xs:element name="number_images_used" type="xs:positiveInteger" minOccurs="0">
                                 CIF: _emd_final_reconstruction.number_images_used 300
                                 """
-                                set_cif_value(nstfr.set_number_images_used, 'number_images_used', const.EMD_FINAL_RECONSTRUCTION, cif_list=f_rec_in, fmt=int)
+                                set_cif_value(nstfr.set_number_images_used, 'number_images_used',
+                                              const.EMD_FINAL_RECONSTRUCTION, cif_list=f_rec_in, fmt=int)
 
                             # base
                             final_rec_dicts = {
-                                'final_rec_dict_in':hel_dict_list['final_rec_dict_in'],
-                                'cat_soft_dict_in':hel_dict_list['cat_soft_dict_in'],
-                                'p_sym_dict_in':hel_dict_list['p_sym_dict_in'],
-                                'h_sym_dict_in':hel_dict_list['h_sym_dict_in']
-                                }
+                                'final_rec_dict_in': hel_dict_list['final_rec_dict_in'],
+                                'cat_soft_dict_in': hel_dict_list['cat_soft_dict_in'],
+                                'p_sym_dict_in': hel_dict_list['p_sym_dict_in'],
+                                'h_sym_dict_in': hel_dict_list['h_sym_dict_in']
+                            }
                             set_final_reconstruction(nstfr, ip_id_in, final_rec_dicts)
                             # element 1
                             set_el_number_images_used(nstfr, f_rec_in)
@@ -8097,17 +8764,20 @@ class CifEMDBTranslator(object):
                         """
                         XSD: <xs:element name="segment_selection" type="segment_selection_type" maxOccurs="unbounded" minOccurs="0">
                         """
+
                         def set_segment_selection_type(seg_sel, ps_in):
                             """
                             XSD: <xs:complexType name="segment_selection_type"> has
                             .. 6 elements
                             """
+
                             def set_el_number_segments(seg_sel, ps_in):
                                 """
                                 XSD: <xs:element name="number_selected" type="xs:positiveInteger" minOccurs="0"/>
                                 CIF: _emd_particle_selection.number_particles_selected
                                 """
-                                set_cif_value(seg_sel.set_number_selected, 'number_particles_selected', const.EMD_PARTICLE_SELECTION, cif_list=ps_in, fmt=int)
+                                set_cif_value(seg_sel.set_number_selected, 'number_particles_selected',
+                                              const.EMD_PARTICLE_SELECTION, cif_list=ps_in, fmt=int)
 
                             def set_el_segment_length():
                                 """
@@ -8131,14 +8801,16 @@ class CifEMDBTranslator(object):
                                 """
                                 XSD: <xs:element name="software_list" type="software_list_type" minOccurs="0"/>
                                 """
-                                set_software_list(const.SOFT_PARTICLE_SELECTION, hel_dict_list['cat_soft_dict_in'], seg_sel.set_software_list)
+                                set_software_list(const.SOFT_PARTICLE_SELECTION, hel_dict_list['cat_soft_dict_in'],
+                                                  seg_sel.set_software_list)
 
                             def set_el_details(seg_sel, ps_in):
                                 """
                                 XSD: <xs:element name="details" type="xs:string" minOccurs="0"/>
                                 CIF: _emd_particle_selection.details
                                 """
-                                set_cif_value(seg_sel.set_details, 'details', const.EMD_PARTICLE_SELECTION, cif_list=ps_in)
+                                set_cif_value(seg_sel.set_details, 'details', const.EMD_PARTICLE_SELECTION,
+                                              cif_list=ps_in)
 
                             # element 1
                             set_el_number_segments(seg_sel, ps_in)
@@ -8166,6 +8838,7 @@ class CifEMDBTranslator(object):
                         """
                         XSD: <xs:element name="refinement" type="refinement_type"/>
                         """
+
                         def set_refinement_type():
                             """
                             XSD: <xs:complexType name="refinement_type"> has
@@ -8197,6 +8870,7 @@ class CifEMDBTranslator(object):
                         XSD: <xs:complexType name="layer_lines_type"> has
                         .. 4 elements
                         """
+
                         def set_layer_lines_type():
                             """
                             XSD: <xs:element name="number_helices"/>
@@ -8222,7 +8896,8 @@ class CifEMDBTranslator(object):
                         ang_dict_in = hel_dict_list['ang_dict_in']
                         cat_soft_dict_in = hel_dict_list['cat_soft_dict_in']
                         if ip_id_in in ang_dict_in:
-                            set_angle_assignments(im_proc, ip_id_in, ang_dict_in, cat_soft_dict_in, em_method, parent_req=False)
+                            set_angle_assignments(im_proc, ip_id_in, ang_dict_in, cat_soft_dict_in, em_method,
+                                                  parent_req=False)
 
                     def set_el_crystal_parameters(ip_id_in, im_proc, hel_dict_list):
                         """
@@ -8230,10 +8905,12 @@ class CifEMDBTranslator(object):
                         """
                         two_d_cryst_dict_in = hel_dict_list['two_d_cryst_dict_in']
                         if ip_id_in in two_d_cryst_dict_in:
-                            set_crystal_parameters(ip_id_in, im_proc, two_d_cryst_dict_in, const.EMD_TWO_D_CRYSTAL_PARAMETERS, parent_req=False)
+                            set_crystal_parameters(ip_id_in, im_proc, two_d_cryst_dict_in,
+                                                   const.EMD_TWO_D_CRYSTAL_PARAMETERS, parent_req=False)
                         three_d_cryst_dict_in = hel_dict_list['three_d_cryst_dict_in']
                         if ip_id_in in three_d_cryst_dict_in:
-                            set_crystal_parameters(ip_id_in, im_proc, three_d_cryst_dict_in, const.EMD_THREE_D_CRYSTAL_PARAMETERS, parent_req=False)
+                            set_crystal_parameters(ip_id_in, im_proc, three_d_cryst_dict_in,
+                                                   const.EMD_THREE_D_CRYSTAL_PARAMETERS, parent_req=False)
 
                     # element 1
                     set_el_final_reconstruction(im_proc, ip_id_in, hel_dict_list)
@@ -8268,14 +8945,15 @@ class CifEMDBTranslator(object):
                     XSD: <xs:group name="crystallography_proc_add_group"> has
                     .. 9 elements
                     """
+
                     def set_el_final_reconstruction(im_proc, ip_id_in):
                         """
                         XSD: <xs:element name="final_reconstruction" type="non_subtom_final_reconstruction_type" minOccurs="0"/>
                         """
-                        non_st_dicts = {'final_rec_dict_in':cryst_dicts['final_rec_dict_in'],
-                                        'cat_soft_dict_in':cryst_dicts['cat_soft_dict_in'],
-                                        'p_sym_dict_in':cryst_dicts['p_sym_dict_in'],
-                                        'h_sym_dict_in':cryst_dicts['h_sym_dict_in']}
+                        non_st_dicts = {'final_rec_dict_in': cryst_dicts['final_rec_dict_in'],
+                                        'cat_soft_dict_in': cryst_dicts['cat_soft_dict_in'],
+                                        'p_sym_dict_in': cryst_dicts['p_sym_dict_in'],
+                                        'h_sym_dict_in': cryst_dicts['h_sym_dict_in']}
                         set_non_sub_tom_final_recon(ip_id_in, im_proc, non_st_dicts)
 
                     def set_el_crystal_parameters(im_proc, ip_id_in, cryst_dicts):
@@ -8284,10 +8962,12 @@ class CifEMDBTranslator(object):
                         """
                         two_d_cryst_dict_in = cryst_dicts['two_d_cryst_dict_in']
                         if ip_id_in in two_d_cryst_dict_in:
-                            set_crystal_parameters(ip_id_in, im_proc, two_d_cryst_dict_in, const.EMD_TWO_D_CRYSTAL_PARAMETERS, parent_req=False)
+                            set_crystal_parameters(ip_id_in, im_proc, two_d_cryst_dict_in,
+                                                   const.EMD_TWO_D_CRYSTAL_PARAMETERS, parent_req=False)
                         three_d_cryst_dict_in = cryst_dicts['three_d_cryst_dict_in']
                         if ip_id_in in three_d_cryst_dict_in:
-                            set_crystal_parameters(ip_id_in, im_proc, three_d_cryst_dict_in, const.EMD_THREE_D_CRYSTAL_PARAMETERS, parent_req=False)
+                            set_crystal_parameters(ip_id_in, im_proc, three_d_cryst_dict_in,
+                                                   const.EMD_THREE_D_CRYSTAL_PARAMETERS, parent_req=False)
 
                     def set_el_startup_model(im_proc, ip_id_in):
                         """
@@ -8309,11 +8989,13 @@ class CifEMDBTranslator(object):
                         """
                         XSD: <xs:element name="molecular_replacement">
                         """
+
                         def set_molecular_replacement_type(mol_repl, cryst_dicts):
                             """
                             XSD: <xs:element name="molecular_replacement"> has
                             .. 3 elements
                             """
+
                             def set_el_starting_model():
                                 """
                                 XSD: <xs:element name="starting_model" maxOccurs="unbounded"> has
@@ -8340,7 +9022,8 @@ class CifEMDBTranslator(object):
                                 """
                                 XSD: <xs:element name="software_list" type="software_list_type" minOccurs="0"/>
                                 """
-                                set_software_list(const.MOLECULAR_REPLACEMENT, cryst_dicts['cat_soft_dict_in'], mol_repl.set_software_list)
+                                set_software_list(const.MOLECULAR_REPLACEMENT, cryst_dicts['cat_soft_dict_in'],
+                                                  mol_repl.set_software_list)
 
                             # element 1
                             set_el_starting_model()
@@ -8358,63 +9041,73 @@ class CifEMDBTranslator(object):
                         """
                         XSD: <xs:element name="lattice_distortion_correction_software_list" type="software_list_type" minOccurs="0"/>
                         """
-                        set_software_list(const.LATTICE_DISTORTION_CORRECTION, cryst_dicts['cat_soft_dict_in'], im_proc.set_lattice_distortion_correction_software_list)
+                        set_software_list(const.LATTICE_DISTORTION_CORRECTION, cryst_dicts['cat_soft_dict_in'],
+                                          im_proc.set_lattice_distortion_correction_software_list)
 
                     def set_el_sym_det_software_list(im_proc, cryst_dicts):
                         """
                         XSD: <xs:element name="symmetry_determination_software_list" type="software_list_type" minOccurs="0"/>
                         """
-                        set_software_list(const.SYMMETRY_DETERMINATION, cryst_dicts['cat_soft_dict_in'], im_proc.set_symmetry_determination_software_list)
+                        set_software_list(const.SYMMETRY_DETERMINATION, cryst_dicts['cat_soft_dict_in'],
+                                          im_proc.set_symmetry_determination_software_list)
 
                     def set_el_merging_software_list(im_proc, cryst_dicts):
                         """
                         XSD: <xs:element name="merging_software_list" type="software_list_type" minOccurs="0"/>
                         """
-                        set_software_list(const.CRYSTALLOGRAPHY_MERGING, cryst_dicts['cat_soft_dict_in'], im_proc.set_merging_software_list)
+                        set_software_list(const.CRYSTALLOGRAPHY_MERGING, cryst_dicts['cat_soft_dict_in'],
+                                          im_proc.set_merging_software_list)
 
                     def set_el_cryst_statistics(im_proc, cryst_dicts):
                         """
                         XSD: <xs:element name="crystallography_statistics" type="crystallography_statistics_type" minOccurs="0"/>
                         """
+
                         def set_cryst_statistics_type(cry_stats, cry_stats_in):
                             """
                             XSD: <xs:complexType name="crystallography_statistics_type"> has
                             .. 11 elements
                             """
+
                             def set_el_num_int_measured(cry_stats, cry_stats_in):
                                 """
                                 XSD: <xs:element name="number_intensities_measured" type="xs:positiveInteger"/>
                                 CIF: _emd_crystallography_stats.number_intensities_measured 1590
                                 """
-                                set_cif_value(cry_stats.set_number_intensities_measured, 'number_intensities_measured', const.EMD_CRYSTALLOGRAPHY_STATS, cif_list=cry_stats_in, fmt=int)
+                                set_cif_value(cry_stats.set_number_intensities_measured, 'number_intensities_measured',
+                                              const.EMD_CRYSTALLOGRAPHY_STATS, cif_list=cry_stats_in, fmt=int)
 
                             def set_el_number_structure_factors(cry_stats, cry_stats_in):
                                 """
                                 XSD: <xs:element name="number_structure_factors" type="xs:positiveInteger"/>
                                 CIF: _emd_crystallography_stats.number_structure_factors 1590
                                 """
-                                set_cif_value(cry_stats.set_number_structure_factors, 'number_structure_factors', const.EMD_CRYSTALLOGRAPHY_STATS, cif_list=cry_stats_in, fmt=int)
+                                set_cif_value(cry_stats.set_number_structure_factors, 'number_structure_factors',
+                                              const.EMD_CRYSTALLOGRAPHY_STATS, cif_list=cry_stats_in, fmt=int)
 
                             def set_el_fourier_space_coverage(cry_stats, cry_stats_in):
                                 """
                                 XSD: <xs:element name="fourier_space_coverage" type="xs:float">
                                 CIF: _emd_crystallography_stats.fourier_space_coverage 89.3
                                 """
-                                set_cif_value(cry_stats.set_fourier_space_coverage, 'fourier_space_coverage', const.EMD_CRYSTALLOGRAPHY_STATS, cif_list=cry_stats_in, fmt=float)
+                                set_cif_value(cry_stats.set_fourier_space_coverage, 'fourier_space_coverage',
+                                              const.EMD_CRYSTALLOGRAPHY_STATS, cif_list=cry_stats_in, fmt=float)
 
                             def set_el_r_sym(cry_stats, cry_stats_in):
                                 """
                                 XSD: <xs:element name="r_sym" type="xs:float"/>
                                 CIF: _emd_crystallography_stats.r_sym 0.244
                                 """
-                                set_cif_value(cry_stats.set_r_sym, 'r_sym', const.EMD_CRYSTALLOGRAPHY_STATS, cif_list=cry_stats_in, fmt=float)
+                                set_cif_value(cry_stats.set_r_sym, 'r_sym', const.EMD_CRYSTALLOGRAPHY_STATS,
+                                              cif_list=cry_stats_in, fmt=float)
 
                             def set_el_r_merge(cry_stats, cry_stats_in):
                                 """
                                 XSD: <xs:element name="r_merge" type="xs:float"/>
                                 CIF: _emd_crystallography_stats.r_merge 0.198
                                 """
-                                set_cif_value(cry_stats.set_r_merge, 'r_merge', const.EMD_CRYSTALLOGRAPHY_STATS, cif_list=cry_stats_in, fmt=float)
+                                set_cif_value(cry_stats.set_r_merge, 'r_merge', const.EMD_CRYSTALLOGRAPHY_STATS,
+                                              cif_list=cry_stats_in, fmt=float)
 
                             def set_el_overall_phase_error(cry_stats, cry_stats_in):
                                 """
@@ -8423,14 +9116,13 @@ class CifEMDBTranslator(object):
                                 """
                                 phase_error = get_cif_value('overall_phase_error', const.EMD_CRYSTALLOGRAPHY_STATS, cry_stats_in)
                                 if phase_error is None:
-                                    phase_error = 0.0 # chosen default value
-                                    self.logger.warning('')
-                                    self.logger.warning(const.CHANGE_MADE+'overall_phase_error is set to (%s) as no value is given and it should be', phase_error)
-                                    set_cif_value(cry_stats.set_overall_phase_error, 'overall_phase_error',
-                                                  const.EMD_CRYSTALLOGRAPHY_STATS, cif_list=cry_stats_in, cif_value=phase_error)
+                                    phase_error = 0.0  # chosen default value
+                                    txt = '(_emd_crystallography_stats.overall_phase_error) is set to (%s) as no value is given and it is required.' % phase_error
+                                    self.current_entry_log.warn_logs.append(self.ALog(log_text=self.current_entry_log.change_title + txt))
+                                    self.log_formatted('self.logger.warning', const.CHANGE_MADE + txt)
+                                    set_cif_value(cry_stats.set_overall_phase_error, 'overall_phase_error', const.EMD_CRYSTALLOGRAPHY_STATS, cif_list=cry_stats_in, cif_value=phase_error)
                                 else:
-                                    set_cif_value(cry_stats.set_overall_phase_error, 'overall_phase_error',
-                                                  const.EMD_CRYSTALLOGRAPHY_STATS, cif_list=cry_stats_in, fmt=float)
+                                    set_cif_value(cry_stats.set_overall_phase_error, 'overall_phase_error', const.EMD_CRYSTALLOGRAPHY_STATS, cif_list=cry_stats_in, fmt=float)
 
                             def set_el_overall_phase_residual(cry_stats, cry_stats_in):
                                 """
@@ -8439,14 +9131,14 @@ class CifEMDBTranslator(object):
                                 """
                                 phase_residual = get_cif_value('overall_phase_residual', const.EMD_CRYSTALLOGRAPHY_STATS, cry_stats_in)
                                 if phase_residual is None:
-                                    phase_residual = 0.0 # chosen default value
-                                    self.logger.warning('')
-                                    self.logger.warning(const.CHANGE_MADE+'overall_phase_residual is set to (%s) as no value is given and it should be', phase_residual)
-                                    set_cif_value(cry_stats.set_overall_phase_residual, 'overall_phase_residual',
-                                                  const.EMD_CRYSTALLOGRAPHY_STATS, cif_list=cry_stats_in, cif_value=phase_residual)
+                                    phase_residual = 0.0  # chosen default value
+                                    txt = '(_emd_crystallography_stats.overall_phase_residual) is set to (%s) as no value is given and it is required.' % phase_residual
+                                    self.current_entry_log.warn_logs.append(self.ALog(log_text=self.current_entry_log.change_title + txt))
+                                    self.log_formatted('self.logger.warning', const.CHANGE_MADE + txt)
+                                    set_cif_value(cry_stats.set_overall_phase_residual, 'overall_phase_residual', const.EMD_CRYSTALLOGRAPHY_STATS, cif_list=cry_stats_in,
+                                                  cif_value=phase_residual)
                                 else:
-                                    set_cif_value(cry_stats.set_overall_phase_residual, 'overall_phase_residual',
-                                                  const.EMD_CRYSTALLOGRAPHY_STATS, cif_list=cry_stats_in, fmt=float)
+                                    set_cif_value(cry_stats.set_overall_phase_residual, 'overall_phase_residual', const.EMD_CRYSTALLOGRAPHY_STATS, cif_list=cry_stats_in, fmt=float)
 
                             def set_el_phase_err_rej_criteria(cry_stats, cry_stats_in):
                                 """
@@ -8455,13 +9147,14 @@ class CifEMDBTranslator(object):
                                 """
                                 error_reject = get_cif_value('phase_error_rejection_criteria', const.EMD_CRYSTALLOGRAPHY_STATS, cry_stats_in)
                                 if error_reject is None:
-                                    error_reject = 0.0 # chosen default value
-                                    self.logger.warning('')
-                                    self.logger.warning(const.CHANGE_MADE+'phase_error_rejection_criteria is set to (%s) as no value is given and it should be', error_reject)
+                                    error_reject = 0.0  # chosen default value
+                                    txt = '(_emd_crystallography_stats.phase_error_rejection_criteria) is set to (%s) as no value is given and it is required.' % error_reject
+                                    self.current_entry_log.warn_logs.append(self.ALog(log_text=self.current_entry_log.change_title + txt))
+                                    self.log_formatted('self.logger.warning', const.CHANGE_MADE + txt)
                                     set_cif_value(cry_stats.set_phase_error_rejection_criteria, 'phase_error_rejection_criteria',
                                                   const.EMD_CRYSTALLOGRAPHY_STATS, cif_list=cry_stats_in, cif_value=error_reject)
                                 else:
-                                    set_cif_value(cry_stats.set_phase_error_rejection_criteria, 'phase_error_rejection_criteria',
+                                    set_cif_value(cry_stats.set_phase_error_rejection_criteria,'phase_error_rejection_criteria',
                                                   const.EMD_CRYSTALLOGRAPHY_STATS, cif_list=cry_stats_in, fmt=float)
 
                             def set_el_high_resolution(cry_stats, cry_stats_in):
@@ -8477,34 +9170,41 @@ class CifEMDBTranslator(object):
                                 XSD: <xs:element name="shell_list" minOccurs="0"> has
                                 .. 1 element
                                 """
+
                                 def set_shell_type(shell, cs_in):
                                     """
                                     XSD: <xs:element name="shell" maxOccurs="unbounded"> has
                                     .. 1 attribute and
                                     .. 6 elements
                                     """
+
                                     def set_attr_id(shell, cs_in):
                                         """
                                         XSD: <xs:attribute name="id" type="xs:positiveInteger"/>
                                         CIF: _emd_crystallography_shell.id
                                         """
-                                        set_cif_value(shell.set_shell_id, 'id', const.EMD_CRYSTALLOGRAPHY_SHELL, cif_list=cs_in, fmt=int, parent_el_req=False)
+                                        set_cif_value(shell.set_shell_id, 'id', const.EMD_CRYSTALLOGRAPHY_SHELL,
+                                                      cif_list=cs_in, fmt=int, parent_el_req=False)
 
                                     def set_el_high_resolution(shell, cs_in):
                                         """
                                         XSD: <xs:element name="high_resolution">
                                         CIF: _emd_crystallography_shell.high_resolution 3.0
                                         """
-                                        set_cif_value(shell.set_high_resolution, 'high_resolution', const.EMD_CRYSTALLOGRAPHY_SHELL, cif_list=cs_in,
-                                                      constructor=emdb.high_resolutionType, fmt=float, units=const.U_ANG, parent_el_req=False)
+                                        set_cif_value(shell.set_high_resolution, 'high_resolution',
+                                                      const.EMD_CRYSTALLOGRAPHY_SHELL, cif_list=cs_in,
+                                                      constructor=emdb.high_resolutionType, fmt=float,
+                                                      units=const.U_ANG, parent_el_req=False)
 
                                     def set_el_low_resolution(shell, cs_in):
                                         """
                                         XSD: <xs:element name="low_resolution">
                                         CIF: _emd_crystallography_shell.low_resolution 5.5
                                         """
-                                        set_cif_value(shell.set_low_resolution, 'low_resolution', const.EMD_CRYSTALLOGRAPHY_SHELL, cif_list=cs_in,
-                                                      constructor=emdb.low_resolutionType, fmt=float, units=const.U_ANG, parent_el_req=False)
+                                        set_cif_value(shell.set_low_resolution, 'low_resolution',
+                                                      const.EMD_CRYSTALLOGRAPHY_SHELL, cif_list=cs_in,
+                                                      constructor=emdb.low_resolutionType, fmt=float, units=const.U_ANG,
+                                                      parent_el_req=False)
 
                                     def set_el_number_structure_factors(shell, cs_in):
                                         """
@@ -8512,14 +9212,16 @@ class CifEMDBTranslator(object):
                                         CIF: _emd_crystallography_shell.number_structure_factors 244
                                         """
                                         set_cif_value(shell.set_number_structure_factors, 'number_structure_factors',
-                                                      const.EMD_CRYSTALLOGRAPHY_SHELL, cif_list=cs_in, fmt=int, parent_el_req=False)
+                                                      const.EMD_CRYSTALLOGRAPHY_SHELL, cif_list=cs_in, fmt=int,
+                                                      parent_el_req=False)
 
                                     def set_el_phase_residual(shell, cs_in):
                                         """
                                         XSD: <xs:element name="phase_residual" type="xs:float"/>
                                         CIF: _emd_crystallography_shell.phase_residual 13.5
                                         """
-                                        set_cif_value(shell.set_phase_residual, 'phase_residual', const.EMD_CRYSTALLOGRAPHY_SHELL,
+                                        set_cif_value(shell.set_phase_residual, 'phase_residual',
+                                                      const.EMD_CRYSTALLOGRAPHY_SHELL,
                                                       cif_list=cs_in, fmt=float, parent_el_req=False)
 
                                     def set_el_fourier_space_coverage(shell, cs_in):
@@ -8527,7 +9229,8 @@ class CifEMDBTranslator(object):
                                         XSD: <xs:element name="fourier_space_coverage" type="xs:float">
                                         CIF: _emd_crystallography_shell.fourier_space_coverage 93.2
                                         """
-                                        set_cif_value(shell.set_fourier_space_coverage, 'fourier_space_coverage', const.EMD_CRYSTALLOGRAPHY_SHELL,
+                                        set_cif_value(shell.set_fourier_space_coverage, 'fourier_space_coverage',
+                                                      const.EMD_CRYSTALLOGRAPHY_SHELL,
                                                       cif_list=cs_in, fmt=float, parent_el_req=False)
 
                                     def set_el_multiplicity(shell, cs_in):
@@ -8535,7 +9238,8 @@ class CifEMDBTranslator(object):
                                         XSD: <xs:element name="multiplicity" type="xs:float"/>
                                         CIF: _emd_crystallography_shell.multiplicity 2.5
                                         """
-                                        set_cif_value(shell.set_multiplicity, 'multiplicity', const.EMD_CRYSTALLOGRAPHY_SHELL,
+                                        set_cif_value(shell.set_multiplicity, 'multiplicity',
+                                                      const.EMD_CRYSTALLOGRAPHY_SHELL,
                                                       cif_list=cs_in, fmt=float, parent_el_req=False)
 
                                     # attribute 1
@@ -8572,7 +9276,8 @@ class CifEMDBTranslator(object):
                                 XSD: <xs:element name="details" type="xs:string" minOccurs="0"/>
                                 CIF: _emd_crystallography_stats.details
                                 """
-                                set_cif_value(cry_stats.set_details, 'details', const.EMD_CRYSTALLOGRAPHY_STATS, cif_list=cry_stats_in)
+                                set_cif_value(cry_stats.set_details, 'details', const.EMD_CRYSTALLOGRAPHY_STATS,
+                                              cif_list=cry_stats_in)
 
                             # element 1
                             set_el_num_int_measured(cry_stats, cry_stats_in)
@@ -8638,15 +9343,16 @@ class CifEMDBTranslator(object):
                     XSD: <xs:group name="tomography_proc_add_group"> has
                     .. 4 elements
                     """
+
                     def set_el_final_reconstruction(im_proc, ip_id_in):
                         """
                         XSD: <xs:element name="final_reconstruction" type="non_subtom_final_reconstruction_type" minOccurs="0"/>
                         """
-                        non_st_dicts = {'final_rec_dict_in':tomo_dicts['final_rec_dict_in'],
-                                        'cat_soft_dict_in':tomo_dicts['cat_soft_dict_in'],
-                                        'p_sym_dict_in':tomo_dicts['p_sym_dict_in'],
-                                        'h_sym_dict_in':tomo_dicts['h_sym_dict_in']
-                                       }
+                        non_st_dicts = {'final_rec_dict_in': tomo_dicts['final_rec_dict_in'],
+                                        'cat_soft_dict_in': tomo_dicts['cat_soft_dict_in'],
+                                        'p_sym_dict_in': tomo_dicts['p_sym_dict_in'],
+                                        'h_sym_dict_in': tomo_dicts['h_sym_dict_in']
+                                        }
                         set_non_sub_tom_final_recon(ip_id_in, im_proc, non_st_dicts)
 
                     def set_el_alig_soft_list(im_proc, tomo_dicts):
@@ -8654,7 +9360,8 @@ class CifEMDBTranslator(object):
                         XSD: <xs:element name="series_aligment_software_list" type="software_list_type" minOccurs="0"/>
                         """
                         cat_soft_dict_in = tomo_dicts['cat_soft_dict_in']
-                        set_software_list(const.LATTICE_DISTORTION_CORRECTION, cat_soft_dict_in, im_proc.set_series_aligment_software_list)
+                        set_software_list(const.LATTICE_DISTORTION_CORRECTION, cat_soft_dict_in,
+                                          im_proc.set_series_aligment_software_list)
 
                     def set_el_ctf_correction(im_proc, ip_id_in, tomo_dicts):
                         """
@@ -8670,23 +9377,26 @@ class CifEMDBTranslator(object):
                         """
                         two_d_cryst_dict_in = tomo_dicts['two_d_cryst_dict_in']
                         if ip_id_in in two_d_cryst_dict_in:
-                            set_crystal_parameters(ip_id_in, im_proc, two_d_cryst_dict_in, const.EMD_TWO_D_CRYSTAL_PARAMETERS, parent_req=False)
+                            set_crystal_parameters(ip_id_in, im_proc, two_d_cryst_dict_in,
+                                                   const.EMD_TWO_D_CRYSTAL_PARAMETERS, parent_req=False)
                         three_d_cryst_dict_in = tomo_dicts['three_d_cryst_dict_in']
                         if ip_id_in in three_d_cryst_dict_in:
-                            set_crystal_parameters(ip_id_in, im_proc, three_d_cryst_dict_in, const.EMD_THREE_D_CRYSTAL_PARAMETERS, parent_req=False)
+                            set_crystal_parameters(ip_id_in, im_proc, three_d_cryst_dict_in,
+                                                   const.EMD_THREE_D_CRYSTAL_PARAMETERS, parent_req=False)
 
                     # element 1
                     set_el_final_reconstruction(im_proc, ip_id_in)
-                     # element 2
+                    # element 2
                     set_el_alig_soft_list(im_proc, tomo_dicts)
-                     # element 3
+                    # element 3
                     set_el_ctf_correction(im_proc, ip_id_in, tomo_dicts)
-                     # element 4
+                    # element 4
                     set_el_crystal_parameters(im_proc, ip_id_in, tomo_dicts)
 
                 # Create dictionaries indexed by emd_image_processing_id
                 soft_dict_in = make_list_of_dicts(const.EMD_SOFTWARE, const.K_EMD_IMAGE_PROCESSING_ID)
-                part_sel_dict_in = make_list_of_dicts(const.EMD_PARTICLE_SELECTION, const.K_EMD_IMAGE_PROCESSING_ID, min_length=2)
+                part_sel_dict_in = make_list_of_dicts(const.EMD_PARTICLE_SELECTION, const.K_EMD_IMAGE_PROCESSING_ID,
+                                                      min_length=2)
                 vol_sel_dict_in = make_dict(const.EMD_VOLUME_SELECTION, const.K_EMD_IMAGE_PROCESSING_ID, min_length=2)
                 ctf_corr_dict_in = make_dict(const.EMD_CTF_CORRECTION, const.K_EMD_IMAGE_PROCESSING_ID)
                 st_mod_dict_in = make_list_of_dicts(const.EMD_STARTUP_MODEL, const.K_EMD_IMAGE_PROCESSING_ID)
@@ -8699,7 +9409,8 @@ class CifEMDBTranslator(object):
                 two_d_cryst_dict_in = make_dict(const.EMD_TWO_D_CRYSTAL_PARAMETERS, const.K_EMD_IMAGE_PROCESSING_ID)
                 three_d_cryst_dict_in = make_dict(const.EMD_THREE_D_CRYSTAL_PARAMETERS, const.K_EMD_IMAGE_PROCESSING_ID)
                 cry_stats_dict_in = make_dict(const.EMD_CRYSTALLOGRAPHY_STATS, const.K_EMD_IMAGE_PROCESSING_ID)
-                cry_shell_dict_in = make_list_of_dicts(const.EMD_CRYSTALLOGRAPHY_SHELL, const.K_EMD_CRYSTALLOGRAPHY_STATS_ID)
+                cry_shell_dict_in = make_list_of_dicts(const.EMD_CRYSTALLOGRAPHY_SHELL,
+                                                       const.K_EMD_CRYSTALLOGRAPHY_STATS_ID)
                 im_rec_dict_in = make_dict(const.EMD_IMAGE_RECORDING, const.K_ID)
 
                 ip_list_in = assert_get_value(const.EMD_IMAGE_PROCESSING, self.cif)
@@ -8713,78 +9424,78 @@ class CifEMDBTranslator(object):
                         sp_im_proc = emdb.singleparticle_processing_type()
                         sp_im_proc.original_tagname_ = 'singleparticle_processing'
                         set_base_image_processing(ip_in, sp_im_proc)
-                        sp_dicts = {'cat_soft_dict_in':cat_soft_dict_in,
-                                    'ctf_corr_dict_in':ctf_corr_dict_in,
-                                    'part_sel_dict_in':part_sel_dict_in,
-                                    'st_mod_dict_in':st_mod_dict_in,
-                                    'ang_dict_in':ang_dict_in,
-                                    'p_sym_dict_in':p_sym_dict_in,
-                                    'h_sym_dict_in':h_sym_dict_in,
-                                    'final_class_dict_in':final_class_dict_in,
-                                    'final_2d_class_dict_in':final_2d_class_dict_in,
-                                    'final_rec_dict_in':final_rec_dict_in}
+                        sp_dicts = {'cat_soft_dict_in': cat_soft_dict_in,
+                                    'ctf_corr_dict_in': ctf_corr_dict_in,
+                                    'part_sel_dict_in': part_sel_dict_in,
+                                    'st_mod_dict_in': st_mod_dict_in,
+                                    'ang_dict_in': ang_dict_in,
+                                    'p_sym_dict_in': p_sym_dict_in,
+                                    'h_sym_dict_in': h_sym_dict_in,
+                                    'final_class_dict_in': final_class_dict_in,
+                                    'final_2d_class_dict_in': final_2d_class_dict_in,
+                                    'final_rec_dict_in': final_rec_dict_in}
                         set_single_part_im_proc_specs(ip_id_in, sp_im_proc, sp_dicts)
                         struct_det.add_image_processing(sp_im_proc)
                     elif em_method == const.EMM_HEL:
                         hel_im_proc = emdb.helical_processing_type()
                         hel_im_proc.original_tagname_ = 'helical_processing'
                         set_base_image_processing(ip_in, hel_im_proc)
-                        helical_dicts = {'part_sel_dict_in':part_sel_dict_in,
-                                         'final_rec_dict_in':final_rec_dict_in,
-                                         'cat_soft_dict_in':cat_soft_dict_in,
-                                         'p_sym_dict_in':p_sym_dict_in,
-                                         'h_sym_dict_in':h_sym_dict_in,
-                                         'ctf_corr_dict_in':ctf_corr_dict_in,
-                                         'ang_dict_in':ang_dict_in,
-                                         'st_mod_dict_in':st_mod_dict_in,
-                                         'two_d_cryst_dict_in':two_d_cryst_dict_in,
-                                         'three_d_cryst_dict_in':three_d_cryst_dict_in}
+                        helical_dicts = {'part_sel_dict_in': part_sel_dict_in,
+                                         'final_rec_dict_in': final_rec_dict_in,
+                                         'cat_soft_dict_in': cat_soft_dict_in,
+                                         'p_sym_dict_in': p_sym_dict_in,
+                                         'h_sym_dict_in': h_sym_dict_in,
+                                         'ctf_corr_dict_in': ctf_corr_dict_in,
+                                         'ang_dict_in': ang_dict_in,
+                                         'st_mod_dict_in': st_mod_dict_in,
+                                         'two_d_cryst_dict_in': two_d_cryst_dict_in,
+                                         'three_d_cryst_dict_in': three_d_cryst_dict_in}
                         set_helical_proc_specifics(ip_id_in, hel_im_proc, helical_dicts)
                         struct_det.add_image_processing(hel_im_proc)
                     elif em_method == const.EMM_TOM:
                         tom_im_proc = emdb.tomography_processing_type()
                         tom_im_proc.original_tagname_ = 'tomography_processing'
                         set_base_image_processing(ip_in, tom_im_proc)
-                        tomo_dicts = {'final_rec_dict_in':final_rec_dict_in,
-                                      'cat_soft_dict_in':cat_soft_dict_in,
-                                      'p_sym_dict_in':p_sym_dict_in,
-                                      'h_sym_dict_in':h_sym_dict_in,
-                                      'ctf_corr_dict_in':ctf_corr_dict_in,
-                                      'two_d_cryst_dict_in':two_d_cryst_dict_in,
-                                      'three_d_cryst_dict_in':three_d_cryst_dict_in}
+                        tomo_dicts = {'final_rec_dict_in': final_rec_dict_in,
+                                      'cat_soft_dict_in': cat_soft_dict_in,
+                                      'p_sym_dict_in': p_sym_dict_in,
+                                      'h_sym_dict_in': h_sym_dict_in,
+                                      'ctf_corr_dict_in': ctf_corr_dict_in,
+                                      'two_d_cryst_dict_in': two_d_cryst_dict_in,
+                                      'three_d_cryst_dict_in': three_d_cryst_dict_in}
                         set_tom_proc_specifics(ip_id_in, tom_im_proc, tomo_dicts)
                         struct_det.add_image_processing(tom_im_proc)
                     elif em_method == const.EMM_STOM:
                         subtom_im_proc = emdb.subtomogram_averaging_processing_type()
                         subtom_im_proc.original_tagname_ = 'subtomogram_averaging_processing'
                         set_base_image_processing(ip_in, subtom_im_proc)
-                        subtom_dicts = {'final_rec_dict_in':final_rec_dict_in,
-                                        'cat_soft_dict_in':cat_soft_dict_in,
-                                        'p_sym_dict_in':p_sym_dict_in,
-                                        'h_sym_dict_in':h_sym_dict_in,
-                                        'vol_sel_dict_in':vol_sel_dict_in,
-                                        'ctf_corr_dict_in':ctf_corr_dict_in,
-                                        'final_class_dict_in':final_class_dict_in,
-                                        'ang_dict_in':ang_dict_in,
-                                        'two_d_cryst_dict_in':two_d_cryst_dict_in,
-                                        'three_d_cryst_dict_in':three_d_cryst_dict_in}
+                        subtom_dicts = {'final_rec_dict_in': final_rec_dict_in,
+                                        'cat_soft_dict_in': cat_soft_dict_in,
+                                        'p_sym_dict_in': p_sym_dict_in,
+                                        'h_sym_dict_in': h_sym_dict_in,
+                                        'vol_sel_dict_in': vol_sel_dict_in,
+                                        'ctf_corr_dict_in': ctf_corr_dict_in,
+                                        'final_class_dict_in': final_class_dict_in,
+                                        'ang_dict_in': ang_dict_in,
+                                        'two_d_cryst_dict_in': two_d_cryst_dict_in,
+                                        'three_d_cryst_dict_in': three_d_cryst_dict_in}
                         set_subtom_av_im_proc_specifics(ip_id_in, subtom_im_proc, subtom_dicts, em_method)
                         struct_det.add_image_processing(subtom_im_proc)
                     elif em_method == const.EMM_EC:
                         cryst_im_proc = emdb.crystallography_processing_type()
                         cryst_im_proc.original_tagname_ = 'crystallography_processing'
                         set_base_image_processing(ip_in, cryst_im_proc)
-                        cryst_dicts = {'final_rec_dict_in':final_rec_dict_in,
-                                       'cat_soft_dict_in':cat_soft_dict_in,
-                                       'p_sym_dict_in':p_sym_dict_in,
-                                       'h_sym_dict_in':h_sym_dict_in,
-                                       'two_d_cryst_dict_in':two_d_cryst_dict_in,
-                                       'three_d_cryst_dict_in':three_d_cryst_dict_in,
-                                       'cry_shell_dict_in':cry_shell_dict_in,
-                                       'st_mod_dict_in':st_mod_dict_in,
-                                       'ctf_corr_dict_in':ctf_corr_dict_in,
-                                       'cry_stats_dict_in':cry_stats_dict_in
-                                      }
+                        cryst_dicts = {'final_rec_dict_in': final_rec_dict_in,
+                                       'cat_soft_dict_in': cat_soft_dict_in,
+                                       'p_sym_dict_in': p_sym_dict_in,
+                                       'h_sym_dict_in': h_sym_dict_in,
+                                       'two_d_cryst_dict_in': two_d_cryst_dict_in,
+                                       'three_d_cryst_dict_in': three_d_cryst_dict_in,
+                                       'cry_shell_dict_in': cry_shell_dict_in,
+                                       'st_mod_dict_in': st_mod_dict_in,
+                                       'ctf_corr_dict_in': ctf_corr_dict_in,
+                                       'cry_stats_dict_in': cry_stats_dict_in
+                                       }
                         set_cryst_proc_specifics(ip_id_in, cryst_im_proc, cryst_dicts)
                         struct_det.add_image_processing(cryst_im_proc)
 
@@ -8792,18 +9503,21 @@ class CifEMDBTranslator(object):
                     # XSD: in <xs:complexType name="base_microscopy_type">:
                     # XSD: <xs:element name="software_list" type="software_list_type" minOccurs="0"/>
                     if const.SOFT_IMAGE_ACQUISITION in cat_soft_dict_in:
-                        ip_im_rec_id_in = get_cif_value(const.K_EMD_IMAGE_RECORDING_ID, const.EMD_IMAGE_PROCESSING, ip_in)
+                        ip_im_rec_id_in = get_cif_value(const.K_EMD_IMAGE_RECORDING_ID, const.EMD_IMAGE_PROCESSING,
+                                                        ip_in)
                         if ip_im_rec_id_in is not None:
                             if ip_im_rec_id_in in im_rec_dict_in:
                                 im_rec_in = im_rec_dict_in[ip_im_rec_id_in]
                                 if im_rec_in is not None:
-                                    mic_id_in = get_cif_value(const.K_EMD_MICROSCOPY_ID, const.EMD_IMAGE_RECORDING, im_rec_in)
+                                    mic_id_in = get_cif_value(const.K_EMD_MICROSCOPY_ID, const.EMD_IMAGE_RECORDING,
+                                                              im_rec_in)
                                     if mic_id_in is not None:
                                         mic_id = int(mic_id_in)
                                         mic_list = microscopy_list.get_microscopy()
                                         for mic in mic_list:
                                             if mic.get_id() == mic_id:
-                                                set_software_list(const.SOFT_IMAGE_ACQUISITION, cat_soft_dict_in, mic.set_software_list)
+                                                set_software_list(const.SOFT_IMAGE_ACQUISITION, cat_soft_dict_in,
+                                                                  mic.set_software_list)
 
             # attribute 1
             set_attr_id(struct_det)
@@ -8832,12 +9546,14 @@ class CifEMDBTranslator(object):
             @return emdb.map_type() element
             XSD: <xs:element name="map" type="map_type">
             """
+
             def set_map_type(em_map, map_in, map_name):
                 """
                 XSD: <xs:element name="map" type="map_type"> has
                 .. 2 attributes
                 .. 14 elements
                 """
+
                 def set_attr_format(em_map, map_in):
                     """
                     XSD: <xs:attribute name="format" fixed="CCP4" use="required"/>
@@ -8850,7 +9566,8 @@ class CifEMDBTranslator(object):
                     XSD: <xs:attribute name="size_kbytes" type="xs:positiveInteger" use="required"/>
                     CIF: _emd_map.size_kb
                     """
-                    set_cif_value(em_map.set_size_kbytes, 'size_kb', const.EMD_MAP, cif_list=map_in, fmt=lambda x: int(float(x) / 1000.0))
+                    set_cif_value(em_map.set_size_kbytes, 'size_kb', const.EMD_MAP, cif_list=map_in,
+                                  fmt=lambda x: int(float(x) / 1000.0))
 
                 def set_el_file(em_map, map_in, map_name_in):
                     """
@@ -8860,17 +9577,19 @@ class CifEMDBTranslator(object):
                     map_name = map_name_in
                     map_in_dict = dict(map_in)
                     map_type = map_in_dict.get('_emd_map.type')
-                    if  map_type == 'primary map':
+                    if map_type == 'primary map':
                         if map_name_in is None:
                             map_name = get_cif_value('file', const.EMD_MAP, map_in)
                         if map_name is None or map_name == '' or map_name.isspace():
                             map_name = self.emdb_id_u.lower() + '.map.gz'
-                            self.logger.warning(const.NOT_REQUIRED_ALERT+'Map file name is not given in cif (_emd_map.file).')
-                            self.logger.warning(' '*len(const.NOT_REQUIRED_ALERT)+'Map name is set to %s', map_name)
+                            txt = 'Map file name is not given for (_emd_map.file). Map name is set to (%s).' % map_name
+                            self.current_entry_log.warn_logs.append(self.ALog(log_text=self.current_entry_log.warn_title + txt))
+                            self.log_formatted('self.logger.warning', const.NOT_REQUIRED_ALERT + txt)
                     else:
                         if map_name == '' or map_name.isspace():
-                            self.logger.error(const.REQUIRED_ALERT+'Map name value for _emd_map.file is an empty string in %s', map_in)
-                            self.logger.error('')
+                            txt = 'The value for (_emd_map.file) is not given in (%s).' % map_in
+                            self.current_entry_log.error_logs.append(self.ALog(log_text=self.current_entry_log.error_title + txt))
+                            self.log_formatted('self.logger.error', const.REQUIRED_ALERT + txt)
                     set_cif_value(em_map.set_file, 'file', const.EMD_MAP, cif_list=map_in, cif_value=map_name, fmt=str.lower)
 
                 def set_el_symmetry(em_map, map_in):
@@ -8878,6 +9597,7 @@ class CifEMDBTranslator(object):
                     XSD: <xs:element name="symmetry" type="applied_symmetry_type"> has
                     .. 1 element out of 3 choices
                     """
+
                     def set_applied_symmetry_type(app_sym):
                         """
                         XSD: <xs:complexType name="applied_symmetry_type">
@@ -8896,17 +9616,20 @@ class CifEMDBTranslator(object):
                     XSD: <xs:element name="data_type" type="map_data_type"/>
                     CIF: _emd_map.data_type 'Image stored as signed byte'
                     """
-                    set_cif_value(em_map.set_data_type, 'data_type', const.EMD_MAP, cif_list=map_in, fmt=const.MAP_DATA_TYPE_CIF2XML)
+                    set_cif_value(em_map.set_data_type, 'data_type', const.EMD_MAP, cif_list=map_in,
+                                  fmt=const.MAP_DATA_TYPE_CIF2XML)
 
                 def set_el_dimensions(em_map, map_in):
                     """
                     XSD: <xs:element name="dimensions" type="integer_vector_map_type"/>
                     """
+
                     def set_integer_vector_map_type(dim, map_in):
                         """
                         XSD: <xs:complexType name="integer_vector_map_type"> has
                         .. 3 elements
                         """
+
                         def set_el_col(dim, map_in):
                             """
                             XSD: <xs:element name="col" type="xs:positiveInteger"/>
@@ -8944,11 +9667,13 @@ class CifEMDBTranslator(object):
                     """
                     XSD: <xs:element name="origin">
                     """
+
                     def set_origin_type(orig, map_in):
                         """
                         XSD: <xs:element name="origin"> has
                         .. 3 elements
                         """
+
                         def set_el_col(orig, map_in):
                             """
                             XSD: <xs:element name="col" type="xs:integer"/>
@@ -8985,11 +9710,13 @@ class CifEMDBTranslator(object):
                     """
                     XSD: <xs:element name="spacing">
                     """
+
                     def set_spacing_type(spc, map_in):
                         """
                         XSD: <xs:element name="spacing"> has
                         .. 3 elements
                         """
+
                         def set_el_x(spc, map_in):
                             """
                             XSD: <xs:element name="x" type="xs:positiveInteger"/>
@@ -9026,52 +9753,60 @@ class CifEMDBTranslator(object):
                     """
                     XSD: <xs:element name="cell">
                     """
+
                     def set_cell_type(cell, map_in):
                         """
                         XSD: <xs:element name="cell"> has
                         .. 6 elements
                         """
+
                         def set_el_a(cell, map_in):
                             """
                             XSD: <xs:element name="a" type="cell_type"/>
                             CIF: _emd_map.cell_a
                             """
-                            set_cif_value(cell.set_a, 'cell_a', const.EMD_MAP, cif_list=map_in, constructor=emdb.cell_type, fmt=float, units=const.U_ANG)
+                            set_cif_value(cell.set_a, 'cell_a', const.EMD_MAP, cif_list=map_in,
+                                          constructor=emdb.cell_type, fmt=float, units=const.U_ANG)
 
                         def set_el_b(cell, map_in):
                             """
                             XSD: <xs:element name="b" type="cell_type"/>
                             CIF: _emd_map.cell_b
                             """
-                            set_cif_value(cell.set_b, 'cell_b', const.EMD_MAP, cif_list=map_in, constructor=emdb.cell_type, fmt=float, units=const.U_ANG)
+                            set_cif_value(cell.set_b, 'cell_b', const.EMD_MAP, cif_list=map_in,
+                                          constructor=emdb.cell_type, fmt=float, units=const.U_ANG)
 
                         def set_el_c(cell, map_in):
                             """
                             XSD: <xs:element name="c" type="cell_type"/>
                             CIF: _emd_map.cell_c
                             """
-                            set_cif_value(cell.set_c, 'cell_c', const.EMD_MAP, cif_list=map_in, constructor=emdb.cell_type, fmt=float, units=const.U_ANG)
+                            set_cif_value(cell.set_c, 'cell_c', const.EMD_MAP, cif_list=map_in,
+                                          constructor=emdb.cell_type, fmt=float, units=const.U_ANG)
 
                         def set_el_alpha(cell, map_in):
                             """
                             XSD: <xs:element name="alpha" type="cell_angle_type"/>
                             CIF: _emd_map.cell_alpha
                             """
-                            set_cif_value(cell.set_alpha, 'cell_alpha', const.EMD_MAP, cif_list=map_in, constructor=emdb.cell_type, fmt=float, units=const.U_DEG)
+                            set_cif_value(cell.set_alpha, 'cell_alpha', const.EMD_MAP, cif_list=map_in,
+                                          constructor=emdb.cell_type, fmt=float, units=const.U_DEG)
 
                         def set_el_beta(cell, map_in):
                             """
                             XSD: <xs:element name="beta" type="cell_angle_type"/>
                             CIF: _emd_map.cell_beta
                             """
-                            set_cif_value(cell.set_beta, 'cell_beta', const.EMD_MAP, cif_list=map_in, constructor=emdb.cell_type, fmt=float, units=const.U_DEG)
+                            set_cif_value(cell.set_beta, 'cell_beta', const.EMD_MAP, cif_list=map_in,
+                                          constructor=emdb.cell_type, fmt=float, units=const.U_DEG)
 
                         def set_el_gamma(cell, map_in):
                             """
                             XSD: <xs:element name="gamma" type="cell_angle_type"/>
                             CIF: _emd_map.cell_gamma
                             """
-                            set_cif_value(cell.set_gamma, 'cell_gamma', const.EMD_MAP, cif_list=map_in, constructor=emdb.cell_type, fmt=float, units=const.U_DEG)
+                            set_cif_value(cell.set_gamma, 'cell_gamma', const.EMD_MAP, cif_list=map_in,
+                                          constructor=emdb.cell_type, fmt=float, units=const.U_DEG)
 
                         # element 1
                         set_el_a(cell, map_in)
@@ -9094,11 +9829,13 @@ class CifEMDBTranslator(object):
                     """
                     XSD: <xs:element name="axis_order">
                     """
+
                     def set_axis_order_type(axis, map_in):
                         """
                         XSD: <xs:element name="axis_order"> has
                         .. 3 elements
                         """
+
                         def set_el_fast(axis, map_in):
                             """
                             XSD: <xs:element name="fast">
@@ -9135,31 +9872,36 @@ class CifEMDBTranslator(object):
                     """
                     XSD: <xs:element name="statistics" type="map_statistics_type"/>
                     """
+
                     def set_map_statistics_type(stat, map_in):
                         """
                         XSD: <xs:element name="statistics" type="map_statistics_type"/> has
                         .. 4 elements
                         """
+
                         def set_el_minimum(stat, map_in):
                             """
                             XSD: <xs:element name="minimum" type="xs:float"/>
                             CIF: _emd_map.statistics_minimum
                             """
-                            set_cif_value(stat.set_minimum, 'statistics_minimum', const.EMD_MAP, cif_list=map_in, fmt=float)
+                            set_cif_value(stat.set_minimum, 'statistics_minimum', const.EMD_MAP, cif_list=map_in,
+                                          fmt=float)
 
                         def set_el_maximum(stat, map_in):
                             """
                             XSD: <xs:element name="maximum" type="xs:float"/>
                             CIF: _emd_map.statistics_maximum
                             """
-                            set_cif_value(stat.set_maximum, 'statistics_maximum', const.EMD_MAP, cif_list=map_in, fmt=float)
+                            set_cif_value(stat.set_maximum, 'statistics_maximum', const.EMD_MAP, cif_list=map_in,
+                                          fmt=float)
 
                         def set_el_average(stat, map_in):
                             """
                             XSD: <xs:element name="average" type="xs:float"/>
                             CIF: _emd_map.statistics_average
                             """
-                            set_cif_value(stat.set_average, 'statistics_average', const.EMD_MAP, cif_list=map_in, fmt=float)
+                            set_cif_value(stat.set_average, 'statistics_average', const.EMD_MAP, cif_list=map_in,
+                                          fmt=float)
 
                         def set_el_std(stat, map_in):
                             """
@@ -9185,31 +9927,36 @@ class CifEMDBTranslator(object):
                     """
                     XSD: <xs:element name="pixel_spacing">
                     """
+
                     def set_pixel_spacing_type(pix, map_in):
                         """
                         XSD: <xs:element name="pixel_spacing"> has
                         .. 3 elements
                         """
+
                         def set_el_x(pix, map_in):
                             """
                             XSD: <xs:element name="x" type="pixel_spacing_type"/>
                             CIF: _emd_map.pixel_spacing_x
                             """
-                            set_cif_value(pix.set_x, 'pixel_spacing_x', const.EMD_MAP, cif_list=map_in, constructor=emdb.pixel_spacing_type, fmt=float, units=const.U_ANG)
+                            set_cif_value(pix.set_x, 'pixel_spacing_x', const.EMD_MAP, cif_list=map_in,
+                                          constructor=emdb.pixel_spacing_type, fmt=float, units=const.U_ANG)
 
                         def set_el_y(pix, map_in):
                             """
                             XSD: <xs:element name="y" type="pixel_spacing_type"/>
                             CIF: _emd_map.pixel_spacing_y
                             """
-                            set_cif_value(pix.set_y, 'pixel_spacing_y', const.EMD_MAP, cif_list=map_in, constructor=emdb.pixel_spacing_type, fmt=float, units=const.U_ANG)
+                            set_cif_value(pix.set_y, 'pixel_spacing_y', const.EMD_MAP, cif_list=map_in,
+                                          constructor=emdb.pixel_spacing_type, fmt=float, units=const.U_ANG)
 
                         def set_el_z(pix, map_in):
                             """
                             XSD: <xs:element name="z" type="pixel_spacing_type"/>
                             CIF: _emd_map.pixel_spacing_z
                             """
-                            set_cif_value(pix.set_z, 'pixel_spacing_z', const.EMD_MAP, cif_list=map_in, constructor=emdb.pixel_spacing_type, fmt=float, units=const.U_ANG)
+                            set_cif_value(pix.set_z, 'pixel_spacing_z', const.EMD_MAP, cif_list=map_in,
+                                          constructor=emdb.pixel_spacing_type, fmt=float, units=const.U_ANG)
 
                         # element 1
                         set_el_x(pix, map_in)
@@ -9226,12 +9973,14 @@ class CifEMDBTranslator(object):
                     """
                     XSD: <xs:element name="contour_list" minOccurs="0">
                     """
+
                     def set_contour_type(cntr, map_in):
                         """
                         <xs:element name="contour" maxOccurs="unbounded"> has
                         .. 1 attribute and
                         .. 2 elements
                         """
+
                         def set_attr_primary(cntr):
                             """
                             XSD: <xs:attribute name="primary" type="xs:boolean" use="required"/>
@@ -9246,7 +9995,7 @@ class CifEMDBTranslator(object):
                             Contour level had to be made non-mandatory as it's not given for tomograms
                             _emd_structure_determination.method != "TOMOGRAPHY"
                             """
-                            # get structure determination method 
+                            # get structure determination method
                             struct_det_method = get_cif_value('method', const.EMD_STRUCTURE_DETERMINATION)
                             # determine map type
                             map_type = None
@@ -9257,10 +10006,12 @@ class CifEMDBTranslator(object):
                                 map_type = get_cif_value('type', const.EMD_MAP, pr_map_list_in[0])
                                 if map_type == 'primary map':
                                     if struct_det_method != 'TOMOGRAPHY':
-                                        set_cif_value(cntr.set_level, 'contour_level', const.EMD_MAP, cif_list=map_in, fmt=float)
+                                        set_cif_value(cntr.set_level, 'contour_level', const.EMD_MAP, cif_list=map_in,
+                                                      fmt=float)
                                     else:
-                                        self.logger.info('')
-                                        self.logger.info(const.INFO_ALERT+'Contour level is not set for TOMOGRAPHY primary map')
+                                        txt = 'Contour level is not set for TOMOGRAPHY primary map.'
+                                        self.current_entry_log.info_logs.append(self.ALog(log_text=self.current_entry_log.info_title + txt))
+                                        self.log_formatted('self.logger.info', const.INFO_ALERT + txt)
 
                         def set_el_source(cntr, map_in):
                             """
@@ -9390,6 +10141,7 @@ class CifEMDBTranslator(object):
             ..2 attributes
             ..a sequence of 7 elements
             """
+
             def set_attr_emdb_id():
                 """
                 XSD: <xs:attribute name="emdb_id" type="emdb_id_type" use="required">
@@ -9413,23 +10165,20 @@ class CifEMDBTranslator(object):
                             log(get_cif_item('database_code', const.DATABASE_2), self.xml_out.set_emdb_id, emdb_id)
                             if self.__show_log_id:
                                 # Add entry ID into the warning logger messages
-                                self.logger.critical('%s', self.emdb_id_u)
-                                self.logger.critical('')
+                                self.log_formatted('self.logger.error', self.emdb_id_u)
                         else:
-                            self.logger.error(const.REQUIRED_ALERT+'The value for EMDB is not given in CIF.')
-                            self.logger.error('CIF: _database_2.database_id _database_2.database_code')
-                            self.logger.error('SOLUTION (in CIF): have ''EMDB EMD-xxxx'' instead of ''EMDB .''')
-                            self.logger.error('')
+                            txt = 'The value for EMDB is not given in CIF for (_database_2.database_id _database_2.database_code). SOLUTION:  have (EMDB EMD-xxxx) instead of (EMDB .) or (EMDB ?).'
+                            self.current_entry_log.error_logs.append(self.ALog(log_text=self.current_entry_log.error_title + txt))
+                            self.log_formatted('self.logger.error', const.REQUIRED_ALERT + txt)
                 else:
-                    self.logger.error(const.REQUIRED_ALERT+'EMDB id is not given in CIF.')
-                    self.logger.error('CIF: _database_2.database_id _database_2.database_code')
-                    self.logger.error('SOLUTION: add ''EMDB EMD-xxxx'' in CIF')
-                    self.logger.error('')
+                    txt = 'EMDB id is not given in CIF for (_database_2.database_id _database_2.database_code). SOLUTION: add (EMDB EMD-xxxx) in CIF.'
+                    self.current_entry_log.error_logs.append(self.ALog(log_text=self.current_entry_log.error_title + txt))
+                    self.log_formatted('self.logger.error', const.REQUIRED_ALERT + txt)
 
             def set_attr_version():
                 """
                 XSD: <xs:attribute name="version" use="required">
-                NOT IN CIF: The value is added in here - 
+                NOT IN CIF: The value is added in here -
                 """
                 self.xml_out.set_version(const.XML_OUT_VERSION)
 
@@ -9462,6 +10211,7 @@ class CifEMDBTranslator(object):
                 """
                 XSD: <xs:element name="structure_determination_list">
                 """
+
                 def set_struct_det_list(sd_list):
                     """
                     XSD: <xs:element name="structure_determination_list"> is
@@ -9483,49 +10233,60 @@ class CifEMDBTranslator(object):
                 pr_map_list_in = map_dict_in[const.MAP_PRIMARY] if const.MAP_PRIMARY in map_dict_in else []
                 len_pr_map_list_in = len(pr_map_list_in)
                 if len_pr_map_list_in != 1:
-                    self.logger.error(const.REQUIRED_ALERT+'There should be one and only one primary map. %d map(s) found', len_pr_map_list_in)
+                    txt = 'There should be one and only one primary map. (%d) map(s) found.' % len_pr_map_list_in
+                    self.current_entry_log.error_logs.append(self.ALog(log_text=self.current_entry_log.error_title + txt))
+                    self.log_formatted('self.logger.error', const.REQUIRED_ALERT + txt)
                 else:
                     em_map = make_map(pr_map_list_in[0], get_canonical_map_name(pr_map_list_in[0], 'PRIMARY'))
                     if em_map.hasContent_():
                         self.xml_out.set_map(em_map)
                     else:
-                        self.logger.critical(const.REQUIRED_ALERT+'NO INFORMATION FOR PRIMARY MAP GIVEN!')
+                        txt = 'No information given for the primary map.'
+                        self.current_entry_log.error_logs.append(self.ALog(log_text=self.current_entry_log.error_title + txt))
+                        self.log_formatted('self.logger.error', const.REQUIRED_ALERT + txt)
 
             def set_el_interpretation():
                 """
                 XSD: <xs:element name="interpretation" type="interpretation_type"  minOccurs="0"/>
                 """
+
                 def set_interpretation_type(intrp, map_dict_in):
                     """
                     XSD: <xs:complexType name="interpretation_type"> has
                     .. 6 elements
                     """
+
                     def set_el_modelling_list(intrp):
                         """
                         XSD: <xs:element name="modelling_list" minOccurs="0">
                         Modelling - each modelling can have multiple models
                         """
+
                         def set_modelling_type(modelling, modelling_in, cat_soft_dict_in):
                             """
                             XSD: <xs:complexType name="modelling_type"> has
                             .. 8 elements
                             """
+
                             def set_el_initial_model(modelling, modelling_id_in, model_dict_in):
                                 """
                                 XSD: <xs:element name="initial_model" maxOccurs="unbounded">
                                 """
+
                                 def set_initial_model_type(model, model_in):
                                     """
                                     XSD: <xs:element name="initial_model" maxOccurs="unbounded"> has
                                     .. 3 elements
                                     """
+
                                     def set_el_access_code(model, model_in):
                                         """
                                         XSD: <xs:element name="access_code">
                                         CIF: _emd_modelling_initial_model.pdb_id  1EHZ
                                         pattern "d[dA-Za-z]{3}"
                                         """
-                                        set_cif_value(model.set_access_code, 'pdb_id', const.EMD_MODELLING_INITIAL_MODEL, cif_list=model_in)
+                                        set_cif_value(model.set_access_code, 'pdb_id',
+                                                      const.EMD_MODELLING_INITIAL_MODEL, cif_list=model_in)
 
                                     def set_el_chain(model, model_in):
                                         """
@@ -9533,6 +10294,7 @@ class CifEMDBTranslator(object):
                                         .. a base chain_type and
                                         .. 1 element
                                         """
+
                                         def set_el_numofcps_in_final_model():
                                             """
                                             XSD: <xs:element name="number_of_copies_in_final_model" type="xs:positiveInteger"  minOccurs="0">
@@ -9544,23 +10306,29 @@ class CifEMDBTranslator(object):
                                             XSD: <xs:complexType name="chain_type"> has
                                             .. 2 elements
                                             """
+
                                             def set_el_id(chain, model_in):
                                                 """
                                                 XSD: <xs:element name="id" type="chain_pdb_id" minOccurs="0" maxOccurs="unbounded"/>
                                                 CIF: _emd_modelling_initial_model.pdb_chain_id A
                                                 """
-                                                ids_in = get_cif_value('pdb_chain_id', const.EMD_MODELLING_INITIAL_MODEL, cif_list=model_in)
+                                                ids_in = get_cif_value('pdb_chain_id',
+                                                                       const.EMD_MODELLING_INITIAL_MODEL,
+                                                                       cif_list=model_in)
                                                 if ids_in is not None:
                                                     ids = ids_in.split(',')
                                                     for a_id in ids:
-                                                        set_cif_value(chain.add_chain_id, 'pdb_chain_id', const.EMD_MODELLING_INITIAL_MODEL, cif_list=model_in, cif_value=a_id)
+                                                        set_cif_value(chain.add_chain_id, 'pdb_chain_id',
+                                                                      const.EMD_MODELLING_INITIAL_MODEL,
+                                                                      cif_list=model_in, cif_value=a_id)
 
                                             def set_el_residue_range(chain, model_in):
                                                 """
                                                 XSD: <xs:element name="residue_range" maxOccurs="unbounded" minOccurs="0">
                                                 CIF: _emd_modelling_initial_model.pdb_chain_residue_range 5-545
                                                 """
-                                                set_cif_value(chain.set_residue_range, 'pdb_chain_residue_range', const.EMD_MODELLING_INITIAL_MODEL, cif_list=model_in)
+                                                set_cif_value(chain.set_residue_range, 'pdb_chain_residue_range',
+                                                              const.EMD_MODELLING_INITIAL_MODEL, cif_list=model_in)
 
                                             # element 1
                                             set_el_id(chain, model_in)
@@ -9579,7 +10347,8 @@ class CifEMDBTranslator(object):
                                         XSD: <xs:element name="details" type="xs:string" minOccurs="0"/>
                                         CIF: _emd_modelling_initial_model.details
                                         """
-                                        set_cif_value(model.set_details, 'details', const.EMD_MODELLING_INITIAL_MODEL, cif_list=model_in)
+                                        set_cif_value(model.set_details, 'details', const.EMD_MODELLING_INITIAL_MODEL,
+                                                      cif_list=model_in)
 
                                     # element 1
                                     set_el_access_code(model, model_in)
@@ -9607,41 +10376,47 @@ class CifEMDBTranslator(object):
                                 XSD: <xs:element name="refinement_protocol" minOccurs="0">
                                 CIF: _emd_modelling.refinement_protocol {AB INITIO MODEL,...}
                                 """
-                                set_cif_value(modelling.set_refinement_protocol, 'refinement_protocol', const.EMD_MODELLING, cif_list=modelling_in)
+                                set_cif_value(modelling.set_refinement_protocol, 'refinement_protocol',
+                                              const.EMD_MODELLING, cif_list=modelling_in)
 
                             def set_el_software_list(modelling, cat_soft_dict_in):
                                 """
                                 XSD: <xs:element name="software_list" type="software_list_type" minOccurs="0"/>
                                 """
-                                set_software_list(const.SOFT_MODEL_FITTING, cat_soft_dict_in, modelling.set_software_list)
+                                set_software_list(const.SOFT_MODEL_FITTING, cat_soft_dict_in,
+                                                  modelling.set_software_list)
 
                             def set_el_details(modelling, modelling_in):
                                 """
                                 XSD: <xs:element name="details" type="xs:string" minOccurs="0"/>
                                 CIF: _emd_modelling.details
                                 """
-                                set_cif_value(modelling.set_details, 'details', const.EMD_MODELLING, cif_list=modelling_in)
+                                set_cif_value(modelling.set_details, 'details', const.EMD_MODELLING,
+                                              cif_list=modelling_in)
 
                             def set_el_target_criteria(modelling, modelling_in):
                                 """
                                 XSD: <xs:element name="target_criteria" type="xs:token" minOccurs="0">
                                 CIF: _emd_modelling.target_criteria 'Correlation coefficient'
                                 """
-                                set_cif_value(modelling.set_target_criteria, 'target_criteria', const.EMD_MODELLING, cif_list=modelling_in)
+                                set_cif_value(modelling.set_target_criteria, 'target_criteria', const.EMD_MODELLING,
+                                              cif_list=modelling_in)
 
                             def set_el_refinement_space(modelling, modelling_in):
                                 """
                                 XSD: <xs:element name="refinement_space" type="xs:token" minOccurs="0">
                                 CIF: _emd_modelling.ref_space {REAL,RECIPROCAL}
                                 """
-                                set_cif_value(modelling.set_refinement_space, 'ref_space', const.EMD_MODELLING, cif_list=modelling_in)
+                                set_cif_value(modelling.set_refinement_space, 'ref_space', const.EMD_MODELLING,
+                                              cif_list=modelling_in)
 
                             def set_el_overall_bvalue(modelling, modelling_in):
                                 """
                                 XSD: <xs:element name="overall_bvalue" type="xs:float" minOccurs="0">
                                 CIF: _emd_modelling.overall_b_value 200
                                 """
-                                set_cif_value(modelling.set_overall_bvalue, 'overall_b_value', const.EMD_MODELLING, cif_list=modelling_in, fmt=float)
+                                set_cif_value(modelling.set_overall_bvalue, 'overall_b_value', const.EMD_MODELLING,
+                                              cif_list=modelling_in, fmt=float)
 
                             # element 1
                             set_el_initial_model(modelling, modelling_id_in, model_dict_in)
@@ -9667,7 +10442,8 @@ class CifEMDBTranslator(object):
                             ip_id_in = get_cif_value(const.K_ID, const.EMD_IMAGE_PROCESSING, ip_in)
                             soft_dict_in = make_list_of_dicts(const.EMD_SOFTWARE, const.K_EMD_IMAGE_PROCESSING_ID)
                             if ip_id_in in soft_dict_in:
-                                cat_soft_dict_in = make_list_of_dicts(const.EMD_SOFTWARE, 'category', soft_dict_in[ip_id_in])
+                                cat_soft_dict_in = make_list_of_dicts(const.EMD_SOFTWARE, 'category',
+                                                                      soft_dict_in[ip_id_in])
 
                         modelling_list = emdb.modelling_listType()
                         modelling_list_in = self.cif.get(const.EMD_MODELLING)
@@ -9692,11 +10468,13 @@ class CifEMDBTranslator(object):
                         XSD: <xs:element name="segmentation_list" minOccurs="0"> has
                         .. 1 element
                         """
+
                         def set_segmentation_type(seg, msk):
                             """
                             XSD: <xs:element name="segmentation" maxOccurs="unbounded"> has
                             .. 3 elements
                             """
+
                             def set_el_file(seg, msk):
                                 """
                                 XSD: <xs:element name="file">
@@ -9796,6 +10574,7 @@ class CifEMDBTranslator(object):
                 4. structure factors
                 Only fsc curve is implemented here???
                 """
+
                 def set_fsc_curve_validation_type(fsc, fsc_in):
                     """
                     XSD: <xs:complexType name="fsc_curve_validation_type"> has
@@ -9803,6 +10582,7 @@ class CifEMDBTranslator(object):
                     XSD: <xs:complexType name="validation_type"> has
                     .. 2 elements with pattern for a fsc curve only!!!???
                     """
+
                     def set_el_file(fsc, fsc_in):
                         """
                         XSD: <xs:element name="file">
@@ -9851,13 +10631,23 @@ class CifEMDBTranslator(object):
             # element 7
             set_el_validation()
 
+        def get_entry_id_from_input_file():
+            cif_re = re.compile(r"EMD\-([0-9]){4}")
+            search_result = re.search(cif_re, self.cif_file_name)
+            if search_result is not None:
+                return search_result.group()
+
         if self.cif_file_read:
-            initial_log(self.logger.warning)
+            initial_log('self.logger.warning')
             const = self.Constants
+            self.entry_in_translation_log = self.EntryLog(get_entry_id_from_input_file())
             self.xml_out = emdb.entry_type()
             set_entry_type()
+            self.translation_log.logs.append(self.entry_in_translation_log)
         else:
-            self.logger.critical('Translation cannot be performed. The cif file %s cannot be read.', self.cif_file_name)
+            txt = 'Translation cannot be performed. The cif file (%s) cannot be read.' % self.cif_file_name
+            self.current_entry_log.error_logs.append(self.ALog(log_text=txt))
+            self.log_formatted('self.logger.error', self.Constants.REQUIRED_ALERT + txt)
 
     def translate(self, in_cif, out_xml):
         """
@@ -9875,15 +10665,15 @@ class CifEMDBTranslator(object):
             xml_file = open(xml_filename, 'r')
             try:
                 etree.fromstring(xml_file.read(), the_parser)
-            except etree.XMLSyntaxError:# as err:
-                #self.logger.critical(self.Constants.VALIDATION_ERROR+" %s XMLSyntaxError for %s", err, xml_filename)
+            except etree.XMLSyntaxError:
                 return False
-            except etree.XMLSchemaError:# as err:
-                #self.logger.critical(self.Constants.VALIDATION_ERROR+" %s XMLSchemaError for %s", err, xml_filename)
+            except etree.XMLSchemaError:
                 return False
             return True
         except IOError as exp:
-            self.logger.critical(self.Constants.VALIDATION_ERROR+"Error %s occured. Arguments %s.", exp.message, exp.args)
+            txt = 'Error (%s) occured. Arguments (%s).' % (exp.message, exp.args)
+            self.current_entry_log.error_logs.append(self.ALog(log_text=self.current_entry_log.validation_title + txt))
+            self.log_formatted('self.logger.critical', self.Constants.VALIDATION_ERROR + txt)
             return False
         finally:
             xml_file.close()
@@ -9898,23 +10688,29 @@ class CifEMDBTranslator(object):
             xsd = etree.parse(in_schema_filename)
             xml_schema = etree.XMLSchema(xsd)
             xml_schema.assertValid(xml_doc)
-            self.logger.info('File %s validates', in_xml)
+            txt = 'File %s validates.' % in_xml
+            self.current_entry_log.info_logs.append(self.ALog(log_text=txt))
+            self.log_formatted('self.logger.info', txt)
         except etree.XMLSyntaxError as exp:
-            self.logger.critical('PARSING ERROR %s', exp)
+            txt = 'PARSING ERROR: %s.' % exp
+            self.current_entry_log.error_logs.append(self.ALog(log_text=txt))
+            self.log_formatted('self.logger.critical', txt)
         except etree.DocumentInvalid as exp:
             i = 1
             for err in exp.error_log:
-                self.logger.critical('VALIDATION ERROR %d: %s', i, err)
-                self.logger.critical('')
+                txt = '%d: %s' % (i, err)
+                self.current_entry_log.error_logs.append(self.ALog(log_text=self.current_entry_log.validation_title + txt))
+                self.log_formatted('self.logger.critical', self.Constants.VALIDATION_ERROR + txt)
                 i = i + 1
 
     def validation_logger_header(self, log_func, in_schema_filename):
         """
         Makes the validation logger pretty
         """
-        log_func('-'*120)
-        log_func('VALIDATION REPORT using %s schema', in_schema_filename)
-        log_func('')
+        if self.logger is not None:
+            log_func('-' * 120)
+            log_func('VALIDATION REPORT using %s schema', in_schema_filename)
+            log_func('')
 
     def validate(self, in_xml, in_schema_filename):
         """
@@ -9923,7 +10719,9 @@ class CifEMDBTranslator(object):
         try:
             in_schema = open(in_schema_filename, 'r')
         except IOError as exp:
-            self.logger.critical(self.Constants.VALIDATION_ERROR+"Error %s occurred. Arguments %s.", exp.message, exp.args)
+            txt = "Error %s occurred. Arguments are: %s." % (exp.message, exp.args)
+            self.current_entry_log.error_logs.append(self.ALog(log_text=self.current_entry_log.validation_title + txt))
+            self.log_formatted('self.logger.critical', self.Constants.VALIDATION_ERROR + txt)
             return False
         else:
             schema_doc = in_schema.read()
@@ -9933,7 +10731,7 @@ class CifEMDBTranslator(object):
             xml_parser = etree.XMLParser(schema=the_schema)
             validates = self.validate_file(xml_parser, in_xml)
             if not validates:
-                self.validation_logger_header(self.logger.critical, in_schema_filename)
+                self.validation_logger_header('self.logger.critical', in_schema_filename)
                 self.show_validation_errors(in_xml, in_schema_filename)
             return validates
         finally:
@@ -9945,6 +10743,7 @@ class CifEMDBTranslator(object):
         """
         self.translate(in_cif, out_xml)
         self.validate(out_xml, in_schema)
+
 
 def main():
     """Translate a cif file to EMDB xml 3.x.x.x"""
@@ -9982,12 +10781,12 @@ def main():
     parser.add_option("-i", "--in-file", action="store", type="string", metavar="FILE", dest="inputFile", help="Write input to FILE")
     parser.add_option("-x", "--xml", action="store_true", dest="translate2Xml", help="Translate cif file to XML", default=True)
     parser.add_option("-c", "--cif", action="store_false", dest="translate2Xml", help="Translate XML file to cif")
-    parser.add_option("-f", "--info-log-off", action="store_true", dest="info_off", help="Logging to INFO file turned off")
-    parser.add_option("-w", "--warn-log-off", action="store_true", dest="warn_off", help="Logging to WARN file turned off")
-    parser.add_option("-e", "--error-log-off", action="store_true", dest="err_off", help="Logging to ERROR file turned off")
-    parser.add_option("-l", "--console-log-on", action="store_true", dest="console_log_on", help="Logging to console turned on")
-    parser.add_option("-p", "--private-include", action="store_true", dest="private_inc", help="Private elements included in the xml output file")
-    parser.add_option("-s", "--show-log-id", action="store_true", dest="show_log_ids", help="Entry ids are printed into logs")
+    parser.add_option("-f", "--info-log", action="store_false", dest="info_log", help="Logging to INFO file flag")
+    parser.add_option("-w", "--warn-log", action="store_false", dest="warn_log", help="Logging to WARN file flag")
+    parser.add_option("-e", "--error-log", action="store_false", dest="err_log", help="Logging to ERROR file flag")
+    parser.add_option("-l", "--console-log", action="store_false", dest="console_log", help="Logging to console turned on")
+    parser.add_option("-p", "--private-include", action="store_false", dest="private_inc", help="Private elements included in the xml output file")
+    parser.add_option("-s", "--show-log-id", action="store_false", dest="show_log_ids", help="Entry ids are printed into logs")
 
     (options, args) = parser.parse_args()
 
@@ -9995,15 +10794,12 @@ def main():
     if len(args) == 0:
         print usage
         sys.exit("No input options given!")
-#     else:
-#         input_file = args[0]
+    #     else:
+    #         input_file = args[0]
 
     if options.translate2Xml is True:
         translator = CifEMDBTranslator()
-        if options.info_off or options.warn_off or options.err_off:
-            translator.turn_off_file_loggers(options.info_off, options.warn_off, options.err_off)
-        if options.console_log_on:
-            translator.turn_on_console_logging()
+        translator.set_console_logging(options.console_log, options.info_log, options.warn_log, options.err_log)
         translator.set_show_private(options.private_inc)
         translator.set_show_log_id(options.show_log_ids)
         translator.read_cif_in_file(options.inputFile)
@@ -10011,6 +10807,7 @@ def main():
         translator.write_xml_out_file(options.outputFile)
     else:
         logging.info('XML to CIF translation not implemented yet. Coming sooooon :)')
+
 
 if __name__ == "__main__":
     main()
