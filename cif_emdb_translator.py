@@ -563,7 +563,7 @@ class CifEMDBTranslator(object):
             '_emd_three_d_crystal_parameters.space_group': '<xs:element name="space_group" type="xs:token">',
             '_emd_two_d_crystal_parameters.plane_group': '<xs:element name="space_group" type="xs:token">',
             '_emd_angle_assignment.type': '<xs:element name="type">',
-            '_emd_angle_assignment.projection_matching_number_reference_projections': '<xs:element name="number_reference_projections" type="xs:positiveInteger"/>',
+            '_emd_angle_assignment.projection_matching_number_reference_projections': '<xs:element name="number_reference_projections" type="xs:positiveInteger" minOccurs="0"/>',
             '_emd_angle_assignment.projection_matching_merit_function': '<xs:element name="merit_function" type="xs:token" minOccurs="0"/>',
             '_emd_angle_assignment.details': '<xs:element name="details" type="xs:string" minOccurs="0"/>',
             '_emd_crystallography_stats.number_intensities_measured': '<xs:element name="number_intensities_measured" type="xs:positiveInteger"/>',
