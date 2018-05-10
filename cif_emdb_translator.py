@@ -783,6 +783,10 @@ class CifEMDBTranslator(object):
         def id(self):
             return self.ID
 
+        @id.setter
+        def id(self, id_value):
+            self.ID = id_value
+
         @property
         def errors(self):
             return self.error_logs
@@ -1345,10 +1349,10 @@ class CifEMDBTranslator(object):
                     return 'Not provided'
                 else:
                     return em_cif_item
-            else:
-                txt = u'Mapping from _emd to _em space does not exist for (%s).' % emd_cif_item
-                self.current_entry_log.warn_logs.append(self.ALog(log_text=self.current_entry_log.warn_title + txt))
-                self.log_formatted(self.warn_log_string, const.NOT_REQUIRED_ALERT + txt)
+                    # else:
+                    #     txt = u'Mapping from _emd to _em space does not exist for (%s).' % emd_cif_item
+                    #     self.current_entry_log.warn_logs.append(self.ALog(log_text=self.current_entry_log.warn_title + txt))
+                    #     self.log_formatted(self.warn_log_string, const.NOT_REQUIRED_ALERT + txt)
 
         def is_cif_item_required(cif_item):
             """
@@ -10126,6 +10130,9 @@ class CifEMDBTranslator(object):
                             # The following is as a prefix for file names in the archive
                             self.emdb_id_u = emdb_id.replace('-', '_')
                             self.xml_out.set_emdb_id(emdb_id)
+                            if self.entry_in_translation_log.id == '':
+                                self.entry_in_translation_log.id = emdb_id
+
                             if self.__show_log_id:
                                 # Add entry ID into the warning logger messages
                                 self.log_formatted(self.error_log_string, self.emdb_id_u)
