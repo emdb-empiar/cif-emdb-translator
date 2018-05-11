@@ -556,8 +556,8 @@ class CifEMDBTranslator(object):
             '_emd_three_d_crystal_parameters.c_sampling_length': '<xs:element name="c_sampling_length" type="cell_type" minOccurs="0"/>',
             '_emd_three_d_crystal_parameters.gamma': '<xs:element name="gamma" type="cell_angle_type"/>',
             '_emd_two_d_crystal_parameters.gamma': '<xs:element name="gamma" type="cell_angle_type"/>',
-            '_emd_three_d_crystal_parameters.alpha': '<xs:element name="alpha" type="cell_angle_type"/>',
-            '_emd_two_d_crystal_parameters.alpha': '<xs:element name="alpha" type="cell_angle_type"/>',
+            '_emd_three_d_crystal_parameters.alpha': '<xs:element name="alpha" type="cell_angle_type" minOccurs="0"/>',
+            '_emd_two_d_crystal_parameters.alpha': '<xs:element name="alpha" type="cell_angle_type minOccurs="0"/>',
             '_emd_three_d_crystal_parameters.beta': '<xs:element name="beta" type="cell_angle_type" minOccurs="0"/>',
             '_emd_two_d_crystal_parameters.beta': '<xs:element name="beta" type="cell_angle_type" minOccurs="0"/>',
             '_emd_three_d_crystal_parameters.space_group': '<xs:element name="space_group" type="xs:token">',
@@ -688,8 +688,8 @@ class CifEMDBTranslator(object):
             '_emd_map.cell_a': '<xs:element name="a" type="cell_type"/>',
             '_emd_map.cell_b': '<xs:element name="b" type="cell_type"/>',
             '_emd_map.cell_c': '<xs:element name="c" type="cell_type"/>',
-            '_emd_map.cell_alpha': '<xs:element name="alpha" type="cell_angle_type"/>',
-            '_emd_map.cell_beta': '<xs:element name="beta" type="cell_angle_type"/>',
+            '_emd_map.cell_alpha': '<xs:element name="alpha" type="cell_angle_type" minOccurs="0"/>',
+            '_emd_map.cell_beta': '<xs:element name="beta" type="cell_angle_type" minOccurs="0"/>',
             '_emd_map.cell_gamma': '<xs:element name="gamma" type="cell_angle_type"/>',
             '_emd_map.file': '<xs:element name="file">',
             '_emd_map.axis_order_fast': '<xs:element name="fast">',
@@ -825,20 +825,17 @@ class CifEMDBTranslator(object):
 
 
 
-        def add_info(self, cif_item, setter_func, xsd, em_for_emd, fmt_cif_value=None, parent_el_req=None,
-                     soft_name=None):
+        def add_info(self, cif_item, setter_func, xsd, em_for_emd, fmt_cif_value=None, parent_el_req=None, soft_name=None):
             info = CifEMDBTranslator.ALog(cif_item, setter_func, xsd, em_for_emd, fmt_cif_value, parent_el_req, soft_name)
             info.create_std_info_log_text(self._info_title)
             self.info_logs.append(info)
 
-        def add_warn(self, cif_item, setter_func, xsd, em_for_emd, fmt_cif_value=None, parent_el_req=None,
-                     soft_name=None):
+        def add_warn(self, cif_item, setter_func, xsd, em_for_emd, fmt_cif_value=None, parent_el_req=None, soft_name=None):
             warn = CifEMDBTranslator.ALog(cif_item, setter_func, xsd, em_for_emd, fmt_cif_value, parent_el_req, soft_name)
             warn.create_problematic_log_text(self._warn_title)
             self.warn_logs.append(warn)
 
-        def add_err(self, cif_item, setter_func, xsd, em_for_emd, fmt_cif_value=None, parent_el_req=None,
-                    soft_name=None):
+        def add_err(self, cif_item, setter_func, xsd, em_for_emd, fmt_cif_value=None, parent_el_req=None, soft_name=None):
             err = CifEMDBTranslator.ALog(cif_item, setter_func, xsd, em_for_emd, fmt_cif_value, parent_el_req, soft_name)
             err.create_problematic_log_text(self._error_title)
             self.error_logs.append(err)
@@ -1133,7 +1130,7 @@ class CifEMDBTranslator(object):
                     self.error_log_string = self.open_log_stream(self.Constants.ERROR_LOG_STRING)
                     log_str = self.error_log_string
             if log_str is not None:
-                log_str.write('\n(' + self.entry_in_translation_log.id + ')' + txt + u' ')
+                log_str.write('\n(' + self.entry_in_translation_log.id + ')' + txt + u'\n')
 
     def read_emd_map_v2_cif_file(self):
         """
@@ -1386,8 +1383,8 @@ class CifEMDBTranslator(object):
                     spacing = u' ' * len(alert)
                     log_str.write(u'\n')
                     cif_item_txt = u''
-                    xsd_txt = u''
-                    parent_txt = u''
+                    xsd_txt = u'\n'
+                    parent_txt = u'\n'
                     em_for_emd_txt = u'The _em category for the above category is (%s).'
                     soft_txt = u'Software name is (%s)'
                     if log_str == self.info_log_string:
@@ -2109,48 +2106,42 @@ class CifEMDBTranslator(object):
                             XSD: <xs:element name="role">
                             CIF: _pdbx_contact_author.role
                             """
-                            set_cif_value(cont_author.set_role, 'role', const.PDBX_CONTACT_AUTHOR,
-                                          cif_list=contact_auth_in, fmt=str.upper, parent_el_req=parent_req)
+                            set_cif_value(cont_author.set_role, 'role', const.PDBX_CONTACT_AUTHOR, cif_list=contact_auth_in, fmt=str.upper, parent_el_req=parent_req)
 
                         def set_el_title(cont_author, contact_auth_in, parent_req):
                             """
                             XSD: <xs:element name="title">
                             CIF: _pdbx_contact_author.name_salutation
                             """
-                            set_cif_value(cont_author.set_title, 'name_salutation', const.PDBX_CONTACT_AUTHOR,
-                                          cif_list=contact_auth_in, fmt=str.upper, parent_el_req=parent_req)
+                            set_cif_value(cont_author.set_title, 'name_salutation', const.PDBX_CONTACT_AUTHOR, cif_list=contact_auth_in, fmt=str.upper, parent_el_req=parent_req)
 
                         def set_el_first_name(cont_author, contact_auth_in, parent_req):
                             """
                             XSD: <xs:element name="first_name" type="xs:token">
                             CIF: _pdbx_contact_author.name_first
                             """
-                            set_cif_value(cont_author.set_first_name, 'name_first', const.PDBX_CONTACT_AUTHOR,
-                                          cif_list=contact_auth_in, parent_el_req=parent_req)
+                            set_cif_value(cont_author.set_first_name, 'name_first', const.PDBX_CONTACT_AUTHOR, cif_list=contact_auth_in, parent_el_req=parent_req)
 
                         def set_el_middle_name(cont_author, contact_auth_in, parent_req):
                             """
                             XSD: <xs:element name="middle_name">
                             CIF: _pdbx_contact_author.name_mi
                             """
-                            set_cif_value(cont_author.set_middle_name, 'name_mi', const.PDBX_CONTACT_AUTHOR,
-                                          cif_list=contact_auth_in, fmt=str.upper, parent_el_req=parent_req)
+                            set_cif_value(cont_author.set_middle_name, 'name_mi', const.PDBX_CONTACT_AUTHOR, cif_list=contact_auth_in, fmt=str.upper, parent_el_req=parent_req)
 
                         def set_el_last_name(cont_author, contact_auth_in, parent_req):
                             """
                             XSD: <xs:element name="last_name" type="xs:token">
                             CIF: _pdbx_contact_author.name_last
                             """
-                            set_cif_value(cont_author.set_last_name, 'name_last', const.PDBX_CONTACT_AUTHOR,
-                                          cif_list=contact_auth_in, parent_el_req=parent_req)
+                            set_cif_value(cont_author.set_last_name, 'name_last', const.PDBX_CONTACT_AUTHOR, cif_list=contact_auth_in, parent_el_req=parent_req)
 
                         def set_el_organization(cont_author, contact_auth_in, parent_req):
                             """
                             XSD: <xs:element name="organization">
                             CIF: _pdbx_contact_author.organization_type
                             """
-                            set_cif_value(cont_author.set_organization, 'organization_type', const.PDBX_CONTACT_AUTHOR, cif_list=contact_auth_in,
-                                          constructor=emdb.organizationType, type='', fmt=str.upper, parent_el_req=parent_req)
+                            set_cif_value(cont_author.set_organization, 'organization_type', const.PDBX_CONTACT_AUTHOR, cif_list=contact_auth_in, constructor=emdb.organizationType, type='', fmt=str.upper, parent_el_req=parent_req)
 
                         def set_el_street(cont_author, contact_auth_in, parent_req):
                             """
@@ -2165,8 +2156,7 @@ class CifEMDBTranslator(object):
                             full_address = None
                             if address_1 is not None and address_2 is not None and address_3 is not None:
                                 full_address = ', '.join(filter(None, (address_1, address_2, address_3)))
-                            set_cif_value(cont_author.set_street, 'address_1', const.PDBX_CONTACT_AUTHOR,
-                                          cif_list=contact_auth_in, cif_value=full_address, parent_el_req=parent_req)
+                            set_cif_value(cont_author.set_street, 'address_1', const.PDBX_CONTACT_AUTHOR, cif_list=contact_auth_in, cif_value=full_address, parent_el_req=parent_req)
 
                         def set_el_town_or_city(cont_author, contact_auth_in, parent_req):
                             """
@@ -3233,11 +3223,9 @@ class CifEMDBTranslator(object):
                                 else:
                                     # common_name is not None
                                     if tax_id_in is not None:
-                                        set_cif_value(src.set_organism, cif_key, cif_category, cif_list=src_in, constructor=emdb.organism_type, ncbi=tax_id_in,
-                                                      cif_value=common_name, parent_el_req=False)
+                                        set_cif_value(src.set_organism, cif_key, cif_category, cif_list=src_in, constructor=emdb.organism_type, ncbi=tax_id_in, cif_value=common_name, parent_el_req=False)
                                     else:
-                                        set_cif_value(src.set_organism, cif_key, cif_category, cif_list=src_in, constructor=emdb.organism_type, cif_value=common_name,
-                                                      parent_el_req=False)
+                                        set_cif_value(src.set_organism, cif_key, cif_category, cif_list=src_in, constructor=emdb.organism_type, cif_value=common_name, parent_el_req=False)
                             else:
                                 if tax_id_in is not None:
                                     set_cif_value(src.set_organism, cif_key, cif_category, cif_list=src_in, constructor=emdb.organism_type, ncbi=tax_id_in, parent_el_req=False)
@@ -3264,7 +3252,7 @@ class CifEMDBTranslator(object):
                     if cif_category is not None:
                         cif_key = a_dict.get(cif_category, None)
                         if cif_key is not None:
-                            set_cif_value(src.set_strain, cif_key, cif_category, cif_input=src_in)
+                            set_cif_value(src.set_strain, cif_key, cif_category, cif_list=src_in)
                         else:
                             txt = u'Cannot set the strain element as cif item (%s) is not one in (%s).' % (cif_key, a_dict)
                             self.current_entry_log.error_logs.append(self.ALog(log_text=self.current_entry_log.error_title + txt))
@@ -3283,135 +3271,6 @@ class CifEMDBTranslator(object):
                 set_el_strain(src, cif_category, src_in)
                 # element 3
                 set_el_synonym_organism()
-
-            def get_rec_exp_dict_old(ent_id_in, src_dicts, is_supramolecule):
-                """
-                Helper function: It returns a dictionary needed for recombinant expression containing a cif category depending on several requirements.
-                An EM entry can be:
-                1. Model only; Has a PDB source
-                2. Map only; Has an EM source
-                3. Map and model; Has both, EM and PDB, sources
-
-                The type of EM entry can be determined from the _database_2 cif category list. If the list has _database_2.database_id as:
-                1. PDB; This is a model only entry. The return category is the _entity_src_gen category
-                2. EMDB; This is a map only entry. The return dictionary is the _emd_recombinant_expression cif category
-                3. PDB and EMDB; This is a map and model entry. The return dictionary is one of _entity_src_nat/_entity_src_gen/_entity_src_syn or _emd_recombinant_expression
-
-                SUPRAMOLECULE map and model entry: The return category is _emd_recombinant_expression
-
-                MACROMOLECULE map and model entry:
-                Cif category _emd_supramolecule.source can have the following values:
-                1. NATURAL; The return dictionary has the _entity_src_nat cif category
-                2. RECOMBINANT; To find the return dictionary the following needs finding out:
-
-                _emd_supramolecule.entity_id_list has a list of supramolecules ids (e.g. '1, 2, 3'). More on each entity can be found in the _entity category.
-                _entity.id corresponds to the input parameter ent_id_in. each entity has a type given in _entity.type as:
-                1. polymer
-                2. something other than polymer (such as non-polymer or water); This value should not occur for recombinant expressions.
-
-                If _entity.type is 'polymer' than _entity.src_method gives the return dictionary as:
-                1. nat; The return category is _entity_src_nat
-                2. man; The return category is _entity_src_gen
-                3. syn; The return category is _entity_src_syn
-
-                Parameters:
-                @param ent_id_in:
-                @param src_dicts
-                @param is_supramolecule: True for supramolecules; False for macromolecules
-                """
-                # Determine the type of entry
-                db2_in = assert_get_value(const.DATABASE_2, self.cif)
-                db_id_dict = make_list_of_dicts(const.DATABASE_2, 'database_id', db2_in, 2)
-                if 'EMDB' in db_id_dict and 'PDB' not in db_id_dict:
-                    # Map only
-                    if src_dicts.get('rec_exp_dict_in', None) is None:
-                        txt = u'(_emd_recombinant_expression) category missing for creating recombinant expression for the map only entry (%s).' % ent_id_in
-                        self.current_entry_log.warn_logs.append(self.ALog(log_text=self.current_entry_log.warn_title + txt))
-                        self.log_formatted(self.warn_log_string, const.NOT_REQUIRED_ALERT + txt)
-                    else:
-                        return src_dicts['rec_exp_dict_in']
-                elif 'EMDB' not in db_id_dict and 'PDB' in db_id_dict:
-                    # Model only; The return category is the _entity_src_gen category
-                    if src_dicts.get('ent_src_gen_dict', None) is None:
-                        txt = u'(_entity_src_gen category) missing for creating recombinant expression for the model only entry (%s)' % ent_id_in
-                        self.current_entry_log.warn_logs.append(self.ALog(log_text=self.current_entry_log.warn_title + txt))
-                        self.log_formatted(self.warn_log_string, const.NOT_REQUIRED_ALERT + txt)
-                    else:
-                        return src_dicts['ent_src_gen_dict']
-                elif 'EMDB' in db_id_dict and 'PDB' in db_id_dict:
-                    # Map and model
-                    if is_supramolecule:
-                        if src_dicts.get('rec_exp_dict_in', None) is None:
-                            txt = u'(_emd_recombinant_expression) category missing for creating recombinant expression for the map and model supramolecule entry %s.' % ent_id_in
-                            self.current_entry_log.warn_logs.append(self.ALog(log_text=self.current_entry_log.warn_title + txt))
-                            self.log_formatted(self.warn_log_string, const.NOT_REQUIRED_ALERT + txt)
-                        else:
-                            return src_dicts['rec_exp_dict_in']
-                    else:
-                        # check if _emd_supramolecule.source is NATURAL, RECOMBINANT or MULTIPLE SOURCES
-                        src = get_cif_value('source', const.EMD_SUPRAMOLECULE)
-                        if src == 'NATURAL':
-                            if src_dicts.get('ent_src_nat_dict', None) is None:
-                                txt = u'(_entity_src_nat) category missing for creating recombinant expression for the map and model entry %s where (_emd_supramolecule.source) is (NATURAL).' % ent_id_in
-                                self.current_entry_log.warn_logs.append(self.ALog(log_text=self.current_entry_log.warn_title + txt))
-                                self.log_formatted(self.warn_log_string, const.NOT_REQUIRED_ALERT + txt)
-                            else:
-                                return src_dicts['ent_src_nat_dict']
-                        elif src == 'RECOMBINANT':
-                            entity_dict = make_dict(const.ENTITY, 'id')
-                            if ent_id_in in entity_dict:
-                                ent_type = get_cif_value('type', const.ENTITY, entity_dict[ent_id_in])
-                                if ent_type == 'polymer':
-                                    ent_src_method = get_cif_value('src_method', const.ENTITY, entity_dict[ent_id_in])
-                                    if ent_src_method == 'nat':
-                                        if src_dicts.get('ent_src_nat_dict', None) is None:
-                                            txt = u'(_entity_src_nat) category missing for creating recombinant expression for the map and model entry (%s) where (_emd_supramolecule.source) is (RECOMBINANT) and polymer is (nat).' % ent_id_in
-                                            self.current_entry_log.warn_logs.append(self.ALog(log_text=self.current_entry_log.warn_title + txt))
-                                            self.log_formatted(self.warn_log_string, const.NOT_REQUIRED_ALERT + txt)
-                                        else:
-                                            return src_dicts['ent_src_nat_dict']
-                                    elif ent_src_method == 'man':
-                                        if src_dicts.get('ent_src_gen_dict', None) is None:
-                                            txt = u'(_entity_src_gen) category missing for creating recombinant expression for the map and model entry (%s) where (_emd_supramolecule.source) is (RECOMBINANT) and polymer is (man).' % ent_id_in
-                                            self.current_entry_log.warn_logs.append(self.ALog(log_text=self.current_entry_log.warn_title + txt))
-                                            self.log_formatted(self.warn_log_string, const.NOT_REQUIRED_ALERT + txt)
-                                        else:
-                                            return src_dicts['ent_src_gen_dict']
-                                    if ent_src_method == 'syn':
-                                        if src_dicts.get('ent_src_syn_dict', None) is None:
-                                            txt = u'(_entity_src_syn) category missing for creating recombinant expression for the map and model entry (%s) where (_emd_supramolecule.source) is (RECOMBINANT) and polymer is (man).' % ent_id_in
-                                            self.current_entry_log.warn_logs.append(self.ALog(log_text=self.current_entry_log.warn_title + txt))
-                                            self.log_formatted(self.warn_log_string, const.NOT_REQUIRED_ALERT + txt)
-                                        else:
-                                            return src_dicts['ent_src_syn_dict']
-                                else:
-                                    # this should not happen - write out an error
-                                    if ent_type is not None:
-                                        txt = u'(_entity.type) is (%s) and not polymer.' % ent_type
-                                        self.current_entry_log.warn_logs.append(self.ALog(log_text=self.current_entry_log.warn_title + txt))
-                                        self.log_formatted(self.warn_log_string, const.NOT_REQUIRED_ALERT + txt)
-                                    else:
-                                        txt = u'(_entity.type) is not given.'
-                                        self.current_entry_log.warn_logs.append(self.ALog(log_text=self.current_entry_log.warn_title + txt))
-                                        self.log_formatted(self.warn_log_string, const.NOT_REQUIRED_ALERT + txt)
-                                    return None
-                        elif src == 'MULTIPLE SOURCES':
-                            # this is going to be covered in its children
-                            pass
-                        else:
-                            # this should not happen - write out an error
-                            if src is not None:
-                                txt = u'_emd_supramolecule.source is (%s) and could only be one of these values: NATURAL, RECOMBINANT, MULTIPLE SOURCES.' % src
-                                self.current_entry_log.error_logs.append(self.ALog(log_text=self.current_entry_log.error_title + txt))
-                                self.log_formatted(self.error_log_string, const.REQUIRED_ALERT + txt)
-                            else:
-                                err_txt = u'macromolecule'
-                                if is_supramolecule:
-                                    err_txt = u'supramolecule'
-                                txt = u'The value for (_emd_supramolecule.source) is missing for (%s) id=(%s). Value expected is one of: NATURAL, RECOMBINANT, MULTIPLE SOURCES.' % (err_txt, ent_id_in)
-                                self.current_entry_log.error_logs.append(self.ALog(log_text=self.current_entry_log.error_title + txt))
-                                self.log_formatted(self.error_log_string, const.REQUIRED_ALERT + txt)
-                            return None
 
             def get_rec_exp_dict(ent_id_in, src_dicts, cif_cat_in, is_supramolecule):
                 """
@@ -3908,7 +3767,6 @@ class CifEMDBTranslator(object):
                             .. an extension of base="base_source_type" and
                             .. a sequence of organ, tissue, cell
                             """
-                            cns = emdb.complex_natural_source_type()
                             nat_src_dict_in = sup_mol_dicts['nat_src_dict_in']
                             if sup_mol_id_in in nat_src_dict_in:
                                 sup_mol_dict_in = nat_src_dict_in[sup_mol_id_in]
@@ -3919,8 +3777,23 @@ class CifEMDBTranslator(object):
                                              'add_organelle': False,
                                              'add_cellular_location': False
                                              }
-                                set_sup_mol_nat_src(cns, complex_sup_mol, const.EMD_NATURAL_SOURCE, sup_mol_dict_in,
-                                                    cmpx_dict)
+                                complex_natural_source_type_list = []
+                                attr_ncbis = []
+                                el_organisms = []
+                                el_strains = []
+                                for src_in in sup_mol_dict_in:
+                                    attr_ncbi = get_cif_value('ncbi_tax_id', const.EMD_VIRUS_NATURAL_HOST, cif_list=src_in)
+                                    attr_ncbis.extend([attr_ncbi])
+                                    el_organism = get_cif_value('organism', const.EMD_NATURAL_SOURCE, cif_list=src_in)
+                                    el_organisms.extend([el_organism])
+                                    el_strain = get_cif_value('strain', const.EMD_NATURAL_SOURCE, cif_list=src_in)
+                                    el_strains.extend([el_strain])
+                                complex_natural_source_type_list.extend(attr_ncbis)
+                                complex_natural_source_type_list.extend(el_organisms)
+                                complex_natural_source_type_list.extend(el_strains)
+                                if any(x is not None for x in complex_natural_source_type_list):
+                                    cns = emdb.complex_natural_source_type()
+                                    set_sup_mol_nat_src(cns, complex_sup_mol, const.EMD_NATURAL_SOURCE, sup_mol_dict_in, cmpx_dict)
 
                         def set_el_recombinant_expression(complex_sup_mol, sup_mol_id_in, rec_exp_dict_in):
                             """
@@ -4312,7 +4185,6 @@ class CifEMDBTranslator(object):
                             """
                             XSD: <xs:element name="natural_source">
                             """
-                            cns = emdb.organelle_natural_source_type()
                             if sup_mol_id_in in nat_src_dict_in:
                                 sup_mol_dict_in = nat_src_dict_in[sup_mol_id_in]
                                 org_dict = {'add_nat_src': True,
@@ -4322,8 +4194,43 @@ class CifEMDBTranslator(object):
                                             'add_organelle': True,
                                             'add_cellular_location': True
                                             }
-                                set_sup_mol_nat_src(cns, org_or_cell_sup_mol, const.EMD_NATURAL_SOURCE, sup_mol_dict_in,
-                                                    org_dict)
+                                organelle_natural_source_type_list = []
+                                attr_ncbis = []
+                                el_organisms = []
+                                el_strains = []
+                                el_organs = []
+                                el_tissues = []
+                                el_cells = []
+                                el_organelles = []
+                                el_cellular_locations = []
+                                for src_in in sup_mol_dict_in:
+                                    attr_ncbi = get_cif_value('ncbi_tax_id', const.EMD_VIRUS_NATURAL_HOST, cif_list=src_in)
+                                    attr_ncbis.extend([attr_ncbi])
+                                    el_organism = get_cif_value('organism', const.EMD_NATURAL_SOURCE, cif_list=src_in)
+                                    el_organisms.extend([el_organism])
+                                    el_strain = get_cif_value('strain', const.EMD_NATURAL_SOURCE, cif_list=src_in)
+                                    el_strains.extend([el_strain])
+                                    el_organ = get_cif_value('organ', const.EMD_NATURAL_SOURCE, cif_list=src_in)
+                                    el_organs.extend([el_organ])
+                                    el_tissue = get_cif_value('tissue', const.EMD_NATURAL_SOURCE, cif_list=src_in)
+                                    el_tissues.extend([el_tissue])
+                                    el_cell = get_cif_value('cell', const.EMD_NATURAL_SOURCE, cif_list=src_in)
+                                    el_cells.extend([el_cell])
+                                    el_organelle = get_cif_value('organelle', const.EMD_NATURAL_SOURCE, cif_list=src_in)
+                                    el_organelles.extend([el_organelle])
+                                    el_cellular_location = get_cif_value('cellular_location', const.EMD_NATURAL_SOURCE, cif_list=src_in)
+                                    el_cellular_locations.extend([el_cellular_location])
+                                organelle_natural_source_type_list.extend(attr_ncbis)
+                                organelle_natural_source_type_list.extend(el_organisms)
+                                organelle_natural_source_type_list.extend(el_strains)
+                                organelle_natural_source_type_list.extend(el_organs)
+                                organelle_natural_source_type_list.extend(el_tissues)
+                                organelle_natural_source_type_list.extend(el_cells)
+                                organelle_natural_source_type_list.extend(el_organelles)
+                                organelle_natural_source_type_list.extend(el_cellular_locations)
+                                if any(x is not None for x in organelle_natural_source_type_list):
+                                    cns = emdb.organelle_natural_source_type()
+                                    set_sup_mol_nat_src(cns, org_or_cell_sup_mol, const.EMD_NATURAL_SOURCE, sup_mol_dict_in, org_dict)
 
                         def set_el_molecular_weight(org_or_cell_sup_mol, sup_mol_id_in, s_mol_wt_dict_in):
                             """
@@ -4361,7 +4268,6 @@ class CifEMDBTranslator(object):
                             """
                             XSD: <xs:element name="natural_source">
                             """
-                            cns = emdb.tissue_natural_source_type()
                             nat_src_dict_in = sup_mol_dicts['nat_src_dict_in']
                             if sup_mol_id_in in nat_src_dict_in:
                                 sup_mol_dict_in = nat_src_dict_in[sup_mol_id_in]
@@ -4372,8 +4278,31 @@ class CifEMDBTranslator(object):
                                              'add_organelle': False,
                                              'add_cellular_location': False
                                              }
-                                set_sup_mol_nat_src(cns, tissue_sup_mol, const.EMD_NATURAL_SOURCE, sup_mol_dict_in,
-                                                    tiss_dict)
+                                tissue_natural_source_type_list = []
+                                attr_ncbis = []
+                                el_organisms = []
+                                el_strains = []
+                                el_organs = []
+                                el_tissues = []
+                                for src_in in sup_mol_dict_in:
+                                    attr_ncbi = get_cif_value('ncbi_tax_id', const.EMD_VIRUS_NATURAL_HOST, cif_list=src_in)
+                                    attr_ncbis.extend([attr_ncbi])
+                                    el_organism = get_cif_value('organism', const.EMD_NATURAL_SOURCE, cif_list=src_in)
+                                    el_organisms.extend([el_organism])
+                                    el_strain = get_cif_value('strain', const.EMD_NATURAL_SOURCE, cif_list=src_in)
+                                    el_strains.extend([el_strain])
+                                    el_organ = get_cif_value('organ', const.EMD_NATURAL_SOURCE, cif_list=src_in)
+                                    el_organs.extend([el_organ])
+                                    el_tissue = get_cif_value('tissue', const.EMD_NATURAL_SOURCE, cif_list=src_in)
+                                    el_tissues.extend([el_tissue])
+                                tissue_natural_source_type_list.extend(attr_ncbis)
+                                tissue_natural_source_type_list.extend(el_organisms)
+                                tissue_natural_source_type_list.extend(el_strains)
+                                tissue_natural_source_type_list.extend(el_organs)
+                                tissue_natural_source_type_list.extend(el_tissues)
+                                if any(x is not None for x in tissue_natural_source_type_list):
+                                    cns = emdb.tissue_natural_source_type()
+                                    set_sup_mol_nat_src(cns, tissue_sup_mol, const.EMD_NATURAL_SOURCE, sup_mol_dict_in, tiss_dict)
 
                         # set up the supramolecule specific tagname explicitly
                         # as DSgenerate doesn't provide it
@@ -4393,7 +4322,6 @@ class CifEMDBTranslator(object):
                             """
                             XSD: <xs:element name="natural_source">
                             """
-                            cns = emdb.cell_natural_source_type()
                             nat_src_dict_in = sup_mol_dicts['nat_src_dict_in']
                             if sup_mol_id_in in nat_src_dict_in:
                                 sup_mol_dict_in = nat_src_dict_in[sup_mol_id_in]
@@ -4404,8 +4332,35 @@ class CifEMDBTranslator(object):
                                              'add_organelle': False,
                                              'add_cellular_location': False
                                              }
-                                set_sup_mol_nat_src(cns, cell_sup_mol, const.EMD_NATURAL_SOURCE, sup_mol_dict_in,
-                                                    cell_dict)
+                                cell_natural_source_type_list = []
+                                attr_ncbis = []
+                                el_organisms = []
+                                el_strains = []
+                                el_organs = []
+                                el_tissues = []
+                                el_cells = []
+                                for src_in in sup_mol_dict_in:
+                                    attr_ncbi = get_cif_value('ncbi_tax_id', const.EMD_VIRUS_NATURAL_HOST, cif_list=src_in)
+                                    attr_ncbis.extend([attr_ncbi])
+                                    el_organism = get_cif_value('organism', const.EMD_NATURAL_SOURCE, cif_list=src_in)
+                                    el_organisms.extend([el_organism])
+                                    el_strain = get_cif_value('strain', const.EMD_NATURAL_SOURCE, cif_list=src_in)
+                                    el_strains.extend([el_strain])
+                                    el_organ = get_cif_value('organ', const.EMD_NATURAL_SOURCE, cif_list=src_in)
+                                    el_organs.extend([el_organ])
+                                    el_tissue = get_cif_value('tissue', const.EMD_NATURAL_SOURCE, cif_list=src_in)
+                                    el_tissues.extend([el_tissue])
+                                    el_cell = get_cif_value('cell', const.EMD_NATURAL_SOURCE, cif_list=src_in)
+                                    el_cells.extend([el_cell])
+                                cell_natural_source_type_list.extend(attr_ncbis)
+                                cell_natural_source_type_list.extend(el_organisms)
+                                cell_natural_source_type_list.extend(el_strains)
+                                cell_natural_source_type_list.extend(el_organs)
+                                cell_natural_source_type_list.extend(el_tissues)
+                                cell_natural_source_type_list.extend(el_cells)
+                                if any(x is not None for x in cell_natural_source_type_list):
+                                    cns = emdb.cell_natural_source_type()
+                                    set_sup_mol_nat_src(cns, cell_sup_mol, const.EMD_NATURAL_SOURCE, sup_mol_dict_in, cell_dict)
 
                         # set up the supramolecule specific tagname explicitly
                         # as DSgenerate doesn't provide it
@@ -4427,32 +4382,27 @@ class CifEMDBTranslator(object):
                                 if sup_type is not None:
                                     if sup_type in ['RIBOSOME', 'COMPLEX']:
                                         complex_sup_mol = emdb.complex_supramolecule_type()
-                                        set_complex_supramolecule_type(complex_sup_mol, sup_in, sup_mol_id_in,
-                                                                       sup_mol_dicts, sample)
+                                        set_complex_supramolecule_type(complex_sup_mol, sup_in, sup_mol_id_in, sup_mol_dicts, sample)
                                         if complex_sup_mol.hasContent_():
                                             sup_list.add_supramolecule(complex_sup_mol)
                                     elif sup_type == 'VIRUS':
                                         virus_sup_mol = emdb.virus_supramolecule_type()
-                                        set_virus_supramolecule_type(virus_sup_mol, sup_in, sup_mol_id_in,
-                                                                     sup_mol_dicts, sample)
+                                        set_virus_supramolecule_type(virus_sup_mol, sup_in, sup_mol_id_in, sup_mol_dicts, sample)
                                         if virus_sup_mol.hasContent_():
                                             sup_list.add_supramolecule(virus_sup_mol)
                                     elif sup_type == 'ORGANELLE OR CELLULAR COMPONENT':
                                         org_or_cell_sup_mol = emdb.organelle_or_cellular_component_supramolecule_type()
-                                        set_orgorcell_supmol_type(org_or_cell_sup_mol, sup_in, sup_mol_id_in,
-                                                                  sup_mol_dicts, sample)
+                                        set_orgorcell_supmol_type(org_or_cell_sup_mol, sup_in, sup_mol_id_in, sup_mol_dicts, sample)
                                         if org_or_cell_sup_mol.hasContent_():
                                             sup_list.add_supramolecule(org_or_cell_sup_mol)
                                     elif sup_type == 'TISSUE':
                                         tissue_sup_mol = emdb.tissue_supramolecule_type()
-                                        set_tissue_supramolecule_type(tissue_sup_mol, sup_in, sup_mol_id_in,
-                                                                      sup_mol_dicts, sample)
+                                        set_tissue_supramolecule_type(tissue_sup_mol, sup_in, sup_mol_id_in, sup_mol_dicts, sample)
                                         if tissue_sup_mol.hasContent_():
                                             sup_list.add_supramolecule(tissue_sup_mol)
                                     elif sup_type == 'CELL':
                                         cell_sup_mol = emdb.cell_supramolecule_type()
-                                        set_cell_supramolecule_type(cell_sup_mol, sup_in, sup_mol_id_in, sup_mol_dicts,
-                                                                    sample)
+                                        set_cell_supramolecule_type(cell_sup_mol, sup_in, sup_mol_id_in, sup_mol_dicts, sample)
                                         if cell_sup_mol.hasContent_():
                                             sup_list.add_supramolecule(cell_sup_mol)
                                     else:
@@ -5366,8 +5316,7 @@ class CifEMDBTranslator(object):
                                 """
                                 conc_units = get_cif_value('concentration_units', const.EMD_BUFFER_COMPONENT, buff_comp_in)
                                 if conc_units is not None:
-                                    set_cif_value(buff_comp.set_concentration, 'concentration', const.EMD_BUFFER_COMPONENT, cif_list=buff_comp_in,
-                                                  constructor=emdb.concentrationType, fmt=float, units=conc_units)
+                                    set_cif_value(buff_comp.set_concentration, 'concentration', const.EMD_BUFFER_COMPONENT, cif_list=buff_comp_in, constructor=emdb.concentrationType, fmt=float, units=conc_units)
                                 else:
                                     txt = u'The value for (_emd_buffer_component.concentration_units) is missing. Buffer concentration will not be set.'
                                     self.current_entry_log.warn_logs.append(self.ALog(log_text=self.current_entry_log.warn_title + txt))
@@ -6025,8 +5974,7 @@ class CifEMDBTranslator(object):
                         """
                         details_txt = u''
                         instrument = get_cif_value('instrument', const.EMD_HIGH_PRESSURE_FREEZING, cif_list=h_pf_in)
-                        allowed_instruments = {'BAL-TEC HPM 010', 'EMS-002 RAPID IMMERSION FREEZER', 'LEICA EM HPM100',
-                                               'LEICA EM PACT', 'LEICA EM PACT2', 'OTHER'}
+                        allowed_instruments = {'BAL-TEC HPM 010', 'EMS-002 RAPID IMMERSION FREEZER', 'LEICA EM HPM100', 'LEICA EM PACT', 'LEICA EM PACT2', 'OTHER'}
                         if instrument is not None:
                             if instrument in allowed_instruments:
                                 set_cif_value(h_pf.set_instrument, 'instrument', const.EMD_HIGH_PRESSURE_FREEZING, cif_list=h_pf_in, parent_el_req=False)
@@ -6057,10 +6005,13 @@ class CifEMDBTranslator(object):
                 hpf_present = get_cif_value('high_pressure_freezing', const.EMD_TOMOGRAPHY_PREPARATION, tom_prep_in)
                 if tom_id_in in h_pfdict_in and hpf_present == 'YES':
                     h_pf_in = h_pfdict_in[tom_id_in]
-                    h_pf = emdb.high_pressure_freezingType()
-                    set_high_pressure_freezing_type(h_pf, h_pf_in)
-                    if h_pf.hasContent_():
-                        tom_prep.set_high_pressure_freezing(h_pf)
+                    el_instrument = get_cif_value('instrument', const.EMD_HIGH_PRESSURE_FREEZING, cif_list=h_pf_in)
+                    el_details = get_cif_value('details', const.EMD_HIGH_PRESSURE_FREEZING, cif_list=h_pf_in)
+                    if any(x is not None for x in [el_instrument, el_details]):
+                        h_pf = emdb.high_pressure_freezingType()
+                        set_high_pressure_freezing_type(h_pf, h_pf_in)
+                        if h_pf.hasContent_():
+                            tom_prep.set_high_pressure_freezing(h_pf)
 
             def set_el_embedding_material():
                 """
@@ -8189,13 +8140,11 @@ class CifEMDBTranslator(object):
                             """
                             order = get_cif_value('order', const.EMD_ANGLE_ASSIGNMENT, ang_in)
                             if order == 'INITIAL' and em_method == const.EMM_SP:
-                                set_software_list(const.SOFT_INITIAL_EULER_ASSIGNMENT, cat_soft_dict_in,
-                                                  ang.set_software_list)
+                                set_software_list(const.SOFT_INITIAL_EULER_ASSIGNMENT, cat_soft_dict_in, ang.set_software_list)
                                 if ang.hasContent_():
                                     im_proc.set_initial_angle_assignment(ang)
                             elif order == 'FINAL':
-                                set_software_list(const.SOFT_FINAL_EULER_ASSIGNMENT, cat_soft_dict_in,
-                                                  ang.set_software_list)
+                                set_software_list(const.SOFT_FINAL_EULER_ASSIGNMENT, cat_soft_dict_in, ang.set_software_list)
                                 if ang.hasContent_():
                                     im_proc.set_final_angle_assignment(ang)
 
@@ -8222,7 +8171,7 @@ class CifEMDBTranslator(object):
                         el_angular_sampling = get_cif_value('projection_matching_angular_sampling', const.EMD_ANGLE_ASSIGNMENT, cif_list=ang_in)
                         el_software_list = get_cif_value('order', const.EMD_ANGLE_ASSIGNMENT, cif_list=ang_in)
                         el_details = get_cif_value('details', const.EMD_ANGLE_ASSIGNMENT, cif_list=ang_in)
-                        angle_assignment_type_list = [el_type, el_num_ref_projections, el_merit_function, el_angular_sampling, el_software_list, el_details]
+                        angle_assignment_type_list = [el_type, el_num_ref_projections, el_merit_function, el_angular_sampling, el_details]
                         if any(x is not None for x in angle_assignment_type_list):
                             ang = emdb.angle_assignment_type()
                             set_angle_assignment_type(im_proc, ang, ang_in, cat_soft_dict_in, em_method, parent_req)
@@ -8279,7 +8228,7 @@ class CifEMDBTranslator(object):
                                     """
                                     set_cif_value(u_cell.set_c, 'c', dict_category, cif_list=cryst_in, constructor=emdb.cell_type, units=const.U_ANG, parent_el_req=parent_req)
 
-                                def set_el_c_sampling_length(u_cell, cryst_in, dict_category, parent_req):
+                                def set_el_c_sampling_length(u_cell, cryst_in, dict_category):
                                     """
                                     XSD: <xs:element name="c_sampling_length" type="cell_type">
                                     CIF: _emd_two_d_crystal_parameters.c_sampling_length
@@ -8295,14 +8244,14 @@ class CifEMDBTranslator(object):
                                     """
                                     set_cif_value(u_cell.set_gamma, 'gamma', dict_category, cif_list=cryst_in, constructor=emdb.cell_angle_type, units=const.U_DEG, parent_el_req=parent_req)
 
-                                def set_el_alpha(u_cell, cryst_in, dict_category, parent_req):
+                                def set_el_alpha(u_cell, cryst_in, dict_category):
                                     """
                                     XSD: <xs:element name="alpha" type="cell_angle_type">
                                     CIF: _emd_three_d_crystal_parameters.alpha 120.0
                                     """
                                     set_cif_value(u_cell.set_alpha, 'alpha', dict_category, cif_list=cryst_in, constructor=emdb.cell_angle_type, units=const.U_DEG)
 
-                                def set_el_beta(u_cell, cryst_in, dict_category, parent_req):
+                                def set_el_beta(u_cell, cryst_in, dict_category):
                                     """
                                     XSD: <xs:element name="beta" type="cell_angle_type">
                                     CIF: _emd_three_d_crystal_parameters.beta 120.0
@@ -8316,13 +8265,13 @@ class CifEMDBTranslator(object):
                                 # element 3
                                 set_el_c(u_cell, cryst_in, dict_category)
                                 # element 4
-                                set_el_c_sampling_length(u_cell, cryst_in, dict_category, parent_req)
+                                set_el_c_sampling_length(u_cell, cryst_in, dict_category)
                                 # element 5
                                 set_el_gamma(u_cell, cryst_in, dict_category, parent_req)
                                 # element 6
-                                set_el_alpha(u_cell, cryst_in, dict_category, parent_req)
+                                set_el_alpha(u_cell, cryst_in, dict_category)
                                 # element 7
-                                set_el_beta(u_cell, cryst_in, dict_category, parent_req)
+                                set_el_beta(u_cell, cryst_in, dict_category)
 
                             u_cell = emdb.unit_cell_type()
                             set_unit_cell_type(u_cell, cryst_in, dict_category, parent_req)
@@ -8354,10 +8303,24 @@ class CifEMDBTranslator(object):
                         set_choice_space_group(cryst, cryst_in, dict_category)
 
                     cryst_in = cryst_dict_in[ip_id_in]
-                    cryst = emdb.crystal_parameters_type()
-                    set_crystal_parameters_type(cryst, cryst_in, dict_category, parent_req)
-                    if cryst.hasContent_():
-                        im_proc.set_crystal_parameters(cryst)
+                    el_a = get_cif_value('a', dict_category, cif_list=cryst_in)
+                    el_b = get_cif_value('b', dict_category, cif_list=cryst_in)
+                    el_c = get_cif_value('c', dict_category, cif_list=cryst_in)
+                    el_c_sampling_length = get_cif_value('c_sampling_length', dict_category, cif_list=cryst_in)
+                    el_gamma = get_cif_value('gamma', dict_category, cif_list=cryst_in)
+                    el_alpha = get_cif_value('alpha', dict_category, cif_list=cryst_in)
+                    el_beta = get_cif_value('beta', dict_category, cif_list=cryst_in)
+                    el_choice_space_group = None
+                    if dict_category == const.EMD_THREE_D_CRYSTAL_PARAMETERS:
+                        el_choice_space_group = get_cif_value('space_group', const.EMD_THREE_D_CRYSTAL_PARAMETERS, cif_list=cryst_in)
+                    elif dict_category == const.EMD_TWO_D_CRYSTAL_PARAMETERS:
+                        el_choice_space_group = get_cif_value('plane_group', const.EMD_TWO_D_CRYSTAL_PARAMETERS, cif_list=cryst_in)
+                    crystal_parameters_type_list = [el_a, el_b, el_c, el_c_sampling_length, el_gamma, el_alpha, el_beta, el_choice_space_group]
+                    if any(x is not None for x in crystal_parameters_type_list):
+                        cryst = emdb.crystal_parameters_type()
+                        set_crystal_parameters_type(cryst, cryst_in, dict_category, parent_req)
+                        if cryst.hasContent_():
+                            im_proc.set_crystal_parameters(cryst)
 
                 def set_non_sub_tom_final_recon(ip_id_in, im_proc, non_st_dicts):
                     """
@@ -8462,8 +8425,7 @@ class CifEMDBTranslator(object):
                         XSD: <xs:element name="final_angle_assignment" type="angle_assignment_type" minOccurs="0"/>
                         """
                         if ip_id_in in sp_dict_list['ang_dict_in']:
-                            set_angle_assignments(im_proc, ip_id_in, sp_dict_list['ang_dict_in'],
-                                                  sp_dict_list['cat_soft_dict_in'], em_method, parent_req=False)
+                            set_angle_assignments(im_proc, ip_id_in, sp_dict_list['ang_dict_in'], sp_dict_list['cat_soft_dict_in'], em_method, parent_req=False)
 
                     def set_el_final_multi_ref_align():
                         """
@@ -9180,48 +9142,42 @@ class CifEMDBTranslator(object):
                                         XSD: <xs:element name="high_resolution">
                                         CIF: _emd_crystallography_shell.high_resolution 3.0
                                         """
-                                        set_cif_value(shell.set_high_resolution, 'high_resolution', const.EMD_CRYSTALLOGRAPHY_SHELL, cif_list=cs_in,
-                                                      constructor=emdb.high_resolutionType, fmt=float, units=const.U_ANG, parent_el_req=False)
+                                        set_cif_value(shell.set_high_resolution, 'high_resolution', const.EMD_CRYSTALLOGRAPHY_SHELL, cif_list=cs_in, constructor=emdb.high_resolutionType, fmt=float, units=const.U_ANG, parent_el_req=False)
 
                                     def set_el_low_resolution(shell, cs_in):
                                         """
                                         XSD: <xs:element name="low_resolution">
                                         CIF: _emd_crystallography_shell.low_resolution 5.5
                                         """
-                                        set_cif_value(shell.set_low_resolution, 'low_resolution', const.EMD_CRYSTALLOGRAPHY_SHELL, cif_list=cs_in,
-                                                      constructor=emdb.low_resolutionType, fmt=float, units=const.U_ANG, parent_el_req=False)
+                                        set_cif_value(shell.set_low_resolution, 'low_resolution', const.EMD_CRYSTALLOGRAPHY_SHELL, cif_list=cs_in, constructor=emdb.low_resolutionType, fmt=float, units=const.U_ANG, parent_el_req=False)
 
                                     def set_el_number_structure_factors(shell, cs_in):
                                         """
                                         XSD: <xs:element name="number_structure_factors" type="xs:positiveInteger"/>
                                         CIF: _emd_crystallography_shell.number_structure_factors 244
                                         """
-                                        set_cif_value(shell.set_number_structure_factors, 'number_structure_factors', const.EMD_CRYSTALLOGRAPHY_SHELL,
-                                                      cif_list=cs_in, fmt=int, parent_el_req=False)
+                                        set_cif_value(shell.set_number_structure_factors, 'number_structure_factors', const.EMD_CRYSTALLOGRAPHY_SHELL, cif_list=cs_in, fmt=int, parent_el_req=False)
 
                                     def set_el_phase_residual(shell, cs_in):
                                         """
                                         XSD: <xs:element name="phase_residual" type="xs:float"/>
                                         CIF: _emd_crystallography_shell.phase_residual 13.5
                                         """
-                                        set_cif_value(shell.set_phase_residual, 'phase_residual', const.EMD_CRYSTALLOGRAPHY_SHELL,
-                                                      cif_list=cs_in, fmt=float, parent_el_req=False)
+                                        set_cif_value(shell.set_phase_residual, 'phase_residual', const.EMD_CRYSTALLOGRAPHY_SHELL, cif_list=cs_in, fmt=float, parent_el_req=False)
 
                                     def set_el_fourier_space_coverage(shell, cs_in):
                                         """
                                         XSD: <xs:element name="fourier_space_coverage" type="xs:float">
                                         CIF: _emd_crystallography_shell.fourier_space_coverage 93.2
                                         """
-                                        set_cif_value(shell.set_fourier_space_coverage, 'fourier_space_coverage', const.EMD_CRYSTALLOGRAPHY_SHELL,
-                                                      cif_list=cs_in, fmt=float, parent_el_req=False)
+                                        set_cif_value(shell.set_fourier_space_coverage, 'fourier_space_coverage', const.EMD_CRYSTALLOGRAPHY_SHELL, cif_list=cs_in, fmt=float, parent_el_req=False)
 
                                     def set_el_multiplicity(shell, cs_in):
                                         """
                                         XSD: <xs:element name="multiplicity" type="xs:float"/>
                                         CIF: _emd_crystallography_shell.multiplicity 2.5
                                         """
-                                        set_cif_value(shell.set_multiplicity, 'multiplicity', const.EMD_CRYSTALLOGRAPHY_SHELL,
-                                                      cif_list=cs_in, fmt=float, parent_el_req=False)
+                                        set_cif_value(shell.set_multiplicity, 'multiplicity', const.EMD_CRYSTALLOGRAPHY_SHELL, cif_list=cs_in, fmt=float, parent_el_req=False)
 
                                     # attribute 1
                                     set_attr_id(shell, cs_in)
@@ -9245,10 +9201,19 @@ class CifEMDBTranslator(object):
                                         cry_shell_list_in = cry_shell_dict_in[cry_id_in]
                                         cry_shell_list = emdb.shell_listType()
                                         for cs_in in cry_shell_list_in:
-                                            shell = emdb.shellType()
-                                            set_shell_type(shell, cs_in)
-                                            if shell.hasContent_():
-                                                cry_shell_list.add_shell(shell)
+                                            attr_id = get_cif_value('id', const.EMD_CRYSTALLOGRAPHY_SHELL, cif_list=cs_in)
+                                            el_high_resolution = get_cif_value('high_resolution', const.EMD_CRYSTALLOGRAPHY_SHELL, cif_list=cs_in)
+                                            el_low_resolution = get_cif_value('low_resolution', const.EMD_CRYSTALLOGRAPHY_SHELL, cif_list=cs_in)
+                                            el_number_structure_factors = get_cif_value('number_structure_factors', const.EMD_CRYSTALLOGRAPHY_SHELL, cif_list=cs_in)
+                                            el_phase_residual = get_cif_value('phase_residual', const.EMD_CRYSTALLOGRAPHY_SHELL, cif_list=cs_in)
+                                            el_fourier_space_coverage = get_cif_value('fourier_space_coverage', const.EMD_CRYSTALLOGRAPHY_SHELL, cif_list=cs_in)
+                                            el_multiplicity = get_cif_value('multiplicity', const.EMD_CRYSTALLOGRAPHY_SHELL, cif_list=cs_in)
+                                            shell_type_list = [attr_id, el_high_resolution, el_low_resolution, el_number_structure_factors, el_phase_residual, el_fourier_space_coverage, el_multiplicity]
+                                            if any(x is not None for x in shell_type_list):
+                                                shell = emdb.shellType()
+                                                set_shell_type(shell, cs_in)
+                                                if shell.hasContent_():
+                                                    cry_shell_list.add_shell(shell)
                                         if cry_shell_list.hasContent_():
                                             cry_stats.set_shell_list(cry_shell_list)
 
@@ -10679,8 +10644,6 @@ class CifEMDBTranslator(object):
                 if log_str == self.error_log_string:
                     self.error_log_string = self.open_log_stream(self.Constants.ERROR_LOG_STRING)
                     log_str = self.error_log_string
-            log_str.write(u'-' * 120 + '\n')
-            log_str.write(u'VALIDATION REPORT using %s schema' % in_schema_filename)
             log_str.write(u'\n')
 
     def validate(self, in_xml, in_schema_filename):

@@ -57,7 +57,7 @@ class TestTranslator(unittest.TestCase):
     schema = "emdb.xsd"
 
     process_rcsb = False
-    process_pdbe = False
+    process_pdbe = True
     process_test = True
 
     def test_cif2xml(self):
@@ -79,23 +79,23 @@ class TestTranslator(unittest.TestCase):
                         xml_out = os.path.join(self.testInputCifDir+'/test.xml')
                         translator.translate_and_validate(test_cif, xml_out, self.schema)
                         translator.write_logger_logs(True, True, True)
-                        # print
-                        # print 'CLASS LOGS'
-                        # print
-                        # if translator.is_translation_log_empty:
-                        #     print 'NO ERRORS FOUND'
-                        # else:
-                        #     for entry_log in translator.translation_log.logs:
-                        #         print entry_log.id
-                        #         if entry_log.is_error_log_empty:
-                        #             print
-                        #             print "NO ERRORS FOUND FOR THIS ENTRY"
-                        #             print
-                        #         else:
-                        #             for err in entry_log.errors:
-                        #                 print
-                        #                 print err.log_text
-                        #                 print
+                        print
+                        print 'TEST CLASS LOGS'
+                        print
+                        if translator.is_translation_log_empty:
+                            print 'NO ERRORS FOUND'
+                        else:
+                            for entry_log in translator.translation_log.logs:
+                                print entry_log.id
+                                if entry_log.is_error_log_empty:
+                                    print
+                                    print "NO ERRORS FOUND FOR THIS ENTRY"
+                                    print
+                                else:
+                                    for err in entry_log.errors:
+                                        print
+                                        print err.log_text
+                                        print
             except Exception as ex:
                 print ex
 
@@ -117,136 +117,129 @@ class TestTranslator(unittest.TestCase):
                 #         except Exception as ex:
                 #             print ex
                 #
-                #     if self.process_pdbe:
-                #         try:
-                #             listOfEMIDs,  listOfDepIDs = self.getAllIDs()
-                #             if listOfEMIDs:
-                #                 print len(listOfEMIDs)
-                #                 j = 0
-                #                 for id in listOfEMIDs:
-                #                     depID = listOfDepIDs[j]
-                #                     j = j + 1
-                #                     #print depID
-                #                     #if depID == 'D_1200000799' or depID == 'D_1200005141':
-                #                     #if id == "EMD-8055" or id == "EMD-8057":
-                #                     print id
-                #                     try:
-                #                         fileType, f, copyStatic = PDBprocessedWhere(id).Extension()
-                #                         if f:
-                #                             print i
-                #                             i = i + 1
-                #                             #Check if the cif file is in the _emd space
-                #                             if not self.isCifInEMDSpace(f):
-                #                                 conv_f = os.path.join(self.pdbeInputCifDir, id + '.cif')
-                #                                 print conv_f
-                #                                 # Check if the converted file exits
-                #                                 if not self.convertedCifToEMDSpaceExits(conv_f):
-                #                                     # There is no converted file, convert it now
-                #                                     convert(f, conv_f).em2emd()
-                #                             if os.path.exists(conv_f) and os.path.isfile(conv_f):
-                #                                 of = os.path.join(self.outputXmlDir, id + '.xml')
-                #                                 print of
-                #                                 print "conv_f %s" % conv_f
-                #                                 translator.translate_and_validate(conv_f, of, self.schema)
-                #                                 a_log = translator.current_entry_log
-                #                                 log_id = a_log.id
-                #                             else:
-                #                                 print 'The file ' + conv_f + 'cannot be converted into the _emd space and therefore, cannot be translated'
-                #                     except IOError as exp:
-                #                         print exp
-                #                     print
-                #                     print 'LOGGER LOGS'
-                #                     print
-                #                     translator.write_logger_logs(True, True, True)
-                #             print
-                #             print 'CLASS LOGS'
-                #             print
-                #             if translator.is_translation_log_empty:
-                #                 print 'NO ERRORS FOUND'
-                #             else:
-                #                 for entry_log in translator.translation_log.logs:
-                #                     print entry_log.id
-                #                     if entry_log.is_error_log_empty:
-                #                         print
-                #                         print "NO ERRORS FOUND FOR THIS ENTRY"
-                #                         print
-                #                     else:
-                #                         for err in entry_log.errors:
-                #                             print
-                #                             print err.log_text
-                #                             print
-                #         except IOError as exp:
-                #                     print exp
-                #
-                #
-                #
-                # def isCifInEMDSpace(self, f):
-                #
-                #     if '_emd' in open(f).read():
-                #         return True
-                #     else:
-                #         return False
-                #
-                # def convertedCifToEMDSpaceExits(self, f):
-                #
-                #     if os.path.exists(f) and os.path.isfile(f):
-                #         return True
-                #     else:
-                #         return False
-                #
-                # def getAllIDs(self):
-                #
-                #     ids = []
-                #     d_ids = []
-                #
-                #     latestEMDBDump = '/nfs/pdbe_da/production/data/for_release/emd/em_db_status.csv'
-                #     with open(latestEMDBDump) as csvfile:
-                #         reader = csv.DictReader(csvfile)
-                #         for col in reader:
-                #             ids.append(col['emdb_id'])
-                #             d_ids.append(col['dep_id'])
-                #     return ids, d_ids
-                #
-                # def validateWithSchemaV20(self,headerToValidate):
-                #
-                #     try:
-                #         f = open(self.schema, 'r')
-                #     except:
-                #         return False
-                #     else:
-                #         schema_root = etree.XML(f.read())
-                #         theSchema = etree.XMLSchema(schema_root)
-                #         xml_parser = etree.XMLParser(schema=theSchema)
-                #
-                #         validate = self.validateFile(xml_parser, headerToValidate)
-                #
-                #         if validate:
-                #             #print "%s validates" % headerToValidate
-                #             return True
-                #         else:
-                #             #print "%s FAILED validation" % headerToValidate
-                #             return False
-                #     finally:
-                #         f.close()
-                #
-                # def validateFile(self, theParser, xmlfilename):
-                #     #this method can be used to validate any schema against any file
-                #     try:
-                #         f = open(xmlfilename, 'r')
-                #         try:
-                #             etree.fromstring(f.read(), theParser)
-                #         except etree.XMLSyntaxError as err:
-                #             #print "Can't parse %s file. Error is %s" % (xmlfilename, err)
-                #             return False
-                #         except etree.XMLSchemaError as err:
-                #             #print "XMLSchemaError: %s" % err
-                #             return False
-                #         return True
-                #     except:
-                #         #print "Can't open: %s file" % xmlfilename
-                #         return False
-                #     finally:
-                #         f.close()
+        if self.process_pdbe:
+            try:
+                listOfEMIDs,  listOfDepIDs = self.getAllIDs()
+                if listOfEMIDs:
+                    print len(listOfEMIDs)
+                    j = 0
+                    for id in listOfEMIDs:
+                        depID = listOfDepIDs[j]
+                        j = j + 1
+                        #print depID
+                        #if depID == 'D_1200000799' or depID == 'D_1200005141':
+                        # if id == "EMD-8142":# or id == "EMD-8057":
+                        print id
+                        try:
+                            fileType, f, copyStatic = PDBprocessedWhere(id).Extension()
+                            if f:
+                                print i
+                                i = i + 1
+                                #Check if the cif file is in the _emd space
+                                if not self.isCifInEMDSpace(f):
+                                    conv_f = os.path.join(self.pdbeInputCifDir, id + '.cif')
+                                    print conv_f
+                                    # Check if the converted file exits
+                                    if not self.convertedCifToEMDSpaceExits(conv_f):
+                                        # There is no converted file, convert it now
+                                        convert(f, conv_f).em2emd()
+                                if os.path.exists(conv_f) and os.path.isfile(conv_f):
+                                    of = os.path.join(self.outputXmlDir, id + '.xml')
+                                    print of
+                                    print "conv_f %s" % conv_f
+                                    translator.translate_and_validate(conv_f, of, self.schema)
+                                    a_log = translator.current_entry_log
+                                    log_id = a_log.id
+                                else:
+                                    print 'The file ' + conv_f + 'cannot be converted into the _emd space and therefore, cannot be translated'
+                        except IOError as exp:
+                            print exp
+                        print
+                        print 'PDBE LOGGER LOGS'
+                        print
+                        translator.write_logger_logs(True, True, True)
+                print
+                print 'PDBE CLASS LOGS'
+                print
+                if translator.is_translation_log_empty:
+                    print 'NO ERRORS FOUND'
+                else:
+                    for entry_log in translator.translation_log.logs:
+                        print entry_log.id
+                        if entry_log.is_error_log_empty:
+                            print
+                            print "NO ERRORS FOUND FOR THIS ENTRY"
+                            print
+                        else:
+                            for err in entry_log.errors:
+                                print
+                                print err.log_text
+                                print
+            except IOError as exp:
+                print exp
+
+    def isCifInEMDSpace(self, f):
+        if '_emd' in open(f).read():
+            return True
+        else:
+            return False
+
+    def convertedCifToEMDSpaceExits(self, f):
+        if os.path.exists(f) and os.path.isfile(f):
+            return True
+        else:
+            return False
+
+    def getAllIDs(self):
+        ids = []
+        d_ids = []
+        latestEMDBDump = '/nfs/pdbe_da/production/data/for_release/emd/em_db_status.csv'
+        with open(latestEMDBDump) as csvfile:
+            reader = csv.DictReader(csvfile)
+            for col in reader:
+                ids.append(col['emdb_id'])
+                d_ids.append(col['dep_id'])
+        return ids, d_ids
+
+    def validateWithSchemaV20(self,headerToValidate):
+
+        try:
+            f = open(self.schema, 'r')
+        except:
+            return False
+        else:
+            schema_root = etree.XML(f.read())
+            theSchema = etree.XMLSchema(schema_root)
+            xml_parser = etree.XMLParser(schema=theSchema)
+            validate = self.validateFile(xml_parser, headerToValidate)
+
+            if validate:
+                #print "%s validates" % headerToValidate
+                return True
+            else:
+                #print "%s FAILED validation" % headerToValidate
+                return False
+        finally:
+            f.close()
+
+    def validateFile(self, theParser, xmlfilename):
+        #this method can be used to validate any schema against any file
+        try:
+            f = open(xmlfilename, 'r')
+            try:
+                etree.fromstring(f.read(), theParser)
+            except etree.XMLSyntaxError as err:
+                #print "Can't parse %s file. Error is %s" % (xmlfilename, err)
+                return False
+            except etree.XMLSchemaError as err:
+                #print "XMLSchemaError: %s" % err
+                return False
+            return True
+        except:
+            #print "Can't open: %s file" % xmlfilename
+            return False
+        finally:
+            f.close()
 
 if __name__ == '__main__':
     unittest.main()
