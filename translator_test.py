@@ -58,13 +58,14 @@ class TestTranslator(unittest.TestCase):
 
     process_rcsb = False
     process_pdbe = True
-    process_test = True
+    process_test = False
 
     def test_cif2xml(self):
 
         # create the translator object
         translator = CifEMDBTranslator()
-        translator.set_logger_logging(True, True, True, False)
+        # translator.set_logger_logging(True, True, True, False)
+        translator.set_logger_logging(log_error=True, error_log_file_name='/nfs/msd/work2/sanja/cif_emdb_translator/ERROR.log')
         # translator.set_show_log_id(True)
         # Reads mmcif_pdbx_v5_next.dic that contains information
         # about how the em categories map to the emd categories
@@ -128,36 +129,36 @@ class TestTranslator(unittest.TestCase):
                         j = j + 1
                         #print depID
                         #if depID == 'D_1200000799' or depID == 'D_1200005141':
-                        # if id == "EMD-8142":# or id == "EMD-8057":
-                        print id
-                        try:
-                            fileType, f, copyStatic = PDBprocessedWhere(id).Extension()
-                            if f:
-                                print i
-                                i = i + 1
-                                #Check if the cif file is in the _emd space
-                                if not self.isCifInEMDSpace(f):
-                                    conv_f = os.path.join(self.pdbeInputCifDir, id + '.cif')
-                                    print conv_f
-                                    # Check if the converted file exits
-                                    if not self.convertedCifToEMDSpaceExits(conv_f):
-                                        # There is no converted file, convert it now
-                                        convert(f, conv_f).em2emd()
-                                if os.path.exists(conv_f) and os.path.isfile(conv_f):
-                                    of = os.path.join(self.outputXmlDir, id + '.xml')
-                                    print of
-                                    print "conv_f %s" % conv_f
-                                    translator.translate_and_validate(conv_f, of, self.schema)
-                                    a_log = translator.current_entry_log
-                                    log_id = a_log.id
-                                else:
-                                    print 'The file ' + conv_f + 'cannot be converted into the _emd space and therefore, cannot be translated'
-                        except IOError as exp:
-                            print exp
-                        print
-                        print 'PDBE LOGGER LOGS'
-                        print
-                        translator.write_logger_logs(True, True, True)
+                        if id == "EMD-8142":# or id == "EMD-8057":
+                            print id
+                            try:
+                                fileType, f, copyStatic = PDBprocessedWhere(id).Extension()
+                                if f:
+                                    print i
+                                    i = i + 1
+                                    #Check if the cif file is in the _emd space
+                                    if not self.isCifInEMDSpace(f):
+                                        conv_f = os.path.join(self.pdbeInputCifDir, id + '.cif')
+                                        print conv_f
+                                        # Check if the converted file exits
+                                        if not self.convertedCifToEMDSpaceExits(conv_f):
+                                            # There is no converted file, convert it now
+                                            convert(f, conv_f).em2emd()
+                                    if os.path.exists(conv_f) and os.path.isfile(conv_f):
+                                        of = os.path.join(self.outputXmlDir, id + '.xml')
+                                        print of
+                                        print "conv_f %s" % conv_f
+                                        translator.translate_and_validate(conv_f, of, self.schema)
+                                        a_log = translator.current_entry_log
+                                        log_id = a_log.id
+                                    else:
+                                        print 'The file ' + conv_f + 'cannot be converted into the _emd space and therefore, cannot be translated'
+                            except IOError as exp:
+                                print exp
+                            print
+                            print 'PDBE LOGGER LOGS'
+                            print
+                            translator.write_logger_logs(write_error_log=True)
                 print
                 print 'PDBE CLASS LOGS'
                 print

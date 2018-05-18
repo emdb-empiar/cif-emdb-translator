@@ -955,6 +955,7 @@ class CifEMDBTranslator(object):
         if self.show_log_on_console:
             print '%s' % log_content
         self.write_to_file(log_file_name, log_content)
+        print 'written %s' % log_file_name
 
     def write_logger_logs(self, write_error_log=False, write_warn_log=False, write_info_log=False):
         """
@@ -970,12 +971,14 @@ class CifEMDBTranslator(object):
                 self.error_log_string.close()
 
         if write_warn_log:
+            print 'write_warn_log'
             if self.warn_log_string is not None and not self.warn_log_string.closed:
                 # write the warning log buffer to self.warn_log_file_name
                 self.write_a_logger_log(self.warn_log_string, self.warn_log_file_name)
                 self.warn_log_string.close()
 
         if write_info_log:
+            print 'write_info_log'
             if self.info_log_string is not None and not self.info_log_string.closed:
                 # write the info log buffer to self.info_log_file_name
                 self.write_a_logger_log(self.info_log_string, self.info_log_file_name)
@@ -1092,17 +1095,20 @@ class CifEMDBTranslator(object):
                 self.info_log_string = self.open_log_stream(self.Constants.INFO_LOG_STRING)
             else:
                 self.remove_logger_hdl(self.Constants.INFO_LOG_STRING)
-                self.info_log_string.close()
+                if self.info_log_string is not None:
+                    self.info_log_string.close()
             if log_warn:
                 self.warn_log_string = self.open_log_stream(self.Constants.WARN_LOG_STRING)
             else:
                 self.remove_logger_hdl(self.Constants.WARN_LOG_STRING)
-                self.warn_log_string.close()
+                if self.warn_log_string is not None:
+                    self.warn_log_string.close()
             if log_err:
                 self.error_log_string = self.open_log_stream(self.Constants.ERROR_LOG_STRING)
             else:
                 self.remove_logger_hdl(self.Constants.ERROR_LOG_STRING)
-                self.error_log_string.close()
+                if self.error_log_string is not None:
+                    self.error_log_string.close()
 
     def get_logger_handle(self, log_filename_or_string):
         """Returns the log handle for a log file name"""
