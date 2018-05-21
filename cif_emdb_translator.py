@@ -706,7 +706,8 @@ class CifEMDBTranslator(object):
             '_emd_support_film.thickness': '<xs:element name="film_thickness" minOccurs="0">',
             '_emd_startup_model.random_conical_tilt_angle': '<xs:element name="tilt_angle" minOccurs="0">',
             '_exptl.method': '<xs:element name="method">',
-            '_emd_structure_determination.method': '<xs:element name="method">'
+            '_emd_structure_determination.method': '<xs:element name="method">',
+            '_emd_specialist_optics.energyfilter_slit_width': '<xs:element name="slit_width" minOccurs="0">'
         }
 
     class ALog(object):
@@ -827,17 +828,17 @@ class CifEMDBTranslator(object):
 
         def add_info(self, cif_item, setter_func, xsd, em_for_emd, fmt_cif_value=None, parent_el_req=None, soft_name=None):
             info = CifEMDBTranslator.ALog(cif_item, setter_func, xsd, em_for_emd, fmt_cif_value, parent_el_req, soft_name)
-            info.create_std_info_log_text(self._info_title)
+            info.create_std_info_log_text('(' + self.ID + ')' + self._info_title)
             self.info_logs.append(info)
 
         def add_warn(self, cif_item, setter_func, xsd, em_for_emd, fmt_cif_value=None, parent_el_req=None, soft_name=None):
             warn = CifEMDBTranslator.ALog(cif_item, setter_func, xsd, em_for_emd, fmt_cif_value, parent_el_req, soft_name)
-            warn.create_problematic_log_text(self._warn_title)
+            warn.create_problematic_log_text('(' + self.ID + ')' + self._warn_title)
             self.warn_logs.append(warn)
 
         def add_err(self, cif_item, setter_func, xsd, em_for_emd, fmt_cif_value=None, parent_el_req=None, soft_name=None):
             err = CifEMDBTranslator.ALog(cif_item, setter_func, xsd, em_for_emd, fmt_cif_value, parent_el_req, soft_name)
-            err.create_problematic_log_text(self._error_title)
+            err.create_problematic_log_text('(' + self.ID + ')' + self._error_title)
             self.error_logs.append(err)
 
     class TranslationLog(object):
@@ -955,7 +956,6 @@ class CifEMDBTranslator(object):
         if self.show_log_on_console:
             print '%s' % log_content
         self.write_to_file(log_file_name, log_content)
-        print 'written %s' % log_file_name
 
     def write_logger_logs(self, write_error_log=False, write_warn_log=False, write_info_log=False):
         """
@@ -1259,8 +1259,8 @@ class CifEMDBTranslator(object):
         # self.xml_out is the xml object representing conversion from cif
         if self.xml_out is None or self.xml_out.hasContent_() is False:
             txt = u'There is no content to write out. No output file will be written.'
-            self.current_entry_log.error_logs.append(self.ALog(log_text=self.current_entry_log.error_title + txt))
-            self.log_formatted(self.error_log_string, self.Constants.REQUIRED_ALERT + txt)
+            self.current_entry_log.error_logs.append(self.ALog(log_text='(' + self.entry_in_translation_log.id + ')' + self.current_entry_log.error_title + txt))
+            self.log_formatted(self.error_log_string, '(' + self.entry_in_translation_log.id + ')' + self.Constants.REQUIRED_ALERT + txt)
             return
         # xml_out_file is the actual xml file that will be written into and saved
         xml_out_file = open(xml_out_file_name, 'w') if xml_out_file_name else sys.stdout
@@ -1333,8 +1333,8 @@ class CifEMDBTranslator(object):
                 xsd = const.MMCIF_TO_XSD[cif_item]
             else:
                 txt = u'CIF item (%s) not found in the MMCIF_TO_XSD dictionary.' % cif_item
-                self.current_entry_log.error_logs.append(self.ALog(log_text=self.current_entry_log.error_title + txt))
-                self.log_formatted(self.error_log_string, const.REQUIRED_ALERT + txt)
+                self.current_entry_log.error_logs.append(self.ALog(log_text='(' + self.entry_in_translation_log.id + ')' + self.current_entry_log.error_title + txt))
+                self.log_formatted(self.error_log_string, '(' + self.entry_in_translation_log.id + ')' + const.REQUIRED_ALERT + txt)
             return xsd
 
         def get_em_from_emd(emd_cif_item):
@@ -1555,8 +1555,8 @@ class CifEMDBTranslator(object):
                         except Exception as exp:
                             sub_txt = const.CHANGE_MADE + u'Date set to (%s) for (%s) instead of (%s).' % (fmt_cif_value, '_' + cif_cat + '.' + cif_key, cif_value)
                             txt = str(exp) + u' ' + sub_txt
-                            self.current_entry_log.error_logs.append(self.ALog(log_text=self.current_entry_log.error_title + txt))
-                            self.log_formatted(self.error_log_string, const.REQUIRED_ALERT + txt)
+                            self.current_entry_log.error_logs.append(self.ALog(log_text='(' + self.entry_in_translation_log.id + ')' + self.current_entry_log.error_title + txt))
+                            self.log_formatted(self.error_log_string, '(' + self.entry_in_translation_log.id + ')' + const.REQUIRED_ALERT + txt)
                     elif isinstance(fmt, dict):
                         fmt_cif_value = fmt[cif_value]
                     else:
@@ -1728,8 +1728,8 @@ class CifEMDBTranslator(object):
                 else:
                     auth_out = ''
                     txt = u'Author name: (%s) is not in a required CIF format.' % auth_in
-                    self.current_entry_log.error_logs.append(self.ALog(log_text=self.current_entry_log.error_title + txt))
-                    self.log_formatted(self.error_log_string, const.REQUIRED_ALERT + txt)
+                    self.current_entry_log.error_logs.append(self.ALog(log_text='(' + self.entry_in_translation_log.id + ')' + self.current_entry_log.error_title + txt))
+                    self.log_formatted(self.error_log_string, '(' + self.entry_in_translation_log.id + ')' + const.REQUIRED_ALERT + txt)
             return auth_out
 
         def set_admin_type(admin):
@@ -2307,7 +2307,7 @@ class CifEMDBTranslator(object):
                             author_list.add_author(fmt_author)
                         else:
                             txt = u'Author (%s) at index (%s) is not added to the list of authors as the format is wrong.' % (cif_author, index + 1)
-                            self.current_entry_log.warn_logs.append(self.ALog(log_text=self.current_entry_log.warn_title + txt))
+                            self.current_entry_log.warn_logs.append(self.ALog(log_text='(' + self.entry_in_translation_log.id + ')' + self.current_entry_log.warn_title + txt))
                             self.log_formatted(self.war_log_string, const.NOT_REQUIRED_ALERT + txt)
 
             def set_el_authors_list(admin):
@@ -2338,8 +2338,8 @@ class CifEMDBTranslator(object):
                         set_author_list(audit_author_in, const.AUDIT_AUTHOR, 'name', author_list)
                     else:
                         txt = u'Author list cannot be produced as the CIF category ( _%s ) is missing while (_emd_depui.same_authors_as_pdb) is (YES).' % const.AUDIT_AUTHOR
-                        self.current_entry_log.error_logs.append(self.ALog(log_text=self.current_entry_log.error_title + txt))
-                        self.log_formatted(self.error_log_string, const.REQUIRED_ALERT + txt)
+                        self.current_entry_log.error_logs.append(self.ALog(log_text='(' + self.entry_in_translation_log.id + ')' + self.current_entry_log.error_title + txt))
+                        self.log_formatted(self.error_log_string, '(' + self.entry_in_translation_log.id + ')' + const.REQUIRED_ALERT + txt)
                 else:  # same_as_pdb == 'NO' or None
                     # CIF: _emd_author_list
                     audit_author_list_in = make_dict(const.EMD_AUTHOR_LIST, 'ordinal', 2)
@@ -2347,8 +2347,8 @@ class CifEMDBTranslator(object):
                         set_author_list(audit_author_list_in, const.EMD_AUTHOR_LIST, 'author', author_list)
                     else:
                         txt = u'Author list cannot be produced as the CIF category ( _%s ) is missing while the value for (_emd_depui.same_authors_as_pdb) is either (NO) or not given.' % const.EMD_AUTHOR_LIST
-                        self.current_entry_log.error_logs.append(self.ALog(log_text=self.current_entry_log.error_title + txt))
-                        self.log_formatted(self.error_log_string, const.REQUIRED_ALERT + txt)
+                        self.current_entry_log.error_logs.append(self.ALog(log_text='(' + self.entry_in_translation_log.id + ')' + self.current_entry_log.error_title + txt))
+                        self.log_formatted(self.error_log_string, '(' + self.entry_in_translation_log.id + ')' + const.REQUIRED_ALERT + txt)
                 if author_list is not None:
                     admin.set_authors_list(author_list)
 
@@ -2458,7 +2458,7 @@ class CifEMDBTranslator(object):
                         if refs is not []:
                             ref_txt = ', '.join(refs)
                             txt = init_txt + ref_txt
-                            self.current_entry_log.info_logs.append(self.ALog(log_text=self.current_entry_log.info_title + txt))
+                            self.current_entry_log.info_logs.append(self.ALog(log_text='(' + self.entry_in_translation_log.id + ')' + self.current_entry_log.info_title + txt))
                             self.log_formatted(self.info_log_string, const.INFO_ALERT + txt)
 
                     def create_auth_dict(auth_dict):
@@ -2486,8 +2486,8 @@ class CifEMDBTranslator(object):
                                 auth_dict[auth_id].sort(key=lambda item: int(item[1]))
                         else:
                             txt = u'CIF category (%s) missing.' % const.CITATION_AUTHOR
-                            self.current_entry_log.error_logs.append(self.ALog(log_text=self.current_entry_log.error_title + txt))
-                            self.log_formatted(self.error_log_string, const.REQUIRED_ALERT + txt)
+                            self.current_entry_log.error_logs.append(self.ALog(log_text='(' + self.entry_in_translation_log.id + ')' + self.current_entry_log.error_title + txt))
+                            self.log_formatted(self.error_log_string, '(' + self.entry_in_translation_log.id + ')' + const.REQUIRED_ALERT + txt)
 
                     def set_el_author(pub, cite_id_in, auth_dict):
                         """
@@ -2502,8 +2502,8 @@ class CifEMDBTranslator(object):
                                         pub.add_author(author)
                             else:
                                 txt = u'No authors for citation id (%s) found. At least one is required.' % cite_id_in
-                                self.current_entry_log.error_logs.append(self.ALog(log_text=self.current_entry_log.error_title + txt))
-                                self.log_formatted(self.error_log_string, const.REQUIRED_ALERT + txt)
+                                self.current_entry_log.error_logs.append(self.ALog(log_text='(' + self.entry_in_translation_log.id + ')' + self.current_entry_log.error_title + txt))
+                                self.log_formatted(self.error_log_string, '(' + self.entry_in_translation_log.id + ')' + const.REQUIRED_ALERT + txt)
 
                     def set_journal_citation(jrnl, cite_in, cite_id_in, auth_dict, cite_ref_type_list, jrnl_abbrev_in):
                         """
@@ -2527,7 +2527,7 @@ class CifEMDBTranslator(object):
                             if value_given is not None:
                                 jrnl.set_published(value_given)
                                 txt = u'The value (%s) is given to (journal_citation.set_published).' % value_given
-                                self.current_entry_log.info_logs.append(self.ALog(log_text=self.current_entry_log.info_title + txt))
+                                self.current_entry_log.info_logs.append(self.ALog(log_text='(' + self.entry_in_translation_log.id + ')' + self.current_entry_log.info_title + txt))
                                 self.log_formatted(self.info_log_string, const.INFO_ALERT + txt)
 
                         def set_el_title(jrnl, cite_in):
@@ -2661,7 +2661,7 @@ class CifEMDBTranslator(object):
                             if value_given is not None:
                                 non_jrnl.set_published(value_given)
                                 txt = u'The value (%s) is given to (non_journal_citation.set_published).' % value_given
-                                self.current_entry_log.info_logs.append(self.ALog(log_text=self.current_entry_log.info_title + txt))
+                                self.current_entry_log.info_logs.append(self.ALog(log_text='(' + self.entry_in_translation_log.id + ')' + self.current_entry_log.info_title + txt))
                                 self.log_formatted(self.info_log_string, const.INFO_ALERT + txt)
 
                         def set_el_editor():
@@ -2835,15 +2835,15 @@ class CifEMDBTranslator(object):
                                     citation.set_citation_type(non_jrnl)
                             else:
                                 txt = u'Citations cannot be set. The value for (_citation_author.citation_id) should be either (primary) or a number.'
-                                self.current_entry_log.error_logs.append(self.ALog(log_text=self.current_entry_log.error_title + txt))
+                                self.current_entry_log.error_logs.append(self.ALog(log_text='(' + self.entry_in_translation_log.id + ')' + self.current_entry_log.error_title + txt))
                                 self.log_formatted(self.error_log_string, const.REQUIRED_ALERT + txt)
                         if not any_primary_citations:
                             txt = u'No primary citations given.'
-                            self.current_entry_log.error_logs.append(self.ALog(log_text=self.current_entry_log.error_title + txt))
+                            self.current_entry_log.error_logs.append(self.ALog(log_text='(' + self.entry_in_translation_log.id + ')' + self.current_entry_log.error_title + txt))
                             self.log_formatted(self.error_log_string, const.REQUIRED_ALERT + txt)
                     else:
                         txt = u'CIF category (%s) missing.' % const.CITATION
-                        self.current_entry_log.error_logs.append(self.ALog(log_text=self.current_entry_log.error_title + txt))
+                        self.current_entry_log.error_logs.append(self.ALog(log_text='(' + self.entry_in_translation_log.id + ')' + self.current_entry_log.error_title + txt))
                         self.log_formatted(self.error_log_string, const.REQUIRED_ALERT + txt)
 
                 citation_list = emdb.citation_listType()
@@ -2886,7 +2886,7 @@ class CifEMDBTranslator(object):
                                 # acc_code is not in a format of EMD-xxxx
                                 corrected = False
                                 txt = u'The value for (_emd_crossreference.access_code) is (%s) and it is in a wrong format. If a new value is given the message follows.' % acc_code
-                                self.current_entry_log.warn_logs.append(self.ALog(log_text=self.current_entry_log.warn_title + txt))
+                                self.current_entry_log.warn_logs.append(self.ALog(log_text='(' + self.entry_in_translation_log.id + ')' + self.current_entry_log.warn_title + txt))
                                 self.log_formatted(self.warn_log_string, const.NOT_REQUIRED_ALERT + txt)
                                 if len(acc_code) == 4 and acc_code.isdigit():
                                     # acc_code is a 4-digit number - add EMD- to it
@@ -2899,11 +2899,11 @@ class CifEMDBTranslator(object):
                                 if corrected:
                                     set_cif_value(emdb_ref.set_emdb_id, 'access_code', const.EMD_CROSSREFERENCE, cif_list=emdb_ref_in, cif_value=correct_acc_code)
                                     txt = u'emdb_id is set to (%s) as (_emd_crossreference.access_code) is (%s).' % (correct_acc_code, acc_code)
-                                    self.current_entry_log.warn_logs.append(self.ALog(log_text=self.current_entry_log.warn_title + txt))
+                                    self.current_entry_log.warn_logs.append(self.ALog(log_text='(' + self.entry_in_translation_log.id + ')' + self.current_entry_log.warn_title + txt))
                                     self.log_formatted(self.warn_log_string, const.CHANGE_MADE + txt)
                         else:
                             txt = u'Cannot set crossreference emdb_id as the required value for (_emd_crossreference.access_code) is not given.'
-                            self.current_entry_log.error_logs.append(self.ALog(log_text=self.current_entry_log.error_title + txt))
+                            self.current_entry_log.error_logs.append(self.ALog(log_text='(' + self.entry_in_translation_log.id + ')' + self.current_entry_log.error_title + txt))
                             self.log_formatted(self.error_log_string, const.REQUIRED_ALERT + txt)
 
                     def set_ref_el_relationship(emdb_ref, emdb_ref_in):
@@ -2921,7 +2921,7 @@ class CifEMDBTranslator(object):
                             emdb_ref.set_relationship(emdb.relationshipType(other='unknown'))
                             txt = u'The value (unknown) is given to (emdb_ref.set_relationship).'
                         if txt is not None:
-                            self.current_entry_log.warn_logs.append(self.ALog(log_text=self.current_entry_log.warn_title + txt))
+                            self.current_entry_log.warn_logs.append(self.ALog(log_text='(' + self.entry_in_translation_log.id + ')' + self.current_entry_log.warn_title + txt))
                             self.log_formatted(self.warn_log_string, const.CHANGE_MADE + txt)
 
                     def set_ref_el_details(emdb_ref, emdb_ref_in):
@@ -2945,7 +2945,7 @@ class CifEMDBTranslator(object):
                                 # db_id is not in a format of EMD-xxxx
                                 corrected = False
                                 txt = u'The value for (_pdbx_database_related.db_id) (%s) is in a wrong format. If a new value is given the message follows.' % db_id
-                                self.current_entry_log.warn_logs.append(self.ALog(log_text=self.current_entry_log.warn_title + txt))
+                                self.current_entry_log.warn_logs.append(self.ALog(log_text='(' + self.entry_in_translation_log.id + ')' + self.current_entry_log.warn_title + txt))
                                 self.log_formatted(self.warn_log_string, const.NOT_REQUIRED_ALERT + txt)
                                 if len(db_id) == 4 and db_id.isdigit():
                                     # db_id is a 4-digit number - add EMD- to it
@@ -2958,7 +2958,7 @@ class CifEMDBTranslator(object):
                                 if corrected:
                                     set_cif_value(cross_ref.set_emdb_id, 'db_id', const.PDBX_DATABASE_RELATED, cif_list=rel_in, cif_value=correct_db_id)
                                     txt = u'emdb_id is set to (%s) as the value for (_pdbx_database_related.db_id) is given as (%s).' % (correct_db_id, db_id)
-                                    self.current_entry_log.warn_logs.append(self.ALog(log_text=self.current_entry_log.change_title + txt))
+                                    self.current_entry_log.warn_logs.append(self.ALog(log_text='(' + self.entry_in_translation_log.id + ')' + self.current_entry_log.change_title + txt))
                                     self.log_formatted(self.warn_log_string, const.CHANGE_MADE + txt)
                         else:
                             set_cif_value(cross_ref.set_emdb_id, 'db_id', const.PDBX_DATABASE_RELATED, cif_list=rel_in)
@@ -2980,7 +2980,7 @@ class CifEMDBTranslator(object):
                         else:
                             txt = u'No value is given to (cross_ref.set_relationship).'
                         if txt is not None:
-                            self.current_entry_log.info_logs.append(self.ALog(log_text=self.current_entry_log.info_title + txt))
+                            self.current_entry_log.info_logs.append(self.ALog(log_text='(' + self.entry_in_translation_log.id + ')' + self.current_entry_log.info_title + txt))
                             self.log_formatted(self.info_log_string, const.INFO_ALERT + txt)
 
                     def set_rel_el_details(cross_ref, rel_in):
@@ -3055,7 +3055,7 @@ class CifEMDBTranslator(object):
                         if pdb_ref.hasContent_():
                             pdb_ref_list.add_pdb_reference(pdb_ref)
                             if txt is not None:
-                                self.current_entry_log.warn_logs.append(self.ALog(log_text=self.current_entry_log.change_title + txt))
+                                self.current_entry_log.warn_logs.append(self.ALog(log_text='(' + self.entry_in_translation_log.id + ')' + self.current_entry_log.change_title + txt))
                                 self.log_formatted(self.warn_log_string, const.CHANGE_MADE + txt)
 
                     def set_el_details(pdb_ref, pdb_ref_in):
@@ -3186,7 +3186,7 @@ class CifEMDBTranslator(object):
                         tax_id_in = get_cif_value(cif_key, cif_category, src_in)
                         if cif_key is None or cif_key.isspace():
                             txt = u'Cannot set the database attribute as the cif category (%s) is not one of: (%s).' % (cif_category, a_dict)
-                            self.current_entry_log.error_logs.append(self.ALog(log_text=self.current_entry_log.error_title + txt))
+                            self.current_entry_log.error_logs.append(self.ALog(log_text='(' + self.entry_in_translation_log.id + ')' + self.current_entry_log.error_title + txt))
                             self.log_formatted(self.error_log_string, const.REQUIRED_ALERT + txt)
                         else:
                             set_cif_value(src.set_database, cif_key, cif_category, cif_list=src_in, cif_value='NCBI')
@@ -3217,7 +3217,7 @@ class CifEMDBTranslator(object):
                                     org_sci_name = get_cif_value(cif_key, cif_category, cif_list=src_in)
                                     if org_sci_name is not None and not org_sci_name.isspace():
                                         txt = u'The value for (_entity_src_nat.common_name) is not given so the value for (_entity_src_nat.pdbx_organism_scientific): (%s) is used.' % org_sci_name
-                                        self.current_entry_log.warn_logs.append(self.ALog(log_text=self.current_entry_log.change_title + txt))
+                                        self.current_entry_log.warn_logs.append(self.ALog(log_text='(' + self.entry_in_translation_log.id + ')' + self.current_entry_log.change_title + txt))
                                         self.log_formatted(self.warn_log_string, const.CHANGE_MADE + txt)
                                     else:
                                         org_sci_name = 'Unspecified'
@@ -3239,7 +3239,7 @@ class CifEMDBTranslator(object):
                                     set_cif_value(src.set_organism, cif_key, cif_category, cif_list=src_in, constructor=emdb.organism_type, parent_el_req=False)
                         else:
                             txt = u'Cannot set the organism element as cif item (%s) is not of of (%s).' % (cif_key, a_dict)
-                            self.current_entry_log.error_logs.append(self.ALog(log_text=self.current_entry_log.error_title + txt))
+                            self.current_entry_log.error_logs.append(self.ALog(log_text='(' + self.entry_in_translation_log.id + ')' + self.current_entry_log.error_title + txt))
                             self.log_formatted(self.error_log_string, const.REQUIRED_ALERT + txt)
 
                 def set_el_strain(src, cif_category, src_in):
@@ -3261,7 +3261,7 @@ class CifEMDBTranslator(object):
                             set_cif_value(src.set_strain, cif_key, cif_category, cif_list=src_in)
                         else:
                             txt = u'Cannot set the strain element as cif item (%s) is not one in (%s).' % (cif_key, a_dict)
-                            self.current_entry_log.error_logs.append(self.ALog(log_text=self.current_entry_log.error_title + txt))
+                            self.current_entry_log.error_logs.append(self.ALog(log_text='(' + self.entry_in_translation_log.id + ')' + self.current_entry_log.error_title + txt))
                             self.log_formatted(self.error_log_string, const.REQUIRED_ALERT + txt)
 
                 def set_el_synonym_organism():
@@ -3309,7 +3309,7 @@ class CifEMDBTranslator(object):
                     if src == 'RECOMBINANT':
                         if src_dicts.get('rec_exp_dict_in', None) is None:
                             txt = u'(_emd_recombinant_expression) category missing for creating recombinant expression for the map and model supramolecule entry (%s).' % ent_id_in
-                            self.current_entry_log.warn_logs.append(self.ALog(log_text=self.current_entry_log.warn_title + txt))
+                            self.current_entry_log.warn_logs.append(self.ALog(log_text='(' + self.entry_in_translation_log.id + ')' + self.current_entry_log.warn_title + txt))
                             self.log_formatted(self.warn_log_string, const.NOT_REQUIRED_ALERT + txt)
                         else:
                             return src_dicts['rec_exp_dict_in']
@@ -3324,14 +3324,14 @@ class CifEMDBTranslator(object):
                             elif ent_src_method == 'man':
                                 if src_dicts.get('ent_src_gen_dict', None) is None:
                                     txt = u'(_entity_src_gen) category missing for creating recombinant expression for the map and model entry (%s) where (_emd_supramolecule.source) is (RECOMBINANT) and polymer is (man).' % ent_id_in
-                                    self.current_entry_log.warn_logs.append(self.ALog(log_text=self.current_entry_log.warn_title + txt))
+                                    self.current_entry_log.warn_logs.append(self.ALog(log_text='(' + self.entry_in_translation_log.id + ')' + self.current_entry_log.warn_title + txt))
                                     self.log_formatted(self.warn_log_string, const.NOT_REQUIRED_ALERT + txt)
                                 else:
                                     return src_dicts['ent_src_gen_dict']
                             if ent_src_method == 'syn':
                                 if src_dicts.get('ent_src_syn_dict', None) is None:
                                     txt = u'(_entity_src_syn) category missing for creating recombinant expression for the map and model entry (%s) where (_emd_supramolecule.source) is (RECOMBINANT) and polymer is (man).' % ent_id_in
-                                    self.current_entry_log.warn_logs.append(self.ALog(log_text=self.current_entry_log.warn_title + txt))
+                                    self.current_entry_log.warn_logs.append(self.ALog(log_text='(' + self.entry_in_translation_log.id + ')' + self.current_entry_log.warn_title + txt))
                                     self.log_formatted(self.warn_log_string, const.NOT_REQUIRED_ALERT + txt)
                                 else:
                                     return src_dicts['ent_src_syn_dict']
@@ -3364,7 +3364,7 @@ class CifEMDBTranslator(object):
                                           cif_list=rec_exp_in, constructor=emdb.organism_type, ncbi=tax_id)
                         else:
                             txt = u'The value for (_emd_recombinant_expression.ncbi_tax_id) is not given. It is required for setting the recombinant expression organism.'
-                            self.current_entry_log.error_logs.append(self.ALog(log_text=self.current_entry_log.error_title + txt))
+                            self.current_entry_log.error_logs.append(self.ALog(log_text='(' + self.entry_in_translation_log.id + ')' + self.current_entry_log.error_title + txt))
                             self.log_formatted(self.error_log_string, const.REQUIRED_ALERT + txt)
                     elif '_entity_src_gen.pdbx_host_org_ncbi_taxonomy_id' in rec_exp_dict:
                         tax_id = get_cif_value('pdbx_host_org_ncbi_taxonomy_id', const.ENTITY_SRC_GEN, rec_exp_in)
@@ -3373,14 +3373,14 @@ class CifEMDBTranslator(object):
                                           cif_list=rec_exp_in, constructor=emdb.organism_type, ncbi=tax_id)
                         else:
                             txt = u'The value for (_entity_src_gen.pdbx_host_org_ncbi_taxonomy_id) is not given. It is required for setting the recombinant expression organism.'
-                            self.current_entry_log.error_logs.append(self.ALog(log_text=self.current_entry_log.error_title + txt))
+                            self.current_entry_log.error_logs.append(self.ALog(log_text='(' + self.entry_in_translation_log.id + ')' + self.current_entry_log.error_title + txt))
                             self.log_formatted(self.error_log_string, const.REQUIRED_ALERT + txt)
                     elif '_pdbx_entity_src_syn.ncbi_taxonomy_id' in rec_exp_dict:
                         pass
                     else:
                         # shouldn't happen
                         txt = u'Cannot set recombinant organism. Information is missing in (%s).' % rec_exp_dict
-                        self.current_entry_log.error_logs.append(self.ALog(log_text=self.current_entry_log.error_title + txt))
+                        self.current_entry_log.error_logs.append(self.ALog(log_text='(' + self.entry_in_translation_log.id + ')' + self.current_entry_log.error_title + txt))
                         self.log_formatted(self.error_log_string, const.REQUIRED_ALERT + txt)
 
                 def set_el_recombinant_strain(r_exp, rec_exp_in):
@@ -3625,13 +3625,13 @@ class CifEMDBTranslator(object):
                                     set_cif_value(sup_mol.set_name, 'organism', const.EMD_NATURAL_SOURCE, cif_list=sup_in,
                                                   constructor=emdb.sci_name_type, cif_value=virus_name_from_nat_source)
                                     txt = u'(_emd_supramolecule.name) is not given so the value for (_emd_natural_source.organism) is used.'
-                                    self.current_entry_log.warn_logs.append(self.ALog(log_text=self.current_entry_log.change_title + txt))
+                                    self.current_entry_log.warn_logs.append(self.ALog(log_text='(' + self.entry_in_translation_log.id + ')' + self.current_entry_log.change_title + txt))
                                     self.log_formatted(self.warn_log_string, const.CHANGE_MADE + txt)
                                 else:
                                     set_cif_value(sup_mol.set_name, 'organism', const.EMD_NATURAL_SOURCE, cif_list=sup_in,
                                                   constructor=emdb.sci_name_type, cif_value='Unspecified')
                                     txt = u'The values for (_emd_supramolecule.name) and (_emd_natural_source.organism) are not given. The value of Unspecified is used.'
-                                    self.current_entry_log.warn_logs.append(self.ALog(log_text=self.current_entry_log.change_title + txt))
+                                    self.current_entry_log.warn_logs.append(self.ALog(log_text='(' + self.entry_in_translation_log.id + ')' + self.current_entry_log.change_title + txt))
                                     self.log_formatted(self.warn_log_string, const.CHANGE_MADE + txt)
                             else:
                                 set_cif_value(sup_mol.set_name, 'name', const.EMD_SUPRAMOLECULE, cif_list=sup_in, constructor=emdb.sci_name_type)
@@ -3681,13 +3681,13 @@ class CifEMDBTranslator(object):
                                     a_macromol.original_tagname_ = 'macromolecule'
                                     macro_list.add_macromolecule(a_macromol)
                                 txt = u'Macromolecule (%s) added to the list of macromolecules.' % int(m_in)
-                                self.current_entry_log.info_logs.append(self.ALog(log_text=self.current_entry_log.info_title + txt))
+                                self.current_entry_log.info_logs.append(self.ALog(log_text='(' + self.entry_in_translation_log.id + ')' + self.current_entry_log.info_title + txt))
                                 self.log_formatted(self.info_log_string, const.INFO_ALERT + txt)
                                 if macro_list.hasContent_():
                                     sup_mol.set_macromolecule_list(macro_list)
                             else:
                                 txt = u'No macromolecule found for (%s).' % id_list_item
-                                self.current_entry_log.warn_logs.append(self.ALog(log_text=self.current_entry_log.warn_title + txt))
+                                self.current_entry_log.warn_logs.append(self.ALog(log_text='(' + self.entry_in_translation_log.id + ')' + self.current_entry_log.warn_title + txt))
                                 self.log_formatted(self.warn_log_string, const.NOT_REQUIRED_ALERT + txt)
 
                     def set_el_details(sup_mol, sup_in):
@@ -3869,7 +3869,7 @@ class CifEMDBTranslator(object):
                                         tax_id = 32644  # ID for unknown
                                         set_cif_value(virus_name.set_ncbi, 'ncbi_tax_id', const.EMD_NATURAL_SOURCE, cif_list=nat_src_in, cif_value=tax_id)
                                         txt = u'The value for (_emd_natural_source.ncbi_tax_id) is not given. The value set is (%s) for unknown.' % tax_id
-                                        self.current_entry_log.warn_logs.append(self.ALog(log_text=self.current_entry_log.change_title + txt))
+                                        self.current_entry_log.warn_logs.append(self.ALog(log_text='(' + self.entry_in_translation_log.id + ')' + self.current_entry_log.change_title + txt))
                                         self.log_formatted(self.warn_log_string, const.CHANGE_MADE + txt)
                                     else:
                                         set_cif_value(virus_name.set_ncbi, 'ncbi_tax_id', const.EMD_NATURAL_SOURCE, cif_list=nat_src_in, fmt=int)
@@ -4056,7 +4056,7 @@ class CifEMDBTranslator(object):
                                 virus_iso = 'OTHER'  # default value
                                 set_cif_value(virus_sup_mol.set_virus_isolate, 'isolate', const.EMD_VIRUS, cif_list=virus_in, cif_value=virus_iso)
                                 txt = u'The value for (_emd_virus.isolate) is not given. Set to (OTHER).'
-                                self.current_entry_log.warn_logs.append(self.ALog(log_text=self.current_entry_log.change_title + txt))
+                                self.current_entry_log.warn_logs.append(self.ALog(log_text='(' + self.entry_in_translation_log.id + ')' + self.current_entry_log.change_title + txt))
                                 self.log_formatted(self.warn_log_string, const.CHANGE_MADE + txt)
                             else:
                                 set_cif_value(virus_sup_mol.set_virus_isolate, 'isolate', const.EMD_VIRUS, cif_list=virus_in)
@@ -4071,7 +4071,7 @@ class CifEMDBTranslator(object):
                                 virus_env = 'False'  # default value
                                 set_cif_value(virus_sup_mol.set_virus_enveloped, 'enveloped', const.EMD_VIRUS, cif_list=virus_in, cif_value=virus_env)
                                 txt = u'The value for (_emd_virus.enveloped) is not given. Set to (False).'
-                                self.current_entry_log.warn_logs.append(self.ALog(log_text=self.current_entry_log.change_title + txt))
+                                self.current_entry_log.warn_logs.append(self.ALog(log_text='(' + self.entry_in_translation_log.id + ')' + self.current_entry_log.change_title + txt))
                                 self.log_formatted(self.warn_log_string, const.CHANGE_MADE + txt)
                             else:
                                 set_cif_value(virus_sup_mol.set_virus_enveloped, 'enveloped', const.EMD_VIRUS, cif_list=virus_in, fmt=cif_bool)
@@ -4086,7 +4086,7 @@ class CifEMDBTranslator(object):
                                 virus_empty = 'True'  # default value
                                 set_cif_value(virus_sup_mol.set_virus_empty, 'empty', const.EMD_VIRUS, cif_list=virus_in, cif_value=virus_empty)
                                 txt = u'The value for (_emd_virus.enveloped) is not given. Set to (True).'
-                                self.current_entry_log.warn_logs.append(self.ALog(log_text=self.current_entry_log.change_title + txt))
+                                self.current_entry_log.warn_logs.append(self.ALog(log_text='(' + self.entry_in_translation_log.id + ')' + self.current_entry_log.change_title + txt))
                                 self.log_formatted(self.warn_log_string, const.CHANGE_MADE + txt)
                             else:
                                 set_cif_value(virus_sup_mol.set_virus_empty, 'empty', const.EMD_VIRUS, cif_list=virus_in, fmt=cif_bool)
@@ -4125,7 +4125,7 @@ class CifEMDBTranslator(object):
                             if len_nat_src_list_in > 0:
                                 if len_nat_src_list_in > 1:
                                     txt = u'Only the first row of the (%s) (_emd_natural_source) rows for supramolecule (%s).' % (len_nat_src_list_in, sup_mol_id_in)
-                                    self.current_entry_log.warn_logs.append(self.ALog(log_text=self.current_entry_log.warn_title + txt))
+                                    self.current_entry_log.warn_logs.append(self.ALog(log_text='(' + self.entry_in_translation_log.id + ')' + self.current_entry_log.warn_title + txt))
                                     self.log_formatted(self.warn_log_string, const.NOT_REQUIRED_ALERT + txt)
                                 nat_src_in = nat_src_list_in[0]
                                 # element 1
@@ -4134,7 +4134,7 @@ class CifEMDBTranslator(object):
                                 set_el_sci_species_strain(virus_sup_mol, nat_src_in)
                             else:
                                 txt = u'Empty natural source category for virus!'
-                                self.current_entry_log.error_logs.append(self.ALog(log_text=self.current_entry_log.error_title + txt))
+                                self.current_entry_log.error_logs.append(self.ALog(log_text='(' + self.entry_in_translation_log.id + ')' + self.current_entry_log.error_title + txt))
                                 self.log_formatted(self.error_log_string, const.REQUIRED_ALERT + txt)
                         # element 3
                         virus_nat_host_dict_in = sup_mol_dicts['virus_nat_host_dict_in']
@@ -4165,11 +4165,11 @@ class CifEMDBTranslator(object):
                                     set_el_virus_empty(virus_sup_mol, virus_in)
                             else:
                                 txt = u'Cannot set virus type. This supramolecule with id=(%s) is not in the (_emd_virus) category: (%s).' % sup_mol_id_in, virus_dict_in
-                                self.current_entry_log.error_logs.append(self.ALog(log_text=self.current_entry_log.error_title + txt))
+                                self.current_entry_log.error_logs.append(self.ALog(log_text='(' + self.entry_in_translation_log.id + ')' + self.current_entry_log.error_title + txt))
                                 self.log_formatted(self.error_log_string, const.REQUIRED_ALERT + txt)
                         else:
                             txt = u'Cannot set virus type. The (_emd_virus) category does not exist in cif.'
-                            self.current_entry_log.error_logs.append(self.ALog(log_text=self.current_entry_log.error_title + txt))
+                            self.current_entry_log.error_logs.append(self.ALog(log_text='(' + self.entry_in_translation_log.id + ')' + self.current_entry_log.error_title + txt))
                             self.log_formatted(self.error_log_string, const.REQUIRED_ALERT + txt)
                         # element 11
                         set_el_syn_species_name()
@@ -4413,21 +4413,21 @@ class CifEMDBTranslator(object):
                                             sup_list.add_supramolecule(cell_sup_mol)
                                     else:
                                         txt = u'Supramolecule type not implemented. (_emd_supramolecule.type) is (%s)' % sup_type
-                                        self.current_entry_log.error_logs.append(self.ALog(log_text=self.current_entry_log.error_title + txt))
+                                        self.current_entry_log.error_logs.append(self.ALog(log_text='(' + self.entry_in_translation_log.id + ')' + self.current_entry_log.error_title + txt))
                                         self.log_formatted(self.error_log_string, const.REQUIRED_ALERT + txt)
                                 else:
                                     # supramolecule type is None
                                     txt = u'Supramolecule type for supramolecule with id=(%s) is not given in the cif file. This supramolecule cannot be written into the output XML file.' % sup_mol_id_in
-                                    self.current_entry_log.error_logs.append(self.ALog(log_text=self.current_entry_log.error_title + txt))
+                                    self.current_entry_log.error_logs.append(self.ALog(log_text='(' + self.entry_in_translation_log.id + ')' + self.current_entry_log.error_title + txt))
                                     self.log_formatted(self.error_log_string, const.REQUIRED_ALERT + txt)
                             else:
                                 # supramolecule id is None!
                                 txt = u'Supramolecule id (_emd_supramolecule.id) missing in (%s).' % sup_in
-                                self.current_entry_log.error_logs.append(self.ALog(log_text=self.current_entry_log.error_title + txt))
+                                self.current_entry_log.error_logs.append(self.ALog(log_text='(' + self.entry_in_translation_log.id + ')' + self.current_entry_log.error_title + txt))
                                 self.log_formatted(self.error_log_string, const.REQUIRED_ALERT + txt)
                     else:
                         txt = u'CIF category (_emd_supramolecule) is missing.'
-                        self.current_entry_log.error_logs.append(self.ALog(log_text=self.current_entry_log.error_title + txt))
+                        self.current_entry_log.error_logs.append(self.ALog(log_text='(' + self.entry_in_translation_log.id + ')' + self.current_entry_log.error_title + txt))
                         self.log_formatted(self.error_log_string, const.REQUIRED_ALERT + txt)
 
                 # Create a natural source dictionary with the supramolecule as the key
@@ -4877,7 +4877,7 @@ class CifEMDBTranslator(object):
                                 mol.set_recombinant_expression(r_exp)
                     else:
                         txt = u'The dictionary for recombinant expression for macromolecule id (%s) not found.' % ent_id_in
-                        self.current_entry_log.warn_logs.append(self.ALog(log_text=self.current_entry_log.warn_title + txt))
+                        self.current_entry_log.warn_logs.append(self.ALog(log_text='(' + self.entry_in_translation_log.id + ')' + self.current_entry_log.warn_title + txt))
                         self.log_formatted(self.warn_log_string, const.NOT_REQUIRED_ALERT + txt)
 
                 def set_rna_macromolecule_type(rna_mol, ent_in, ent_id_in, ent_poly_in, src_dicts):
@@ -4923,7 +4923,7 @@ class CifEMDBTranslator(object):
                                 ec_num = ec_num_in.split(',')[0]
                                 set_cif_value(rna_mol.add_ec_number, 'pdbx_ec', const.ENTITY, cif_list=ent_in, cif_value=ec_num)
                                 txt = u'(_entity.pdbx_ec) is given (%s) but the value (%s) is set.' % (ec_num_in, ec_num)
-                                self.current_entry_log.warn_logs.append(self.ALog(log_text=self.current_entry_log.change_title + txt))
+                                self.current_entry_log.warn_logs.append(self.ALog(log_text='(' + self.entry_in_translation_log.id + ')' + self.current_entry_log.change_title + txt))
                                 self.log_formatted(self.warn_log_string, const.CHANGE_MADE + txt)
                             else:
                                 set_cif_value(rna_mol.add_ec_number, 'pdbx_ec', const.ENTITY, cif_list=ent_in)
@@ -5031,7 +5031,7 @@ class CifEMDBTranslator(object):
                                 ec_num = ec_num_in.split(',')[0]
                                 set_cif_value(p_mol.add_ec_number, 'pdbx_ec', const.ENTITY, cif_list=ent_in, cif_value=ec_num)
                                 txt = u'(_entity.pdbx_ec) is given: (%s) but the value: (%s) is set instead.'% (ec_num_in, ec_num)
-                                self.current_entry_log.warn_logs.append(self.ALog(log_text=self.current_entry_log.change_title + txt))
+                                self.current_entry_log.warn_logs.append(self.ALog(log_text='(' + self.entry_in_translation_log.id + ')' + self.current_entry_log.change_title + txt))
                                 self.log_formatted(self.warn_log_string, const.CHANGE_MADE + txt)
                             else:
                                 set_cif_value(p_mol.add_ec_number, 'pdbx_ec', const.ENTITY, cif_list=ent_in)
@@ -5235,7 +5235,7 @@ class CifEMDBTranslator(object):
                             mol_list.add_macromolecule(other_mol)
                         else:
                             txt = u'Entity poly type (%s) not recognized. It needs changing to an allowed type.' % ent_type_in
-                            self.current_entry_log.error_logs.append(self.ALog(log_text=self.current_entry_log.error_title + txt))
+                            self.current_entry_log.error_logs.append(self.ALog(log_text='(' + self.entry_in_translation_log.id + ')' + self.current_entry_log.error_title + txt))
                             self.log_formatted(self.error_log_string, const.REQUIRED_ALERT + txt)
                     elif ent_id_in in ent_non_poly_dict:
                         # Entity non-poly
@@ -5325,7 +5325,7 @@ class CifEMDBTranslator(object):
                                     set_cif_value(buff_comp.set_concentration, 'concentration', const.EMD_BUFFER_COMPONENT, cif_list=buff_comp_in, constructor=emdb.concentrationType, fmt=float, units=conc_units)
                                 else:
                                     txt = u'The value for (_emd_buffer_component.concentration_units) is missing. Buffer concentration will not be set.'
-                                    self.current_entry_log.warn_logs.append(self.ALog(log_text=self.current_entry_log.warn_title + txt))
+                                    self.current_entry_log.warn_logs.append(self.ALog(log_text='(' + self.entry_in_translation_log.id + ')' + self.current_entry_log.warn_title + txt))
                                     self.log_formatted(self.warn_log_string, const.NOT_REQUIRED_ALERT + txt)
 
                             def set_el_formula(buff_comp, buff_comp_in):
@@ -5407,7 +5407,7 @@ class CifEMDBTranslator(object):
                     else:
                         set_cif_value(stain.set_type, 'type', const.EMD_STAINING, cif_list=stain_in, cif_value='NEGATIVE')
                         txt = u'No value is found for (_emd_staining.type). The value (NEGATIVE) is given.'
-                        self.current_entry_log.warn_logs.append(self.ALog(log_text=self.current_entry_log.warn_title + txt))
+                        self.current_entry_log.warn_logs.append(self.ALog(log_text='(' + self.entry_in_translation_log.id + ')' + self.current_entry_log.warn_title + txt))
                         self.log_formatted(self.warn_log_string, const.CHANGE_MADE + txt)
 
                 def set_el_material(stain, stain_in):
@@ -5680,7 +5680,7 @@ class CifEMDBTranslator(object):
                                         atm_value_up = 'OTHER'
                                         set_cif_value(pretreat.set_atmosphere, 'atmosphere', const.EMD_GRID_PRETREATMENT, cif_list=pretreat_in, fmt=str.upper, cif_value=atm_value_up)
                                         txt = u'The value (%s) for (_emd_grid_pretreatment.atmosphere) is not allowed so it is changed to (%s).' % (atm_value, atm_value_up)
-                                        self.current_entry_log.warn_logs.append(self.ALog(log_text=self.current_entry_log.change_title + txt))
+                                        self.current_entry_log.warn_logs.append(self.ALog(log_text='(' + self.entry_in_translation_log.id + ')' + self.current_entry_log.change_title + txt))
                                         self.log_formatted(self.warn_log_string, const.CHANGE_MADE + txt)
                                     else:
                                         set_cif_value(pretreat.set_atmosphere, 'atmosphere', const.EMD_GRID_PRETREATMENT, cif_list=pretreat_in, fmt=str.upper)
@@ -5780,11 +5780,11 @@ class CifEMDBTranslator(object):
                             fl_chamber_temp = float(chamber_temp)
                             if fl_chamber_temp < 85:
                                 txt = u'The value given for (_emd_vitrification.chamber_temperature) is (%s) K. The lowest value should be 85.0 K.' % fl_chamber_temp
-                                self.current_entry_log.warn_logs.append(self.ALog(log_text=self.current_entry_log.not_changed_for_now_title + txt))
+                                self.current_entry_log.warn_logs.append(self.ALog(log_text='(' + self.entry_in_translation_log.id + ')' + self.current_entry_log.not_changed_for_now_title + txt))
                                 self.log_formatted(self.warn_log_string, const.NOT_CHANGED_FOR_NOW + txt)
                             elif fl_chamber_temp > 300:
                                 txt = u'The value given for (_emd_vitrification.chamber_temperature) is (%s) K. The highest value should be 300.0 K.' % fl_chamber_temp
-                                self.current_entry_log.warn_logs.append(self.ALog(log_text=self.current_entry_log.not_changed_for_now_title + txt))
+                                self.current_entry_log.warn_logs.append(self.ALog(log_text='(' + self.entry_in_translation_log.id + ')' + self.current_entry_log.not_changed_for_now_title + txt))
                                 self.log_formatted(self.warn_log_string, const.NOT_CHANGED_FOR_NOW + txt)
 
                         set_cif_value(vitr.set_chamber_temperature, 'chamber_temperature', const.EMD_VITRIFICATION,
@@ -6456,13 +6456,13 @@ class CifEMDBTranslator(object):
                         em_method = em_method_dict.get(metd)
                     else:
                         txt = u'The value for (%s) is not given.' % metd_item
-                        self.current_entry_log.error_logs.append(self.ALog(log_text=self.current_entry_log.error_title + txt))
+                        self.current_entry_log.error_logs.append(self.ALog(log_text='(' + self.entry_in_translation_log.id + ')' + self.current_entry_log.error_title + txt))
                         self.log_formatted(self.error_log_string, const.REQUIRED_ALERT + txt)
                     if em_method is not None:
                         set_cif_value(struct_det.set_method, 'method', const.EMD_STRUCTURE_DETERMINATION, cif_value=em_method)
                     else:
                         txt = u'(%s) is not a recognised structure determination method. Recognised methods are: SINGLE PARTICLE, SUBTOMOGRAM AVERAGING, TOMOGRAPHY, HELICAL, CRYSTALLOGRAPHY.' % metd_item
-                        self.current_entry_log.error_logs.append(self.ALog(log_text=self.current_entry_log.error_title + txt))
+                        self.current_entry_log.error_logs.append(self.ALog(log_text='(' + self.entry_in_translation_log.id + ')' + self.current_entry_log.error_title + txt))
                         self.log_formatted(self.error_log_string, const.REQUIRED_ALERT + txt)
                 return em_method
 
@@ -6525,7 +6525,7 @@ class CifEMDBTranslator(object):
                             spec_prep_list.add_specimen_preparation(cryst_prep)
                         else:
                             txt = u'Unknown EM method: (%s). The specimen preparation section, therefore, cannot be set.' % em_method
-                            self.current_entry_log.error_logs.append(self.ALog(log_text=self.current_entry_log.error_title + txt))
+                            self.current_entry_log.error_logs.append(self.ALog(log_text='(' + self.entry_in_translation_log.id + ')' + self.current_entry_log.error_title + txt))
                             self.log_formatted(self.error_log_string, const.REQUIRED_ALERT + txt)
                             break
 
@@ -6660,6 +6660,14 @@ class CifEMDBTranslator(object):
                                     """
                                     set_cif_value(eng_flt.set_name, 'energyfilter_name', const.EMD_SPECIALIST_OPTICS, cif_list=sp_op_in)
 
+                                def set_el_slit_width(eng_flt, sp_op_in):
+                                    """
+                                    XSD: <xs:element name="slit_width" minOccurs="0">
+                                    CIF: _emd_specialist_optics.energyfilter_slit_width
+                                    """
+                                    set_cif_value(eng_flt.set_slit_width, 'energyfilter_slit_width', const.EMD_SPECIALIST_OPTICS, cif_list=sp_op_in,
+                                                  constructor=emdb.slit_widthType, units=const.U_EV)
+
                                 def set_el_lower_energy_threshold(eng_flt, sp_op_in):
                                     """
                                     XSD: <xs:element name="lower_energy_threshold" minOccurs="0">
@@ -6669,11 +6677,11 @@ class CifEMDBTranslator(object):
                                     if eng_flt_low is not None:
                                         if eng_flt_low.lstrip('-').lstrip('+').isdigit():
                                             set_cif_value(eng_flt.set_lower_energy_threshold, 'energyfilter_lower', const.EMD_SPECIALIST_OPTICS, cif_list=sp_op_in,
-                                                          constructor=emdb.lower_energy_thresholdType, fmt=float, units=const.U_EV)
+                                                          constructor=emdb.lower_energy_thresholdType, units=const.U_EV)
                                         else:
                                             # should be a float
                                             txt = u'The value for (_emd_specialist_optics.energyfilter_lower) should not be: (%s).' % eng_flt_low
-                                            self.current_entry_log.error_logs.append(self.ALog(log_text=self.current_entry_log.error_title + txt))
+                                            self.current_entry_log.error_logs.append(self.ALog(log_text='(' + self.entry_in_translation_log.id + ')' + self.current_entry_log.error_title + txt))
                                             self.log_formatted(self.error_log_string, const.REQUIRED_ALERT + txt)
 
                                 def set_el_upper_energy_threshold(eng_flt, sp_op_in):
@@ -6685,16 +6693,18 @@ class CifEMDBTranslator(object):
                                     if eng_flt_uppr is not None:
                                         if eng_flt_uppr.lstrip('-').lstrip('+').isdigit():
                                             set_cif_value(eng_flt.set_upper_energy_threshold, 'energyfilter_upper', const.EMD_SPECIALIST_OPTICS, cif_list=sp_op_in,
-                                                          constructor=emdb.upper_energy_thresholdType, fmt=float, units=const.U_EV)
+                                                          constructor=emdb.upper_energy_thresholdType, units=const.U_EV)
                                         else:
                                             # should be a float
                                             txt = u'The value for (_emd_specialist_optics.energyfilter_upper) should not be: (%s).' % eng_flt_uppr
-                                            self.current_entry_log.error_logs.append(self.ALog(log_text=self.current_entry_log.error_title + txt))
+                                            self.current_entry_log.error_logs.append(self.ALog(log_text='(' + self.entry_in_translation_log.id + ')' + self.current_entry_log.error_title + txt))
                                             self.log_formatted(self.error_log_string, const.REQUIRED_ALERT + txt)
 
                                 # element 1
                                 set_el_name(eng_flt, sp_op_in)
                                 # element 2
+                                set_el_slit_width(eng_flt, sp_op_in)
+                                # element 3
                                 set_el_lower_energy_threshold(eng_flt, sp_op_in)
                                 # element 3
                                 set_el_upper_energy_threshold(eng_flt, sp_op_in)
@@ -6797,11 +6807,11 @@ class CifEMDBTranslator(object):
                                                 width=emdb.widthType(valueOf_=int(width), units=const.U_PIXEL),
                                                 height=emdb.heightType(valueOf_=int(height), units=const.U_PIXEL)))
                                         txt = u'(im_dig.set_dimensions) set with width (%s) and height (%s).' % (width, height)
-                                        self.current_entry_log.info_logs.append(self.ALog(log_text=self.current_entry_log.info_title + txt))
+                                        self.current_entry_log.info_logs.append(self.ALog(log_text='(' + self.entry_in_translation_log.id + ')' + self.current_entry_log.info_title + txt))
                                         self.log_formatted(self.info_log_string, const.INFO_ALERT + txt)
                                     elif width is not None or height is not None:
                                         txt = u'(im_dig.set_dimensions) cannot be set since the width and height are not given. Both (_emd_image_digitization.dimension_height) and (_emd_image_digitization.dimension_height) values need to be given.'
-                                        self.current_entry_log.error_logs.append(self.ALog(log_text=self.current_entry_log.error_title + txt))
+                                        self.current_entry_log.error_logs.append(self.ALog(log_text='(' + self.entry_in_translation_log.id + ')' + self.current_entry_log.error_title + txt))
                                         self.log_formatted(self.error_log_string, const.REQUIRED_ALERT + txt)
 
                                 def set_el_sampling_interval(im_dig, im_dig_in):
@@ -6930,7 +6940,7 @@ class CifEMDBTranslator(object):
 
                     if mic_id not in im_rec_dict_in:
                         txt = u'No value for (_emd_image_recording) found for microscope: (%s).' % mic_id
-                        self.current_entry_log.error_logs.append(self.ALog(log_text=self.current_entry_log.error_title + txt))
+                        self.current_entry_log.error_logs.append(self.ALog(log_text='(' + self.entry_in_translation_log.id + ')' + self.current_entry_log.error_title + txt))
                         self.log_formatted(self.error_log_string, const.REQUIRED_ALERT + txt)
                     else:
                         im_rec_list_in = im_rec_dict_in[mic_id]
@@ -7049,11 +7059,11 @@ class CifEMDBTranslator(object):
                             fl_nom_fel = float(nom_def) * 0.001
                             if fl_nom_fel < -20:
                                 txt = u'_emd_microscopy.nominal_defocus_max (%s) is less than -20.' % fl_nom_fel
-                                self.current_entry_log.warn_logs.append(self.ALog(log_text=self.current_entry_log.not_changed_for_now_title + txt))
+                                self.current_entry_log.warn_logs.append(self.ALog(log_text='(' + self.entry_in_translation_log.id + ')' + self.current_entry_log.not_changed_for_now_title + txt))
                                 self.log_formatted(self.warn_log_string, const.NOT_CHANGED_FOR_NOW + txt)
                             elif fl_nom_fel > 20:
                                 txt = u'_emd_microscopy.nominal_defocus_max (%s) is larger than 20.' %  fl_nom_fel
-                                self.current_entry_log.warn_logs.append(self.ALog(log_text=self.current_entry_log.not_changed_for_now_title + txt))
+                                self.current_entry_log.warn_logs.append(self.ALog(log_text='(' + self.entry_in_translation_log.id + ')' + self.current_entry_log.not_changed_for_now_title + txt))
                                 self.log_formatted(self.warn_log_string, const.NOT_CHANGED_FOR_NOW + txt)
                             set_cif_value(mic.set_nominal_defocus_max, 'nominal_defocus_max', const.EMD_MICROSCOPY, cif_list=mic_in,
                                           constructor=emdb.nominal_defocus_maxType, units=const.U_MICROM, fmt=lambda x: float(x) * 0.001)
@@ -7068,11 +7078,11 @@ class CifEMDBTranslator(object):
                             fl_cal_fel = float(cal_def) * 0.001
                             if fl_cal_fel < -20:
                                 txt = u'The value given to (_emd_microscopy.calibrated_defocus_max): (%s) is less than -20.' % fl_cal_fel
-                                self.current_entry_log.warn_logs.append(self.ALog(log_text=self.current_entry_log.not_changed_for_now_title + txt))
+                                self.current_entry_log.warn_logs.append(self.ALog(log_text='(' + self.entry_in_translation_log.id + ')' + self.current_entry_log.not_changed_for_now_title + txt))
                                 self.log_formatted(self.warn_log_string, const.NOT_CHANGED_FOR_NOW + txt)
                             elif fl_cal_fel > 20:
                                 txt = u'The value given to (_emd_microscopy.calibrated_defocus_max): (%s) is larger than 20.' %  fl_cal_fel
-                                self.current_entry_log.warn_logs.append(self.ALog(log_text=self.current_entry_log.not_changed_for_now_title + txt))
+                                self.current_entry_log.warn_logs.append(self.ALog(log_text='(' + self.entry_in_translation_log.id + ')' + self.current_entry_log.not_changed_for_now_title + txt))
                                 self.log_formatted(self.warn_log_string, const.NOT_CHANGED_FOR_NOW + txt)
                             set_cif_value(mic.set_calibrated_defocus_max, 'calibrated_defocus_max', const.EMD_MICROSCOPY, cif_list=mic_in,
                                           constructor=emdb.calibrated_defocus_maxType, units=const.U_MICROM, fmt=lambda x: float(x) * 0.001)
@@ -7399,7 +7409,7 @@ class CifEMDBTranslator(object):
                     struct_det.set_microscopy_list(microscopy_list)
                 else:
                     txt = u'CIF category (%s) is missing.' % const.EMD_MICROSCOPY
-                    self.current_entry_log.error_logs.append(self.ALog(log_text=self.current_entry_log.error_title + txt))
+                    self.current_entry_log.error_logs.append(self.ALog(log_text='(' + self.entry_in_translation_log.id + ')' + self.current_entry_log.error_title + txt))
                     self.log_formatted(self.error_log_string, const.REQUIRED_ALERT + txt)
 
             def set_el_image_processing(struct_det, microscopy_list):
@@ -8088,7 +8098,7 @@ class CifEMDBTranslator(object):
                             if angle_type is not None:
                                 if angle_type == '' or angle_type.isspace():
                                     txt = u'Cif item (_emd_angle_assignment.type) is not set. The value given should be one of: ANGULAR RECONSTITUTION, COMMON LINE, NOT APPLICABLE, OTHER, PROJECTION MATCHING, RANDOM ASSIGNMENT, MAXIMUM LIKELIHOOD.'
-                                    self.current_entry_log.error_logs.append(self.ALog(log_text=self.current_entry_log.error_title + txt))
+                                    self.current_entry_log.error_logs.append(self.ALog(log_text='(' + self.entry_in_translation_log.id + ')' + self.current_entry_log.error_title + txt))
                                     self.log_formatted(self.error_log_string, const.REQUIRED_ALERT + txt)
                             set_cif_value(ang.set_type, 'type', const.EMD_ANGLE_ASSIGNMENT, cif_list=ang_in, parent_el_req=parent_req)
 
@@ -9076,7 +9086,7 @@ class CifEMDBTranslator(object):
                                 if phase_error is None:
                                     phase_error = 0.0  # chosen default value
                                     txt = u'(_emd_crystallography_stats.overall_phase_error) is set to (%s) as no value is given and it is required.' % phase_error
-                                    self.current_entry_log.warn_logs.append(self.ALog(log_text=self.current_entry_log.change_title + txt))
+                                    self.current_entry_log.warn_logs.append(self.ALog(log_text='(' + self.entry_in_translation_log.id + ')' + self.current_entry_log.change_title + txt))
                                     self.log_formatted(self.warn_log_string, const.CHANGE_MADE + txt)
                                     set_cif_value(cry_stats.set_overall_phase_error, 'overall_phase_error', const.EMD_CRYSTALLOGRAPHY_STATS, cif_list=cry_stats_in, cif_value=phase_error)
                                 else:
@@ -9091,7 +9101,7 @@ class CifEMDBTranslator(object):
                                 if phase_residual is None:
                                     phase_residual = 0.0  # chosen default value
                                     txt = u'(_emd_crystallography_stats.overall_phase_residual) is set to (%s) as no value is given and it is required.' % phase_residual
-                                    self.current_entry_log.warn_logs.append(self.ALog(log_text=self.current_entry_log.change_title + txt))
+                                    self.current_entry_log.warn_logs.append(self.ALog(log_text='(' + self.entry_in_translation_log.id + ')' + self.current_entry_log.change_title + txt))
                                     self.log_formatted(self.warn_log_string, const.CHANGE_MADE + txt)
                                     set_cif_value(cry_stats.set_overall_phase_residual, 'overall_phase_residual', const.EMD_CRYSTALLOGRAPHY_STATS,
                                                   cif_list=cry_stats_in, cif_value=phase_residual)
@@ -9107,7 +9117,7 @@ class CifEMDBTranslator(object):
                                 if error_reject is None:
                                     error_reject = 0.0  # chosen default value
                                     txt = u'(_emd_crystallography_stats.phase_error_rejection_criteria) is set to (%s) as no value is given and it is required.' % error_reject
-                                    self.current_entry_log.warn_logs.append(self.ALog(log_text=self.current_entry_log.change_title + txt))
+                                    self.current_entry_log.warn_logs.append(self.ALog(log_text='(' + self.entry_in_translation_log.id + ')' + self.current_entry_log.change_title + txt))
                                     self.log_formatted(self.warn_log_string, const.CHANGE_MADE + txt)
                                     set_cif_value(cry_stats.set_phase_error_rejection_criteria, 'phase_error_rejection_criteria',
                                                   const.EMD_CRYSTALLOGRAPHY_STATS, cif_list=cry_stats_in, cif_value=error_reject)
@@ -9533,12 +9543,12 @@ class CifEMDBTranslator(object):
                         if map_name is None or map_name == '' or map_name.isspace():
                             map_name = self.emdb_id_u.lower() + '.map.gz'
                             txt = u'Map file name is not given for (_emd_map.file). Map name is set to (%s).' % map_name
-                            self.current_entry_log.warn_logs.append(self.ALog(log_text=self.current_entry_log.warn_title + txt))
+                            self.current_entry_log.warn_logs.append(self.ALog(log_text='(' + self.entry_in_translation_log.id + ')' + self.current_entry_log.warn_title + txt))
                             self.log_formatted(self.warn_log_string, const.NOT_REQUIRED_ALERT + txt)
                     else:
                         if map_name == '' or map_name.isspace():
                             txt = u'The value for (_emd_map.file) is not given in (%s).' % map_in
-                            self.current_entry_log.error_logs.append(self.ALog(log_text=self.current_entry_log.error_title + txt))
+                            self.current_entry_log.error_logs.append(self.ALog(log_text='(' + self.entry_in_translation_log.id + ')' + self.current_entry_log.error_title + txt))
                             self.log_formatted(self.error_log_string, const.REQUIRED_ALERT + txt)
                     set_cif_value(em_map.set_file, 'file', const.EMD_MAP, cif_list=map_in, cif_value=map_name, fmt=str.lower)
 
@@ -9949,7 +9959,7 @@ class CifEMDBTranslator(object):
                                         set_cif_value(cntr.set_level, 'contour_level', const.EMD_MAP, cif_list=map_in, fmt=float)
                                     else:
                                         txt = u'Contour level is not set for TOMOGRAPHY primary map.'
-                                        self.current_entry_log.info_logs.append(self.ALog(log_text=self.current_entry_log.info_title + txt))
+                                        self.current_entry_log.info_logs.append(self.ALog(log_text='(' + self.entry_in_translation_log.id + ')' + self.current_entry_log.info_title + txt))
                                         self.log_formatted(self.info_log_string, const.INFO_ALERT + txt)
 
                         def set_el_source(cntr, map_in):
@@ -10109,11 +10119,11 @@ class CifEMDBTranslator(object):
                                 self.log_formatted(self.error_log_string, self.emdb_id_u)
                         else:
                             txt = u'The value for EMDB is not given in CIF for (_database_2.database_id _database_2.database_code). SOLUTION:  have (EMDB EMD-xxxx) instead of (EMDB .) or (EMDB ?).'
-                            self.current_entry_log.error_logs.append(self.ALog(log_text=self.current_entry_log.error_title + txt))
+                            self.current_entry_log.error_logs.append(self.ALog(log_text='(' + self.entry_in_translation_log.id + ')' + self.current_entry_log.error_title + txt))
                             self.log_formatted(self.error_log_string, const.REQUIRED_ALERT + txt)
                 else:
                     txt = u'EMDB id is not given in CIF for (_database_2.database_id _database_2.database_code). SOLUTION: add (EMDB EMD-xxxx) in CIF.'
-                    self.current_entry_log.error_logs.append(self.ALog(log_text=self.current_entry_log.error_title + txt))
+                    self.current_entry_log.error_logs.append(self.ALog(log_text='(' + self.entry_in_translation_log.id + ')' + self.current_entry_log.error_title + txt))
                     self.log_formatted(self.error_log_string, const.REQUIRED_ALERT + txt)
 
             def set_attr_version():
@@ -10175,7 +10185,7 @@ class CifEMDBTranslator(object):
                 len_pr_map_list_in = len(pr_map_list_in)
                 if len_pr_map_list_in != 1:
                     txt = u'There should be one and only one primary map. (%d) map(s) found.' % len_pr_map_list_in
-                    self.current_entry_log.error_logs.append(self.ALog(log_text=self.current_entry_log.error_title + txt))
+                    self.current_entry_log.error_logs.append(self.ALog(log_text='(' + self.entry_in_translation_log.id + ')' + self.current_entry_log.error_title + txt))
                     self.log_formatted(self.error_log_string, const.REQUIRED_ALERT + txt)
                 else:
                     em_map = make_map(pr_map_list_in[0], get_canonical_map_name(pr_map_list_in[0], 'PRIMARY'))
@@ -10183,7 +10193,7 @@ class CifEMDBTranslator(object):
                         self.xml_out.set_map(em_map)
                     else:
                         txt = u'No information given for the primary map.'
-                        self.current_entry_log.error_logs.append(self.ALog(log_text=self.current_entry_log.error_title + txt))
+                        self.current_entry_log.error_logs.append(self.ALog(log_text='(' + self.entry_in_translation_log.id + ')' + self.current_entry_log.error_title + txt))
                         self.log_formatted(self.error_log_string, const.REQUIRED_ALERT + txt)
 
             def set_el_interpretation():
@@ -10578,7 +10588,7 @@ class CifEMDBTranslator(object):
             print 'cif file NOT read'
             # TODO
             # txt = u'Translation cannot be performed. The cif file (%s) cannot be read.' % self.cif_file_name
-            # self.current_entry_log.error_logs.append(self.ALog(log_text=txt))
+            # self.current_entry_log.error_logs.append(self.ALog(log_text='(' + self.entry_in_translation_log.id + ')' +txt))
             # self.log_formatted(self.error_log_string, self.Constants.REQUIRED_ALERT + txt)
 
     def translate(self, in_cif, out_xml):
@@ -10604,7 +10614,7 @@ class CifEMDBTranslator(object):
             return True
         except IOError as exp:
             txt = u'Error (%s) occured. Arguments (%s).' % (exp.message, exp.args)
-            self.current_entry_log.error_logs.append(self.ALog(log_text=self.current_entry_log.validation_title + txt))
+            self.current_entry_log.error_logs.append(self.ALog(log_text='(' + self.entry_in_translation_log.id + ')' + self.current_entry_log.validation_title + txt))
             self.log_formatted(self.error_log_string, self.Constants.VALIDATION_ERROR + txt)
             return False
         finally:
@@ -10621,18 +10631,18 @@ class CifEMDBTranslator(object):
             xml_schema = etree.XMLSchema(xsd)
             xml_schema.assertValid(xml_doc)
             txt = u'File %s validates.' % in_xml
-            self.current_entry_log.info_logs.append(self.ALog(log_text=txt))
+            self.current_entry_log.info_logs.append(self.ALog(log_text='(' + self.entry_in_translation_log.id + ')' + txt))
             self.log_formatted(self.info_log_string, txt)
         except etree.XMLSyntaxError as exp:
             txt = u'PARSING ERROR: %s.' % exp
-            self.current_entry_log.error_logs.append(self.ALog(log_text=txt))
+            self.current_entry_log.error_logs.append(self.ALog(log_text='(' + self.entry_in_translation_log.id + ')' + txt))
             self.log_formatted(self.error_log_string, txt)
         except etree.DocumentInvalid as exp:
             i = 1
             for err in exp.error_log:
                 txt = u'%d: %s' % (i, err)
                 self.current_entry_log.error_logs.append(self.ALog(log_text='(' + self.entry_in_translation_log.id + ')' + self.current_entry_log.validation_title + txt))
-                self.log_formatted(self.error_log_string, '(' + self.entry_in_translation_log.id + ')' + self.Constants.VALIDATION_ERROR + txt)
+                self.log_formatted(self.error_log_string, self.Constants.VALIDATION_ERROR + txt)
                 i = i + 1
 
     def validation_logger_header(self, log_str, in_schema_filename):
@@ -10660,7 +10670,7 @@ class CifEMDBTranslator(object):
             in_schema = open(in_schema_filename, 'r')
         except IOError as exp:
             txt = u'Error %s occurred. Arguments are: %s.' % (exp.message, exp.args)
-            self.current_entry_log.error_logs.append(self.ALog(log_text=self.current_entry_log.validation_title + txt))
+            self.current_entry_log.error_logs.append(self.ALog(log_text='(' + self.entry_in_translation_log.id + ')' + self.current_entry_log.validation_title + txt))
             self.log_formatted(self.error_log_string, self.Constants.VALIDATION_ERROR + txt)
             return False
         else:
