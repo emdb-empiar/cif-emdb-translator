@@ -4164,7 +4164,7 @@ class CifEMDBTranslator(object):
                                     # element 10
                                     set_el_virus_empty(virus_sup_mol, virus_in)
                             else:
-                                txt = u'Cannot set virus type. This supramolecule with id=(%s) is not in the (_emd_virus) category: (%s).' % sup_mol_id_in, virus_dict_in
+                                txt = u'Cannot set virus type. This supramolecule with id=(%s) is not in the (_emd_virus) category: (%s).' % (sup_mol_id_in, virus_dict_in)
                                 self.current_entry_log.error_logs.append(self.ALog(log_text='(' + self.entry_in_translation_log.id + ')' + self.current_entry_log.error_title + txt))
                                 self.log_formatted(self.error_log_string, const.REQUIRED_ALERT + txt)
                         else:
