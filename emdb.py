@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 #
-# Generated Tue Jun  5 13:06:56 2018 by generateDS.py version 2.29.5.
+# Generated Tue Jun  5 14:02:21 2018 by generateDS.py version 2.29.5.
 # Python 2.7.11 (v2.7.11:6d1b6a68f775, Dec  5 2015, 12:54:16)  [GCC 4.2.1 (Apple Inc. build 5666) (dot 3)]
 #
 # Command line options:
@@ -9391,7 +9391,7 @@ class fib_current_type(GeneratedsSuper):
 class fib_dose_rate_type(GeneratedsSuper):
     subclass = None
     superclass = None
-    def __init__(self, units='ions/nm^2/s', valueOf_=None):
+    def __init__(self, units='ions/(cm^2*s)', valueOf_=None):
         self.original_tagname_ = None
         self.units = _cast(None, units)
         self.valueOf_ = valueOf_
@@ -9439,7 +9439,7 @@ class fib_dose_rate_type(GeneratedsSuper):
         else:
             outfile.write('/>%s' % (eol_, ))
     def exportAttributes(self, outfile, level, already_processed, namespace_='', name_='fib_dose_rate_type'):
-        if self.units != "ions/nm^2/s" and 'units' not in already_processed:
+        if self.units != "ions/(cm^2*s)" and 'units' not in already_processed:
             already_processed.add('units')
             outfile.write(' units=%s' % (self.gds_encode(self.gds_format_string(quote_attrib(self.units), input_name='units')), ))
     def exportChildren(self, outfile, level, namespace_='', name_='fib_dose_rate_type', fromsubclass_=False, pretty_print=True):

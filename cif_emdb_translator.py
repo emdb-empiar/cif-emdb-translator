@@ -209,7 +209,7 @@ class CifEMDBTranslator(object):
         U_ANG = u'\u212B'  # u'\u00C5'
         U_DEG = 'deg'
         U_DEGF = 'degrees'
-        U_FIB_DOSE_RATE = 'ions/nm^2/s'
+        U_FIB_DOSE_RATE = 'ions/(cm^2*s)'
         U_KDA_NM = 'kDa/nm'
         U_KEL = 'K'
         U_KVOLT = 'kV'
@@ -450,7 +450,7 @@ class CifEMDBTranslator(object):
             '_emd_sectioning_focused_ion_beam.ion': '<xs:element name="ion">',
             '_emd_sectioning_focused_ion_beam.voltage': '<xs:element name="voltage" type="fib_voltage_type"/>',
             '_emd_sectioning_focused_ion_beam.current': '<xs:element name="current" type="fib_current_type"/>',
-            '_emd_sectioning_focused_ion_beam.dose_rate': '<xs:element name="dose_rate" type="fib_dose_rate_type"/>',
+            '_emd_sectioning_focused_ion_beam.dose_rate': '<xs:element name="dose_rate" type="fib_dose_rate_type" minOccurs="0"/>',
             '_emd_sectioning_focused_ion_beam.duration': '<xs:element name="duration" type="fib_duration_type"/>',
             '_emd_sectioning_focused_ion_beam.temperature': '<xs:element name="temperature" type="temperature_type"/>',
             '_emd_sectioning_focused_ion_beam.initial_thickness': '<xs:element name="initial_thickness" type="fib_initial_thickness_type">',
