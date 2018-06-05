@@ -431,7 +431,7 @@ class CifEMDBTranslator(object):
             '_emd_support_film.id': '<xs:attribute name="film_type_id" type="xs:positiveInteger" use="required"/>',
             '_emd_support_film.material': '<xs:element name="film_material" type="xs:token" minOccurs="0">',
             '_emd_support_film.topology': '<xs:element name="film_topology" minOccurs="0">',
-            '_emd_grid_pretreatment.type': '<xs:element name="type" type="xs:token"/>',
+            '_emd_grid_pretreatment.type': '<xs:element name="type" type="xs:token" minOccurs="0"/>',
             '_emd_grid.details': '<xs:element name="details" type="xs:string" minOccurs="0">',
             '_emd_specimen_vitrification.cryogen_name': '<xs:element name="cryogen_name">',
             '_emd_vitrification.instrument': '<xs:element name="instrument" minOccurs="0">',
@@ -5658,7 +5658,7 @@ class CifEMDBTranslator(object):
 
                             def set_el_type(pretreat, pretreat_in):
                                 """
-                                XSD: <xs:element name="type" type="xs:token"/>
+                                XSD: <xs:element name="type" type="xs:token" minOccurs="0"/>
                                 CIF: _emd_grid_pretreatment.type 'GLOW DISCHARGE'
                                 """
                                 set_cif_value(pretreat.set_type, 'type', const.EMD_GRID_PRETREATMENT, cif_list=pretreat_in, parent_el_req=False)
