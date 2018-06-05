@@ -6143,7 +6143,7 @@ class CifEMDBTranslator(object):
 
                     def set_el_dose_rate(fib, fib_in):
                         """
-                        XSD: <xs:element name="dose_rate" type="fib_dose_rate_type"/>
+                        XSD: <xs:element name="dose_rate" type="fib_dose_rate_type" minOccurs="0/>
                         CIF: _emd_sectioning_focused_ion_beam.dose_rate
                         """
                         set_cif_value(fib.set_dose_rate, 'dose_rate', const.EMD_SECTIONING_FOCUSED_ION_BEAM,
@@ -9114,7 +9114,7 @@ class CifEMDBTranslator(object):
                                 CIF: _emd_crystallography_stats.phase_error_rejection_criteria
                                 """
                                 error_reject = get_cif_value('phase_error_rejection_criteria', const.EMD_CRYSTALLOGRAPHY_STATS, cry_stats_in)
-                                if error_reject is None:
+                                if error_reject is None or not isinstance(error_reject, (int, long, float)):
                                     error_reject = 0.0  # chosen default value
                                     txt = u'(_emd_crystallography_stats.phase_error_rejection_criteria) is set to (%s) as no value is given and it is required.' % error_reject
                                     self.current_entry_log.warn_logs.append(self.ALog(log_text='(' + self.entry_in_translation_log.id + ')' + self.current_entry_log.change_title + txt))
@@ -9122,7 +9122,7 @@ class CifEMDBTranslator(object):
                                     set_cif_value(cry_stats.set_phase_error_rejection_criteria, 'phase_error_rejection_criteria',
                                                   const.EMD_CRYSTALLOGRAPHY_STATS, cif_list=cry_stats_in, cif_value=error_reject)
                                 else:
-                                    set_cif_value(cry_stats.set_phase_error_rejection_criteria,'phase_error_rejection_criteria',
+                                    set_cif_value(cry_stats.set_phase_error_rejection_criteria, 'phase_error_rejection_criteria',
                                                   const.EMD_CRYSTALLOGRAPHY_STATS, cif_list=cry_stats_in, fmt=float)
 
                             def set_el_high_resolution(cry_stats, cry_stats_in):
