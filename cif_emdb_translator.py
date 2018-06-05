@@ -2955,6 +2955,11 @@ class CifEMDBTranslator(object):
                                     # db_id is in a EMDB-xxxx format - remove B
                                     correct_db_id = db_id.replace('B', '')
                                     corrected = True
+                                if db_id.find('D_') != -1:
+                                    # db_id is given as e.g. D_1000232117; should be EMD-xxxx
+                                    txt = u'emdb_id cannot be set as the value for (_pdbx_database_related.db_id) is given as (%s).' % db_id
+                                    self.current_entry_log.error_logs.append(self.ALog(log_text='(' + self.entry_in_translation_log.id + ')' + self.current_entry_log.error_title + txt))
+                                    self.log_formatted(self.error_log_string, const.REQUIRED_ALERT + txt)
                                 if corrected:
                                     set_cif_value(cross_ref.set_emdb_id, 'db_id', const.PDBX_DATABASE_RELATED, cif_list=rel_in, cif_value=correct_db_id)
                                     txt = u'emdb_id is set to (%s) as the value for (_pdbx_database_related.db_id) is given as (%s).' % (correct_db_id, db_id)
@@ -2969,7 +2974,6 @@ class CifEMDBTranslator(object):
                         CIF: _pdbx_database_related.content_type
                         """
                         content_type = get_cif_value('content_type', const.PDBX_DATABASE_RELATED, rel_in)
-                        ct_item = get_cif_item('content_type', const.PDBX_DATABASE_RELATED)
                         txt = None
                         if content_type == const.CIF_EMDB_ASSOC:
                             cross_ref.set_relationship(emdb.relationshipType(other=const.CIF_EMDB_ASSOC))
