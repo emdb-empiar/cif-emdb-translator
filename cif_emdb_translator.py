@@ -9125,9 +9125,13 @@ class CifEMDBTranslator(object):
                                     if isinstance(error_reject, (int, long, float)):
                                         set_cif_value(cry_stats.set_phase_error_rejection_criteria, 'phase_error_rejection_criteria', const.EMD_CRYSTALLOGRAPHY_STATS, cif_list=cry_stats_in, fmt=float)
                                     else:
-                                        txt = u'(_emd_crystallography_stats.phase_error_rejection_criteria) is set to (%s) but it should be a number.' % error_reject
-                                        self.current_entry_log.error_logs.append(self.ALog(log_text='(' + self.entry_in_translation_log.id + ')' + self.current_entry_log.error_title + txt))
-                                        self.log_formatted(self.error_log_string, const.REQUIRED_ALERT + txt)
+                                        u_error_reject = unicode(error_reject)
+                                        if u_error_reject.isnumeric():
+                                            set_cif_value(cry_stats.set_phase_error_rejection_criteria, 'phase_error_rejection_criteria', const.EMD_CRYSTALLOGRAPHY_STATS, cif_list=cry_stats_in, fmt=float)
+                                        else:
+                                            txt = u'(_emd_crystallography_stats.phase_error_rejection_criteria) is set to (%s) but it should be a number.' % error_reject
+                                            self.current_entry_log.error_logs.append(self.ALog(log_text='(' + self.entry_in_translation_log.id + ')' + self.current_entry_log.error_title + txt))
+                                            self.log_formatted(self.error_log_string, const.REQUIRED_ALERT + txt)
 
                             def set_el_high_resolution(cry_stats, cry_stats_in):
                                 """
