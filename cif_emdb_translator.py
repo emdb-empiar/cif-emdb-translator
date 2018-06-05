@@ -9130,7 +9130,7 @@ class CifEMDBTranslator(object):
                                         set_cif_value(cry_stats.set_phase_error_rejection_criteria, 'phase_error_rejection_criteria', const.EMD_CRYSTALLOGRAPHY_STATS, cif_list=cry_stats_in, fmt=float)
                                     else:
                                         u_error_reject = unicode(error_reject)
-                                        if u_error_reject.isnumeric():
+                                        if u_error_reject.replace('.', '', 1).isnumeric():
                                             set_cif_value(cry_stats.set_phase_error_rejection_criteria, 'phase_error_rejection_criteria', const.EMD_CRYSTALLOGRAPHY_STATS, cif_list=cry_stats_in, fmt=float)
                                         else:
                                             txt = u'(_emd_crystallography_stats.phase_error_rejection_criteria) is set to (%s) but it should be a number.' % error_reject
