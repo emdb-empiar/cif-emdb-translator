@@ -2308,7 +2308,7 @@ class CifEMDBTranslator(object):
                         else:
                             txt = u'Author (%s) at index (%s) is not added to the list of authors as the format is wrong.' % (cif_author, index + 1)
                             self.current_entry_log.warn_logs.append(self.ALog(log_text='(' + self.entry_in_translation_log.id + ')' + self.current_entry_log.warn_title + txt))
-                            self.log_formatted(self.war_log_string, const.NOT_REQUIRED_ALERT + txt)
+                            self.log_formatted(self.warn_log_string, const.NOT_REQUIRED_ALERT + txt)
 
             def set_el_authors_list(admin):
                 """
@@ -9968,7 +9968,18 @@ class CifEMDBTranslator(object):
                                 map_type = get_cif_value('type', const.EMD_MAP, pr_map_list_in[0])
                                 if map_type == 'primary map':
                                     if struct_det_method != 'TOMOGRAPHY':
-                                        set_cif_value(cntr.set_level, 'contour_level', const.EMD_MAP, cif_list=map_in, fmt=float)
+                                        cntr_level = get_cif_value('contour_level', const.EMD_MAP, cif_list=map_in)
+                                        if cntr_level is not None:
+                                            if not isinstance(cntr_level, str):
+                                                set_cif_value(cntr.set_level, 'contour_level', const.EMD_MAP, cif_list=map_in, fmt=float)
+                                            else:
+                                                txt = u'Contour level is given as a text value of %s . This is not correct. It should be a number.' % cntr_level
+                                                self.current_entry_log.error_logs.append(self.ALog(log_text='(' + self.entry_in_translation_log.id + ')' + self.current_entry_log.error_title + txt))
+                                                self.log_formatted(self.error_log_string, const.REQUIRED_ALERT + txt)
+                                        else:
+                                            txt = u'Contour level is missing for %s.' % struct_det_method
+                                            self.current_entry_log.error_logs.append(self.ALog(log_text='(' + self.entry_in_translation_log.id + ')' + self.current_entry_log.error_title + txt))
+                                            self.log_formatted(self.error_log_string, const.REQUIRED_ALERT + txt)
                                     else:
                                         txt = u'Contour level is not set for TOMOGRAPHY primary map.'
                                         self.current_entry_log.info_logs.append(self.ALog(log_text='(' + self.entry_in_translation_log.id + ')' + self.current_entry_log.info_title + txt))
