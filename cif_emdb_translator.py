@@ -971,14 +971,12 @@ class CifEMDBTranslator(object):
                 self.error_log_string.close()
 
         if write_warn_log:
-            print 'write_warn_log'
             if self.warn_log_string is not None and not self.warn_log_string.closed:
                 # write the warning log buffer to self.warn_log_file_name
                 self.write_a_logger_log(self.warn_log_string, self.warn_log_file_name)
                 self.warn_log_string.close()
 
         if write_info_log:
-            print 'write_info_log'
             if self.info_log_string is not None and not self.info_log_string.closed:
                 # write the info log buffer to self.info_log_file_name
                 self.write_a_logger_log(self.info_log_string, self.info_log_file_name)
