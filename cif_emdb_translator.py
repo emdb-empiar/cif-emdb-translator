@@ -1270,6 +1270,27 @@ class CifEMDBTranslator(object):
 
     def translate_cif_to_xml(self):
         """Translate cif file to EMDB xml 3.0"""
+        def is_number(astr):
+            try:
+                float(astr)
+                return True
+            except ValueError:
+                pass
+
+            try:
+                int(astr)
+                return True
+            except ValueError:
+                pass
+
+            try:
+                import unicodedata
+                unicodedata.numeric(astr)
+                return True
+            except (TypeError, ValueError):
+                pass
+
+            return False
 
         def cif_bool(cif_bool_value):
             """
@@ -9971,9 +9992,14 @@ class CifEMDBTranslator(object):
                                             if not isinstance(cntr_level, str):
                                                 set_cif_value(cntr.set_level, 'contour_level', const.EMD_MAP, cif_list=map_in, fmt=float)
                                             else:
-                                                txt = u'Contour level is given as a text value of %s . This is not correct. It should be a number.' % cntr_level
-                                                self.current_entry_log.error_logs.append(self.ALog(log_text='(' + self.entry_in_translation_log.id + ')' + self.current_entry_log.error_title + txt))
-                                                self.log_formatted(self.error_log_string, const.REQUIRED_ALERT + txt)
+                                                # contour level is a string; check if the string can be converted
+                                                if is_number(cntr_level.lstrip('+-')):
+                                                    cl_float = float(cntr_level.lstrip('+-'))
+                                                    set_cif_value(cntr.set_level, 'contour_level', const.EMD_MAP, cif_list=map_in, cif_value=cl_float)
+                                                else:
+                                                    txt = u'Contour level is given as a text value of %s . This is not correct. It should be a number.' % cntr_level
+                                                    self.current_entry_log.error_logs.append(self.ALog(log_text='(' + self.entry_in_translation_log.id + ')' + self.current_entry_log.error_title + txt))
+                                                    self.log_formatted(self.error_log_string, const.REQUIRED_ALERT + txt)
                                         else:
                                             txt = u'Contour level is missing for %s.' % struct_det_method
                                             self.current_entry_log.error_logs.append(self.ALog(log_text='(' + self.entry_in_translation_log.id + ')' + self.current_entry_log.error_title + txt))
