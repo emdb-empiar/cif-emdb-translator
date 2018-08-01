@@ -9979,35 +9979,30 @@ class CifEMDBTranslator(object):
                             # get structure determination method
                             struct_det_method = get_cif_value('method', const.EMD_STRUCTURE_DETERMINATION)
                             # determine map type
-                            map_type = None
-                            map_dict_in = make_list_of_dicts(const.EMD_MAP, 'type')
-                            pr_map_list_in = map_dict_in[const.MAP_PRIMARY] if const.MAP_PRIMARY in map_dict_in else []
-                            len_pr_map_list_in = len(pr_map_list_in)
-                            if len_pr_map_list_in == 1:
-                                map_type = get_cif_value('type', const.EMD_MAP, pr_map_list_in[0])
-                                if map_type == 'primary map':
-                                    if struct_det_method != 'TOMOGRAPHY':
-                                        cntr_level = get_cif_value('contour_level', const.EMD_MAP, cif_list=map_in)
-                                        if cntr_level is not None:
-                                            if not isinstance(cntr_level, str):
-                                                set_cif_value(cntr.set_level, 'contour_level', const.EMD_MAP, cif_list=map_in, fmt=float)
-                                            else:
-                                                # contour level is a string; check if the string can be converted
-                                                if is_number(cntr_level.lstrip('+-')):
-                                                    cl_float = float(cntr_level.lstrip('+-'))
-                                                    set_cif_value(cntr.set_level, 'contour_level', const.EMD_MAP, cif_list=map_in, cif_value=cl_float)
-                                                else:
-                                                    txt = u'Contour level is given as a text value of %s . This is not correct. It should be a number.' % cntr_level
-                                                    self.current_entry_log.error_logs.append(self.ALog(log_text='(' + self.entry_in_translation_log.id + ')' + self.current_entry_log.error_title + txt))
-                                                    self.log_formatted(self.error_log_string, const.REQUIRED_ALERT + txt)
+                            map_type = get_cif_value('type', const.EMD_MAP, cif_list=map_in)
+                            if map_type == 'primary map':
+                                if struct_det_method != 'TOMOGRAPHY':
+                                    cntr_level = get_cif_value('contour_level', const.EMD_MAP, cif_list=map_in)
+                                    if cntr_level is not None:
+                                        if not isinstance(cntr_level, str):
+                                            set_cif_value(cntr.set_level, 'contour_level', const.EMD_MAP, cif_list=map_in, fmt=float)
                                         else:
-                                            txt = u'Contour level is missing for %s.' % struct_det_method
-                                            self.current_entry_log.error_logs.append(self.ALog(log_text='(' + self.entry_in_translation_log.id + ')' + self.current_entry_log.error_title + txt))
-                                            self.log_formatted(self.error_log_string, const.REQUIRED_ALERT + txt)
+                                            # contour level is a string; check if the string can be converted
+                                            if is_number(cntr_level.lstrip('+-')):
+                                                cl_float = float(cntr_level.lstrip('+-'))
+                                                set_cif_value(cntr.set_level, 'contour_level', const.EMD_MAP, cif_list=map_in, cif_value=cl_float)
+                                            else:
+                                                txt = u'Contour level is given as a text value of %s . This is not correct. It should be a number.' % cntr_level
+                                                self.current_entry_log.error_logs.append(self.ALog(log_text='(' + self.entry_in_translation_log.id + ')' + self.current_entry_log.error_title + txt))
+                                                self.log_formatted(self.error_log_string, const.REQUIRED_ALERT + txt)
                                     else:
-                                        txt = u'Contour level is not set for TOMOGRAPHY primary map.'
-                                        self.current_entry_log.info_logs.append(self.ALog(log_text='(' + self.entry_in_translation_log.id + ')' + self.current_entry_log.info_title + txt))
-                                        self.log_formatted(self.info_log_string, const.INFO_ALERT + txt)
+                                        txt = u'Contour level is missing for %s.' % struct_det_method
+                                        self.current_entry_log.error_logs.append(self.ALog(log_text='(' + self.entry_in_translation_log.id + ')' + self.current_entry_log.error_title + txt))
+                                        self.log_formatted(self.error_log_string, const.REQUIRED_ALERT + txt)
+                                else:
+                                    txt = u'Contour level is not set for TOMOGRAPHY primary map.'
+                                    self.current_entry_log.info_logs.append(self.ALog(log_text='(' + self.entry_in_translation_log.id + ')' + self.current_entry_log.info_title + txt))
+                                    self.log_formatted(self.info_log_string, const.INFO_ALERT + txt)
 
                         def set_el_source(cntr, map_in):
                             """
