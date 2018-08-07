@@ -10170,10 +10170,12 @@ class CifEMDBTranslator(object):
 
             def set_attr_version():
                 """
-                XSD: <xs:attribute name="version" use="required">
+                XSD: <xs:attribute name="version" type="xs:token" default="3.0.0.1"/>
                 NOT IN CIF: The value is added in here -
                 """
-                self.xml_out.set_version(const.XML_OUT_VERSION)
+                # no need to set the version as the dafualt value is given
+                # self.xml_out.set_version(const.XML_OUT_VERSION)
+                pass
 
             def set_el_admin():
                 """
