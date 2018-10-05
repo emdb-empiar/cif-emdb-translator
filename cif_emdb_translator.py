@@ -48,7 +48,7 @@ class CifEMDBTranslator(object):
         There are many constants in use for the translation.
         They have been collected here for ease of use.
         """
-        XML_OUT_VERSION = '3.0.0.1'
+        XML_OUT_VERSION = '3.0.1.1'
 
         # Cif categories
         CITATION = 'citation'
@@ -3794,17 +3794,17 @@ class CifEMDBTranslator(object):
                             """
                             XSD: <xs:element name="natural_source" type="complex_natural_source_type" minOccurs="0"/> is
                             .. an extension of base="base_source_type" and
-                            .. a sequence of organ, tissue, cell
+                            .. a sequence of organ, tissue, cell, organelle and cellular location
                             """
                             nat_src_dict_in = sup_mol_dicts['nat_src_dict_in']
                             if sup_mol_id_in in nat_src_dict_in:
                                 sup_mol_dict_in = nat_src_dict_in[sup_mol_id_in]
                                 cmpx_dict = {'add_nat_src': True,
-                                             'add_organ': False,
-                                             'add_tissue': False,
-                                             'add_cell': False,
-                                             'add_organelle': False,
-                                             'add_cellular_location': False
+                                             'add_organ': True,
+                                             'add_tissue': True,
+                                             'add_cell': True,
+                                             'add_organelle': True,
+                                             'add_cellular_location': True
                                              }
                                 complex_natural_source_type_list = []
                                 attr_ncbis = []
