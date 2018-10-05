@@ -129,7 +129,7 @@ class TestTranslator(unittest.TestCase):
                         j = j + 1
                         #print depID
                         #if depID == 'D_1200000799' or depID == 'D_1200005141':
-                        if id == "EMD-8142":# or id == "EMD-8057":
+                        if True: # id == "EMD-8142":# or id == "EMD-8057":
                             print id
                             try:
                                 fileType, f, copyStatic = PDBprocessedWhere(id).Extension()
