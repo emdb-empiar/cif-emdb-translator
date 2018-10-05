@@ -64,8 +64,8 @@ class TestTranslator(unittest.TestCase):
 
         # create the translator object
         translator = CifEMDBTranslator()
-        # translator.set_logger_logging(True, True, True, False)
-        translator.set_logger_logging(log_error=True, error_log_file_name='/nfs/msd/work2/sanja/cif_emdb_translator/ERROR.log')
+        translator.set_logger_logging(True, True, True, False)
+        # translator.set_logger_logging(log_error=True, error_log_file_name='/nfs/msd/work2/sanja/cif_emdb_translator/ERROR.log')
         # translator.set_show_log_id(True)
         # Reads mmcif_pdbx_v5_next.dic that contains information
         # about how the em categories map to the emd categories
