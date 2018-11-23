@@ -233,7 +233,7 @@ class CifEMDBTranslator(object):
         # Other constants
         CIF_EMDB_ASSOC = 'associated EM volume'
         CIF_EMDB_OTHER = 'other EM volume'
-        CIF_AUTHOR_RE = re.compile(r"^([A-Za-z '\-\.]+), (([A-Z\-]+\.)*)$")
+        CIF_AUTHOR_RE = re.compile(r'^([A-Za-z \'\-.]+), (([A-Z\-]+\.)*)')
         CIF_HALF_MAP_RE = re.compile(r"^D_[0-9]+\_em\-half\-volume\_P([0-9]+)\.map")
         CIF_ADD_MAP_RE = re.compile(r"^D_[0-9]+\_em\-additional\-volume\_P([0-9]+)\.map")
         CIF_EMD_ID_RE = re.compile(r"EMD\-([0-9]){4}")
@@ -1743,7 +1743,7 @@ class CifEMDBTranslator(object):
                 auth_match = re.match(const.CIF_AUTHOR_RE, auth_in)
                 if auth_match is not None and not auth_in.isspace():
                     match_groups = auth_match.groups()
-                    auth_out = '%s %s' % (match_groups[0], match_groups[1].replace('.', ''))
+                    auth_out = '%s %s' % (match_groups[0].replace('.', ''), match_groups[1].replace('.', ''))
                 else:
                     auth_out = ''
                     txt = u'Author name: (%s) is not in a required CIF format.' % auth_in
